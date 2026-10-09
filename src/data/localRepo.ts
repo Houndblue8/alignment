@@ -1,0 +1,57 @@
+// Browser-only data store. Used by end-to-end tests and for running the app without a backend.
+import type { Repo } from './repo';
+import type { Snapshot } from './model';
+
+const KEY = 'alignment.localdb';
+
+function read(): Snapshot | null {
+  try {
+    const raw = localStorage.getItem(KEY);
+    return raw ? (JSON.parse(raw) as Snapshot) : null;
+  } catch {
+    return null;
+  }
+}
+
+function write(s: Snapshot): void {
+  localStorage.setItem(KEY, JSON.stringify(s));
+}
+
+function update(fn: (s: Snapshot) => void): Promise<void> {
+  const s = read();
+  if (!s) return Promise.reject(new Error('No data yet.'));
+  fn(s);
+  write(s);
+  return Promise.resolve();
+}
+
+const upsertById = <T extends { id: string }>(list: T[], items: T[]): T[] => {
+  const map = new Map(list.map((x) => [x.id, x]));
+  for (const i of items) map.set(i.id, i);
+  return [...map.values()];
+};
+
+export const localRepo: Repo = {
+  load: async () => read(),
+  seed: async (snapshot) => {
+    if (!read()) write(snapshot);
+  },
+  saveSettings: (v) => update((s) => void (s.settings = v)),
+  saveVision: (v) => update((s) => void (s.vision = v)),
+  saveContract: (v) => update((s) => void (s.contract = v)),
+  upsertPlaces: (p) => update((s) => void (s.places = upsertById(s.places, p))),
+  upsertEvents: (e) => update((s) => void (s.events = upsertById(s.events, e))),
+  deleteEvent: (id) => update((s) => void (s.events = s.events.filter((e) => e.id !== id))),
+  upsertTasks: (t) => update((s) => void (s.tasks = upsertById(s.tasks, t))),
+  deleteTask: (id) => update((s) => void (s.tasks = s.tasks.filter((t) => t.id !== id))),
+  upsertDays: (d) =>
+    update((s) => {
+      for (const day of d) s.days[day.date] = day;
+    }),
+  replaceBlocks: (dates, blocks) =>
+    update((s) => {
+      s.blocks = [...s.blocks.filter((b) => !dates.includes(b.date)), ...blocks];
+    }),
+  upsertQuote: (q) => update((s) => void (s.quotes = upsertById(s.quotes, [q]))),
+  deleteQuote: (id) => update((s) => void (s.quotes = s.quotes.filter((q) => q.id !== id))),
+};

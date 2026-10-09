@@ -7,6 +7,7 @@ export { diffBlocks, type BlockDiff } from './diff';
 export { computeBedtime, latestFeasibleWake } from './bedtime';
 export { priorityScore, urgency, baseUrgency, rankTasks, pickBig3, isSchoolUrgent, needsDecision } from './priority';
 export { scoreDay, scoreWeek, streak } from './scoring';
-export { expandEvents } from './expand';
+export { expandEvents, confirmTentative, toInstance } from './expand';
+export { examWithinWindow } from './planWeek';
 export { travel, workPlace } from './places';
 export * from './time';

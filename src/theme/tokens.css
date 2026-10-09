@@ -1,4 +1,4 @@
-/* Every color in the app comes from these variables. Other themes are added in Phase 4. */
+/* Every color in the app comes from these variables (Appendix C). Phase 4 adds the other five themes. */
 :root,
 [data-theme='gold-cream'] {
   --bg: #fbf7ee;
@@ -6,107 +6,43 @@
   --text: #2a2418;
   --muted: #7a6f5a;
   --accent: #b8892b;
+  /* Darker accent for small text and icons on light backgrounds (gold text on cream is never used). */
+  --accent-ink: #7d5c17;
   --accent-soft: #f1e4bf;
+  --on-accent: #2a2418;
   --border: #e7dcc0;
   --win: #b8892b;
-  --half: #f1e4bf;
-  --loss: #d9cfbd;
+  --half: #e6cd86;
+  --loss: #d5ccbb;
+  --danger: #a3413a;
+  --danger-soft: #f6e1dc;
+  --edge: var(--border);
 
-  --font-heading: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
-  --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --j-body: #b5653a;
+  --j-sport: #3f7d5a;
+  --j-shs: #b8892b;
+  --j-school: #3c6e91;
+  --j-faith: #7a5c9e;
+  --j-life: #c2577a;
+
+  color-scheme: light;
+}
+
+:root {
+  --font-heading: 'Fraunces Variable', 'Iowan Old Style', Georgia, serif;
+  --font-body: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --fs-xl: 2.25rem;
+  --fs-lg: 1.375rem;
+  --fs-md: 1rem;
+  --fs-sm: 0.8125rem;
   --radius: 18px;
-  --space: 8px;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-html,
-body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--font-body);
-  font-size: 16px;
-  line-height: 1.5;
-}
-
-h1 {
-  font-family: var(--font-heading);
-  font-weight: 600;
-  font-size: 2rem;
-  margin: 0;
-}
-
-.muted {
-  color: var(--muted);
-  margin: 0;
-}
-
-.hello {
-  min-height: 100dvh;
-  display: grid;
-  place-items: center;
-  padding: calc(var(--space) * 2);
-}
-
-.card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: calc(var(--space) * 4);
-  display: grid;
-  justify-items: center;
-  gap: calc(var(--space) * 2);
-  width: min(100%, 360px);
-}
-
-.chip {
-  margin: 0;
-  padding: 4px 12px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: var(--accent-soft);
-  font-size: 0.875rem;
-}
-
-.chip[data-state='offline'] {
-  background: var(--loss);
-}
-
-.ring {
-  width: 120px;
-  height: 120px;
-  transform: rotate(-90deg);
-}
-
-.ring circle {
-  fill: none;
-  stroke-width: 10;
-}
-
-.ring-track {
-  stroke: var(--accent-soft);
-}
-
-.ring-fill {
-  stroke: var(--accent);
-  stroke-linecap: round;
-  stroke-dasharray: 327;
-  stroke-dashoffset: 327;
-  animation: fill 1.2s ease-out forwards;
-}
-
-@keyframes fill {
-  to {
-    stroke-dashoffset: 82;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .ring-fill {
-    animation: none;
-    stroke-dashoffset: 82;
-  }
+  --radius-sm: 12px;
+  --s1: 8px;
+  --s2: 16px;
+  --s3: 24px;
+  --s4: 32px;
+  --s5: 40px;
+  --tabbar-h: 64px;
+  --sidebar-w: 220px;
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
 }

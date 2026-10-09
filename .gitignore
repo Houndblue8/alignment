@@ -13,3 +13,4 @@ playwright-report/
 coverage/
 .DS_Store
 *.tsbuildinfo
+!.env.e2e

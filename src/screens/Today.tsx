@@ -1,4 +1,4 @@
-import { Check, MapPin, MoreVertical, Pin, RefreshCw, SkipForward } from 'lucide-react';
+import { Car, Check, MapPin, MoreVertical, Pin, RefreshCw, SkipForward } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { journeyLabel } from '../data/model';
@@ -9,6 +9,7 @@ import { useApp } from '../state/store';
 import { AnchorButton } from '../ui/AnchorButton';
 import { Big3Section } from '../ui/Big3';
 import { Sheet } from '../ui/Sheet';
+import { JOURNEY_ICON, KIND_ICON } from '../ui/icons';
 
 export function Today() {
   const s = useApp((a) => a.s)!;
@@ -129,12 +130,14 @@ function BlockRow({ b, nowMin }: { b: Block; nowMin: number }) {
   const task = b.taskId ? s.tasks.find((t) => t.id === b.taskId) : undefined;
   const journey = task?.journey ?? kindJourney(b.kind);
   const isNow = b.start <= nowMin && nowMin < b.end;
+  const Icon = task ? JOURNEY_ICON[task.journey] : KIND_ICON[b.kind];
 
   if (b.kind === 'travel') {
     return (
       <div className="tl-row" id={b.id}>
         <span className="tl-time">{fmtTime(b.start)}</span>
-        <div className="tl-card travel small muted">
+        <div className="tl-card travel small muted row">
+          <Car size={14} aria-hidden="true" />
           {b.title}, {shortDuration(b.end - b.start)}
         </div>
       </div>
@@ -153,6 +156,7 @@ function BlockRow({ b, nowMin }: { b: Block; nowMin: number }) {
           data-testid="block"
         >
           <span className="row">
+            <Icon size={16} strokeWidth={1.75} aria-hidden="true" className="kind-icon" />
             <span className="title grow clip">{b.title}</span>
             {b.pinned && <Pin size={14} aria-label="Pinned" />}
             {b.status === 'done' && <Check size={16} aria-label="Done" />}

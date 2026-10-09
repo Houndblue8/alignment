@@ -88,6 +88,16 @@ Each entry: what was decided, who decided, and what it replaces in the brief. Pl
 - Coach line: one Haiku call per day, cached. Away 2 or more days: the brief's message plus a 5 minute start. Away 5 or more: a firm message and a Lost Day reset button.
 - Decision after 3 deferrals: Do it today (top of the Big 3), Schedule it (sets the date as its deadline), Delegate (AI writes steps and any message draft onto the task), Drop it.
 
+### D13. Look (Phase 4, 2026-10-10)
+- Six themes with the brief's exact base colors. Derived colors (text on accent, Half and Loss chips, journey colors, an accent dark enough for small text) are chosen per theme and checked by a contrast test (4.5:1 for text). Three adjustments to reach 4.5:1: Sakura muted #8A6C77 to #836571, Ocean muted #587887 to #537281, Black and Gold Half chip #6F5D1E.
+- The theme saves to the account and to the browser (only to paint the right background before the app loads). The account setting wins. Color fades play on a theme switch, never on load.
+- Black Panther: chrome (#C9CED6) on thin card edges at low opacity, icons, the ring outline (with a faint metallic gradient) and the signature underline. Forest and Ember: the ember second accent marks streak counters and the Half chip.
+- Contract to Self is laid out as a signed document: an opening line ("I, ___, make this agreement with myself on ..."), roman-numbered clauses with symbols, a signature line, and a wax-style seal. Signing: the name is written in a script font (Great Vibes) left to right over 2 seconds, the line draws, the label and date fade in, the seal stamps, it holds, then fades and slides up. Tap skips. Reduced motion: no movement, everything appears at once.
+- Symbols: every block type and journey has a line icon (Lucide). Screens settle in with a short staggered fade-up. A day turning into a Win plays a glow on the Home ring and says "That day is a Win."
+- Sheets render at the top level of the page so animated cards can never cover them.
+- Install hint: an Install button where the browser offers one (Android, desktop Chrome or Edge); on iPhone, "tap Share, then Add to Home Screen". Dismissible once.
+- Higgsfield: optional background clips listed in public/media/manifest.json, with prompts and export specs in docs/HIGGSFIELD.md. Nothing renders until a clip is added.
+
 ## Claude's defaults (change any by telling me)
 
 - 5 minute buffers between blocks, except inside the morning routine (D2).

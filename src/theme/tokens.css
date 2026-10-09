@@ -1,4 +1,7 @@
-/* Every color in the app comes from these variables (Appendix C). Phase 4 adds the other five themes. */
+/* Every color in the app comes from these variables (Appendix C). Base colors are the brief's exact values.
+   Derived tokens (accent-ink, on-accent, half, loss, journey colors) are chosen for readable contrast;
+   src/theme/contrast.test.ts checks them in every theme. */
+
 :root,
 [data-theme='gold-cream'] {
   --bg: #fbf7ee;
@@ -6,31 +9,185 @@
   --text: #2a2418;
   --muted: #7a6f5a;
   --accent: #b8892b;
-  /* Darker accent for small text and icons on light backgrounds (gold text on cream is never used). */
-  --accent-ink: #7d5c17;
   --accent-soft: #f1e4bf;
-  --on-accent: #2a2418;
   --border: #e7dcc0;
+  /* Accent dark enough for small text and icons (gold text on cream is never used). */
+  --accent-ink: #7d5c17;
+  --on-accent: #2a2418;
+  --edge: var(--border);
   --win: #b8892b;
+  --on-win: #2a2418;
   --half: #e6cd86;
+  --on-half: #2a2418;
   --loss: #d5ccbb;
+  --on-loss: #2a2418;
   --danger: #a3413a;
   --danger-soft: #f6e1dc;
-  --edge: var(--border);
-
+  --line: var(--accent);
   --j-body: #b5653a;
   --j-sport: #3f7d5a;
   --j-shs: #b8892b;
   --j-school: #3c6e91;
   --j-faith: #7a5c9e;
   --j-life: #c2577a;
-
   color-scheme: light;
+}
+
+[data-theme='sakura'] {
+  --bg: #fff6f8;
+  --card: #ffffff;
+  --text: #3a2830;
+  /* Brief: #8A6C77, darkened a touch to reach 4.5:1 on the page background. */
+  --muted: #836571;
+  --accent: #d4688a;
+  --accent-soft: #fbdde7;
+  --border: #f2d5de;
+  --accent-ink: #a23d61;
+  --on-accent: #1f1216;
+  --edge: var(--border);
+  --win: #d4688a;
+  --on-win: #1f1216;
+  --half: #f4b6c9;
+  --on-half: #3a2830;
+  --loss: #e6d6db;
+  --on-loss: #3a2830;
+  --danger: #a3413a;
+  --danger-soft: #fbe1e4;
+  --line: var(--accent);
+  --j-body: #c0663e;
+  --j-sport: #3d8a68;
+  --j-shs: #c9922e;
+  --j-school: #4a76a8;
+  --j-faith: #8c63b0;
+  --j-life: #d4688a;
+  color-scheme: light;
+}
+
+[data-theme='ocean'] {
+  --bg: #f1f7fa;
+  --card: #ffffff;
+  --text: #12303f;
+  /* Brief: #587887, darkened a touch to reach 4.5:1 on the page background. */
+  --muted: #537281;
+  --accent: #1f7fa8;
+  --accent-soft: #d4eaf4;
+  --border: #cde2eb;
+  --accent-ink: #17668a;
+  --on-accent: #ffffff;
+  --edge: var(--border);
+  --win: #1f7fa8;
+  --on-win: #ffffff;
+  --half: #a9d3e8;
+  --on-half: #12303f;
+  --loss: #d3dee3;
+  --on-loss: #12303f;
+  --danger: #a3413a;
+  --danger-soft: #f6e1dc;
+  --line: var(--accent);
+  --j-body: #c0663e;
+  --j-sport: #2f8a5f;
+  --j-shs: #b8892b;
+  --j-school: #1f7fa8;
+  --j-faith: #6f5aa8;
+  --j-life: #c2577a;
+  color-scheme: light;
+}
+
+[data-theme='forest-ember'] {
+  --bg: #f3f5ec;
+  --card: #ffffff;
+  --text: #1e2a1b;
+  --muted: #64705c;
+  --accent: #2f6b3f;
+  --accent-2: #d9742b;
+  --accent-soft: #dce8d2;
+  --border: #d6dec8;
+  --accent-ink: #2f6b3f;
+  --on-accent: #ffffff;
+  --edge: var(--border);
+  --win: #2f6b3f;
+  --on-win: #ffffff;
+  /* Second accent: streak counters and the Half chip. */
+  --half: #d9742b;
+  --on-half: #1e2a1b;
+  --loss: #cfd5c6;
+  --on-loss: #1e2a1b;
+  --danger: #a3413a;
+  --danger-soft: #f6e1dc;
+  --line: var(--accent);
+  --j-body: #d9742b;
+  --j-sport: #2f6b3f;
+  --j-shs: #b8892b;
+  --j-school: #3c6e91;
+  --j-faith: #7a5c9e;
+  --j-life: #b8536f;
+  color-scheme: light;
+}
+
+[data-theme='black-gold'] {
+  --bg: #0b0b0c;
+  --card: #161617;
+  --text: #f5f0e1;
+  --muted: #a8a090;
+  --accent: #d4af37;
+  --accent-soft: #2a2614;
+  --border: #2b2a26;
+  --accent-ink: #d4af37;
+  --on-accent: #0b0b0c;
+  --edge: var(--border);
+  --win: #d4af37;
+  --on-win: #0b0b0c;
+  --half: #6f5d1e;
+  --on-half: #f5f0e1;
+  --loss: #3a3833;
+  --on-loss: #f5f0e1;
+  --danger: #e0796f;
+  --danger-soft: #3a1d1a;
+  --line: var(--accent);
+  --j-body: #e08a5c;
+  --j-sport: #6cc08f;
+  --j-shs: #d4af37;
+  --j-school: #6fa8d6;
+  --j-faith: #b79be0;
+  --j-life: #e383a4;
+  color-scheme: dark;
+}
+
+[data-theme='black-panther'] {
+  --bg: #09080d;
+  --card: #14111c;
+  --text: #ede9f6;
+  --muted: #9f96b5;
+  --accent: #8b5cf6;
+  --accent-soft: #2a1f45;
+  --border: #2e2a3a;
+  --chrome: #c9ced6;
+  --accent-ink: #b197fc;
+  --on-accent: #09080d;
+  /* Chrome: thin card edges at low opacity, the ring outline and the signature underline. */
+  --edge: rgb(201 206 214 / 0.22);
+  --win: #8b5cf6;
+  --on-win: #09080d;
+  --half: #5b3fa0;
+  --on-half: #ede9f6;
+  --loss: #5e3f4b;
+  --on-loss: #ede9f6;
+  --danger: #f08b9b;
+  --danger-soft: #3a1622;
+  --line: var(--chrome);
+  --j-body: #e08a5c;
+  --j-sport: #6cc08f;
+  --j-shs: #d4af37;
+  --j-school: #7fb2e0;
+  --j-faith: #b197fc;
+  --j-life: #e383a4;
+  color-scheme: dark;
 }
 
 :root {
   --font-heading: 'Fraunces Variable', 'Iowan Old Style', Georgia, serif;
   --font-body: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-script: 'Great Vibes', 'Snell Roundhand', 'Brush Script MT', cursive;
   --fs-xl: 2.25rem;
   --fs-lg: 1.375rem;
   --fs-md: 1rem;

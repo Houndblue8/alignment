@@ -7,6 +7,12 @@ import { haptic } from '../lib/haptics';
 import { dayOf, isTaskDone } from '../state/planning';
 import { useApp } from '../state/store';
 import { Sheet } from './Sheet';
+import { JOURNEY_ICON } from './icons';
+
+function JIcon({ journey }: { journey: Journey }) {
+  const I = JOURNEY_ICON[journey];
+  return <I size={16} strokeWidth={1.75} aria-hidden="true" className="journey-icon" style={journeyStyle(journey)} />;
+}
 
 export function Big3Section() {
   const s = useApp((a) => a.s)!;
@@ -46,6 +52,7 @@ export function Big3Section() {
               >
                 {done && <Check size={16} strokeWidth={3} />}
               </button>
+              <JIcon journey={t.journey} />
               <span className="grow clip">{t.title}</span>
               <span className="chip">{shortDuration(t.estimatedMinutes)}</span>
             </div>

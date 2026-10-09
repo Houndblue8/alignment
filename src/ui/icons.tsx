@@ -1,0 +1,53 @@
+import {
+  BookOpen,
+  Briefcase,
+  CalendarDays,
+  Car,
+  Church,
+  Coffee,
+  Dumbbell,
+  GraduationCap,
+  HeartPulse,
+  Moon,
+  Rocket,
+  ShowerHead,
+  Snowflake,
+  Sparkles,
+  Sunrise,
+  Sunset,
+  Trophy,
+  Users,
+  UtensilsCrossed,
+  Volleyball,
+  type LucideIcon,
+} from 'lucide-react';
+import type { BlockKind, Journey } from '../planner';
+
+export const JOURNEY_ICON: Record<Journey, LucideIcon> = {
+  body: HeartPulse,
+  sport: Trophy,
+  shs: Rocket,
+  school: GraduationCap,
+  faith: Church,
+  life: Users,
+};
+
+export const KIND_ICON: Record<BlockKind, LucideIcon> = {
+  anchor_cold_shower: Snowflake,
+  anchor_walk: Sunrise,
+  shs_floor: Rocket,
+  breakfast: Coffee,
+  meal: UtensilsCrossed,
+  class: GraduationCap,
+  event: CalendarDays,
+  practice: Volleyball,
+  library_work: BookOpen,
+  work: Briefcase,
+  workout: Dumbbell,
+  shower: ShowerHead,
+  misc: Sparkles,
+  travel: Car,
+  buffer: Sparkles,
+  winddown: Sunset,
+  bed: Moon,
+};

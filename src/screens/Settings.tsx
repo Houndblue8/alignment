@@ -9,6 +9,8 @@ import { ai } from '../ops/ai';
 import { LIVE_CASES, runLiveCheck, type LiveResult } from '../ops/liveCheck';
 import { useApp } from '../state/store';
 import { Sheet } from '../ui/Sheet';
+import { ThemePicker } from '../ui/ThemePicker';
+import { themeName } from '../theme/themes';
 
 const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const ORDER = [1, 2, 3, 4, 5, 6, 0];
@@ -137,8 +139,8 @@ export function Settings() {
         </label>
       </Group>
 
-      <Group title="Theme" summary="Gold and Cream">
-        <p className="small muted">Gold and Cream. Five more themes arrive in Phase 4.</p>
+      <Group title="Theme" summary={themeName(s.settings.theme)}>
+        <ThemePicker />
       </Group>
 
       <Group title="Talk box check" summary="Live AI test, about 5 cents">

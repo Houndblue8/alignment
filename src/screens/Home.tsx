@@ -1,12 +1,13 @@
 import { ChevronRight } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { fmtTime, fromHHMM } from '../lib/format';
 import { addDays, expandEvents, weekStart, weekday } from '../planner';
-import { anchorStreaks, dayOf, nextBlock, quoteFor, seasonRecord, todayProgress, weekResults } from '../state/planning';
+import { anchorStreaks, dayOf, nextBlock, quoteFor, resultFor, seasonRecord, todayProgress, weekResults } from '../state/planning';
 import { useApp } from '../state/store';
 import { Big3Section } from '../ui/Big3';
 import { AwayMessage, CoachLine, Decisions } from '../ui/HomeExtras';
+import { InstallHint } from '../ui/InstallHint';
 import { Ring } from '../ui/Ring';
 import { SeriesBar, WeekCircles } from '../ui/Series';
 
@@ -24,20 +25,26 @@ export function Home() {
   const quote = quoteFor(s, now.date);
   const bed = rec.plan.bedtime;
   const firstLine = s.vision.identity.split(/(?<=\.)\s/)[0] ?? s.vision.identity;
+  const isWin = rec.checkinDone && resultFor(s, now.date) === 'win';
+  const showToast = useApp((a) => a.showToast);
+  const wasWin = useRef(isWin);
+  useEffect(() => {
+    if (isWin && !wasWin.current) showToast('That day is a Win.');
+    wasWin.current = isWin;
+  }, [isWin, showToast]);
 
   return (
     <>
+      <InstallHint />
       <AwayMessage />
       <CoachLine />
       <IsaacPrompt />
       <CodeRedHint />
       <Decisions />
 
-      <section className="card pad stack lg" style={{ justifyItems: 'center' }}>
-        <Ring value={progress.done} max={progress.total} label={`${progress.done} of ${progress.total} done today`}>
-          <span className="big">
-            {progress.done}/{progress.total}
-          </span>
+      <section className={`card pad stack lg ${isWin ? 'win-glow' : ''}`} style={{ justifyItems: 'center' }}>
+        <Ring value={progress.done} max={progress.total} label={isWin ? 'Today is a Win' : `${progress.done} of ${progress.total} done today`}>
+          <span className="big">{isWin ? 'Win' : `${progress.done}/${progress.total}`}</span>
           <span className="small muted">today</span>
         </Ring>
         {next ? (
@@ -77,11 +84,11 @@ export function Home() {
           <span className="small muted">Season</span>
         </div>
         <div className="tile">
-          <span className="num">{streaks.coldShower}</span>
+          <span className="num streak">{streaks.coldShower}</span>
           <span className="small muted">Cold shower streak</span>
         </div>
         <div className="tile">
-          <span className="num">{streaks.walk}</span>
+          <span className="num streak">{streaks.walk}</span>
           <span className="small muted">Walk streak</span>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import { useEffect, useRef, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 
 /** A bottom sheet on phones and a centered dialog on laptops. Escape or the backdrop closes it. */
@@ -14,7 +15,8 @@ export function Sheet({ title, onClose, children }: { title: string; onClose: ()
       prev?.focus();
     };
   }, [onClose]);
-  return (
+  // Rendered at the top of the page so no animated or transformed card can cover or clip it.
+  return createPortal(
     <div className="sheet-backdrop" onClick={onClose}>
       <div className="sheet" role="dialog" aria-modal="true" aria-label={title} ref={ref} onClick={(e) => e.stopPropagation()}>
         <div className="row between">
@@ -25,6 +27,7 @@ export function Sheet({ title, onClose, children }: { title: string; onClose: ()
         </div>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

@@ -1,0 +1,269 @@
+/* Contract to Self: a document, and the signing moment (Appendix C 4). */
+.contract-screen {
+  position: relative;
+  transition:
+    opacity 0.5s var(--ease),
+    transform 0.5s var(--ease);
+}
+.contract-screen.leaving {
+  opacity: 0;
+  transform: translateY(-16px);
+}
+.contract-doc {
+  position: relative;
+  background: var(--card);
+  border: 1px solid var(--edge);
+  border-radius: 6px;
+  padding: var(--s4) var(--s3);
+  display: grid;
+  gap: var(--s3);
+  box-shadow:
+    0 1px 0 var(--border),
+    0 18px 40px -24px rgb(0 0 0 / 0.35);
+}
+/* A thin inset rule, like a printed agreement. */
+.contract-doc::before {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  pointer-events: none;
+}
+.doc-head {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  gap: var(--s1);
+}
+.eyebrow {
+  font-size: var(--fs-sm);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent-ink);
+}
+.doc-intro {
+  font-family: var(--font-heading);
+  max-width: 34ch;
+}
+.blank {
+  display: inline-block;
+  min-width: 8ch;
+  border-bottom: 1px solid var(--line);
+  padding: 0 4px;
+}
+.blank.filled {
+  font-family: var(--font-script);
+  font-size: 1.35em;
+  line-height: 1;
+}
+.clauses {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: var(--s2);
+}
+.clause {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  gap: var(--s1);
+  align-items: start;
+  animation: settle 0.5s var(--ease) both;
+}
+.clause-num {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  color: var(--accent-ink);
+  font-family: var(--font-heading);
+  font-size: var(--fs-sm);
+}
+.clause p {
+  border-left: 1px solid var(--border);
+  padding-left: var(--s2);
+}
+.sign-input {
+  font-family: var(--font-heading);
+}
+.signature-block {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: var(--s2);
+}
+.sig {
+  display: grid;
+  gap: 4px;
+}
+.sig-text {
+  font-family: var(--font-script);
+  font-size: clamp(2.2rem, 9vw, 3.2rem);
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  clip-path: inset(0 100% 0 0);
+  animation: write 2s cubic-bezier(0.45, 0.05, 0.3, 1) 0.15s forwards;
+}
+.sig-line {
+  height: 1px;
+  background: var(--line);
+  transform: scaleX(0);
+  transform-origin: left;
+  animation: draw-line 0.6s var(--ease) 1.9s forwards;
+}
+[data-theme='black-panther'] .sig-line {
+  background: linear-gradient(90deg, #8a9099, #f2f4f7 50%, #8a9099);
+  height: 1.5px;
+}
+.sig-label,
+.sig-date,
+.sig-skip {
+  opacity: 0;
+  animation: reveal 0.6s var(--ease) 2.3s forwards;
+}
+.sig-date {
+  grid-column: 1 / -1;
+}
+.sig-skip {
+  grid-column: 1 / -1;
+  animation-delay: 3s;
+}
+.seal-stamp {
+  opacity: 0;
+  transform: scale(1.7) rotate(-18deg);
+  animation: stamp 0.45s cubic-bezier(0.2, 1.4, 0.4, 1) 2.45s forwards;
+}
+.seal-wax {
+  fill: var(--accent);
+}
+.seal-ring {
+  fill: none;
+  stroke: var(--on-accent);
+  stroke-width: 1.5;
+  opacity: 0.55;
+}
+.seal-ring.thin {
+  stroke-width: 0.8;
+  opacity: 0.35;
+}
+.seal-letter {
+  font-family: var(--font-heading);
+  font-size: 34px;
+  font-weight: 600;
+  fill: var(--on-accent);
+}
+.doc-mark {
+  opacity: 0.9;
+}
+
+@keyframes reveal {
+  to {
+    opacity: 1;
+  }
+}
+@keyframes write {
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+@keyframes draw-line {
+  to {
+    transform: scaleX(1);
+  }
+}
+@keyframes stamp {
+  60% {
+    opacity: 1;
+    transform: scale(0.94) rotate(-6deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(-8deg);
+  }
+}
+@keyframes settle {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+/* Optional Higgsfield background behind the contract. */
+.hero-media {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+}
+.hero-media video,
+.hero-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.22;
+}
+
+/* Screens settle in: each top-level card fades up, slightly staggered. */
+.main > * {
+  animation: settle 0.45s var(--ease) both;
+}
+.main > *:nth-child(2) {
+  animation-delay: 40ms;
+}
+.main > *:nth-child(3) {
+  animation-delay: 80ms;
+}
+.main > *:nth-child(4) {
+  animation-delay: 120ms;
+}
+.main > *:nth-child(5) {
+  animation-delay: 160ms;
+}
+.main > *:nth-child(n + 6) {
+  animation-delay: 200ms;
+}
+
+/* The Win moment: the ring glows and a ring of light expands once. */
+.win-glow {
+  position: relative;
+}
+.win-glow::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius);
+  box-shadow: 0 0 0 0 var(--accent);
+  animation: win-pulse 1.4s var(--ease) 2;
+  pointer-events: none;
+}
+@keyframes win-pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 60%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 22px transparent;
+  }
+}
+
+/* Reduced motion: no movement, the signature simply fades in. */
+@media (prefers-reduced-motion: reduce) {
+  .sig-text {
+    clip-path: none;
+    animation: none;
+  }
+  .sig-line {
+    transform: none;
+  }
+  .sig-label,
+  .sig-date,
+  .sig-skip,
+  .seal-stamp {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+  .contract-screen.leaving {
+    transform: none;
+  }
+}

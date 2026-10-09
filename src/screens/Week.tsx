@@ -43,11 +43,11 @@ export function Week() {
           <span className="small muted">Season</span>
         </div>
         <div className="tile">
-          <span className="num">{streaks.coldShower}</span>
+          <span className="num streak">{streaks.coldShower}</span>
           <span className="small muted">Cold shower streak</span>
         </div>
         <div className="tile">
-          <span className="num">{streaks.walk}</span>
+          <span className="num streak">{streaks.walk}</span>
           <span className="small muted">Walk streak</span>
         </div>
       </div>

@@ -10,6 +10,15 @@
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <title>Alignment</title>
+    <style>
+      /* Page background per theme, painted before any script or stylesheet loads (no flash). */
+      html, body { background: #fbf7ee; margin: 0; }
+      html[data-theme='sakura'], html[data-theme='sakura'] body { background: #fff6f8; }
+      html[data-theme='ocean'], html[data-theme='ocean'] body { background: #f1f7fa; }
+      html[data-theme='forest-ember'], html[data-theme='forest-ember'] body { background: #f3f5ec; }
+      html[data-theme='black-gold'], html[data-theme='black-gold'] body { background: #0b0b0c; }
+      html[data-theme='black-panther'], html[data-theme='black-panther'] body { background: #09080d; }
+    </style>
     <script>
       // Apply the saved theme before first paint so there is no flash.
       try {

@@ -14,9 +14,7 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
-html {
-  transition: background-color 0.25s var(--ease);
-}
+/* Color fades only after the first frame (see main.tsx), so they play on a theme switch, never on load. */
 
 /* Long words, ids and error text wrap instead of running off the screen. */
 body {
@@ -395,17 +393,17 @@ label.label {
 .result.win {
   background: var(--win);
   border-color: var(--win);
-  color: var(--on-accent);
+  color: var(--on-win);
 }
 .result.half {
   background: var(--half);
   border-color: var(--half);
-  color: var(--text);
+  color: var(--on-half);
 }
 .result.loss {
   background: var(--loss);
   border-color: var(--loss);
-  color: var(--text);
+  color: var(--on-loss);
 }
 .result.today {
   border-color: var(--accent);
@@ -839,6 +837,115 @@ label.label {
   to {
     transform: rotate(360deg);
   }
+}
+
+.kind-icon,
+.journey-icon {
+  flex: none;
+  color: var(--jc, var(--muted));
+}
+
+/* Theme picker */
+.theme-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: var(--s1);
+}
+.theme-card {
+  display: grid;
+  gap: 6px;
+  padding: 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--card);
+  cursor: pointer;
+  text-align: left;
+}
+.theme-card.on {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent);
+}
+.swatch {
+  position: relative;
+  height: 56px;
+  border-radius: 10px;
+  overflow: hidden;
+  display: block;
+}
+.swatch span {
+  position: absolute;
+}
+.swatch span:first-child {
+  left: 10px;
+  right: 10px;
+  top: 10px;
+  bottom: 10px;
+  border-radius: 8px;
+  border: 2px solid;
+}
+.swatch .dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  left: 18px;
+  top: 21px;
+}
+.swatch .bar {
+  height: 6px;
+  left: 40px;
+  right: 18px;
+  top: 25px;
+  border-radius: 999px;
+}
+
+/* Top bar */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 40px;
+  margin-bottom: calc(var(--s1) * -1);
+}
+
+/* Smooth theme changes */
+.theme-ready,
+.theme-ready body,
+.theme-ready .card,
+.theme-ready .nav,
+.theme-ready .tl-card,
+.theme-ready .tile,
+.theme-ready .btn,
+.theme-ready .sheet,
+.theme-ready .anchor,
+.theme-ready .chip {
+  transition:
+    background-color 0.3s var(--ease),
+    border-color 0.3s var(--ease),
+    color 0.3s var(--ease);
+}
+
+/* Forest and Ember: the second accent marks streaks. */
+.tile .num.streak {
+  color: var(--accent-2, inherit);
+}
+
+/* Black Panther: chrome on thin lines only, with a faint metallic sheen. */
+[data-theme='black-panther'] .card,
+[data-theme='black-panther'] .tile,
+[data-theme='black-panther'] .tl-card {
+  border-color: var(--edge);
+}
+[data-theme='black-panther'] .nav svg,
+[data-theme='black-panther'] .icon-btn svg {
+  color: var(--chrome);
+}
+.ring-outline {
+  stroke: var(--line);
+  opacity: 0.35;
+}
+[data-theme='black-panther'] .ring-outline {
+  stroke: url(#chrome-sheen);
+  opacity: 0.9;
 }
 
 details.collapse > summary {

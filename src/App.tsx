@@ -17,6 +17,8 @@ import { dayOf } from './state/planning';
 import { useApp } from './state/store';
 import { Nav } from './ui/Nav';
 import { TalkBox } from './ui/TalkBox';
+import { PaletteButton } from './ui/ThemePicker';
+import { fmtDate } from './planner';
 import { ToastView } from './ui/Toast';
 
 export function App() {
@@ -92,6 +94,10 @@ function Loaded() {
     <div className="shell with-nav">
       <Nav />
       <main className="main">
+        <header className="topbar">
+          <span className="small muted">{fmtDate(now.date)}</span>
+          <PaletteButton />
+        </header>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/today" element={<Today />} />

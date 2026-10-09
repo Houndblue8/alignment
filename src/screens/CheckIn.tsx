@@ -8,6 +8,7 @@ import { rankTasks } from '../planner';
 import { dayOf, fillBig3 } from '../state/planning';
 import { useApp } from '../state/store';
 import { AnchorButton } from '../ui/AnchorButton';
+import { HeroMedia } from '../ui/HeroMedia';
 import { NewTaskForm } from '../ui/Big3';
 import { Sheet } from '../ui/Sheet';
 
@@ -48,6 +49,7 @@ export function CheckIn() {
 
   return (
     <main className="fullscreen">
+      <HeroMedia name="checkin" />
       <div className="stack">
         <p className="small muted">Morning check-in</p>
         <h1 className="big">What time did you wake up?</h1>

@@ -1,7 +1,7 @@
 // Talk box: turns Eli's words into operations. One model call per request; the app validates the reply
 // and calls again at most once with the validation errors.
 import schema from '../_shared/ops.schema.json' with { type: 'json' };
-import { apiErrorMessage, claude, type Anthropic } from '../_shared/anthropic.ts';
+import { apiErrorMessage, createWithFallback, type Anthropic } from '../_shared/anthropic.ts';
 import { cors, env, fail, json } from '../_shared/http.ts';
 import { PARSE_SYSTEM } from '../_shared/prompts.ts';
 
@@ -56,11 +56,9 @@ Deno.serve(async (req) => {
       ],
       tool_choice: { type: 'auto' },
       messages: [{ role: 'user', content }],
-      // If a safety classifier declines, the API retries the same request on a fallback model.
-      betas: ['server-side-fallback-2026-07-01'],
-      fallbacks: 'default',
     };
-    const res = await claude().beta.messages.create(params as unknown as Anthropic.Beta.MessageCreateParamsNonStreaming);
+    // If a safety classifier declines, the API reruns the request on a fallback model (when the key allows it).
+    const res = await createWithFallback(params);
 
     if (res.stop_reason === 'refusal') return fail('The AI declined to handle that. Try rewording it.', 422);
     const call = res.content.find((b) => b.type === 'tool_use' && b.name === 'submit_ops');

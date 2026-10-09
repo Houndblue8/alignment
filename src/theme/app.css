@@ -18,6 +18,18 @@ html {
   transition: background-color 0.25s var(--ease);
 }
 
+/* Long words, ids and error text wrap instead of running off the screen. */
+body {
+  overflow-wrap: break-word;
+}
+.card,
+.banner,
+.toast,
+.sheet,
+.tl-card {
+  overflow-wrap: anywhere;
+}
+
 h1,
 h2,
 h3 {

@@ -81,6 +81,27 @@ test('18. invalid AI output is retried once, then shows an error, keeps the word
   expect(await localDb(page)).toEqual(before);
 });
 
+test('a long error message wraps inside the screen', async ({ page }) => {
+  await page.addInitScript(() => {
+    (window as unknown as { __alignmentAI: unknown }).__alignmentAI = {
+      parse: async () => {
+        throw new Error(`The AI rejected the request: 400 {"type":"error","error":{"type":"invalid_request_error","message":"${'x'.repeat(220)}"}}`);
+      },
+    };
+  });
+  await signedWithTasks(page, '2026-10-16T08:30', []);
+  await checkIn(page, '7:30');
+  await openTalk(page);
+  await page.getByTestId('talk-input').fill('anything');
+  await page.getByRole('button', { name: 'Send' }).click();
+  await expect(page.getByRole('alert')).toContainText('The AI rejected the request');
+  const overflow = await page.evaluate(() => {
+    const vw = document.documentElement.clientWidth;
+    return [...document.querySelectorAll('body *')].filter((e) => e.getBoundingClientRect().right > vw + 1).map((e) => e.className);
+  });
+  expect(overflow).toEqual([]);
+});
+
 test('19. Undo restores the exact previous state', async ({ page }) => {
   await installFakeAI(page);
   await signedWithTasks(page, '2026-10-16T08:30', [{ id: 'keep', title: 'Existing task', importance: 3 }]);

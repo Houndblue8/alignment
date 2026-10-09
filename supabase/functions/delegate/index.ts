@@ -1,5 +1,5 @@
 // Delegate (Part 8 step 11): writes the steps and drafts any message so Eli only executes.
-import { apiErrorMessage, claude, type Anthropic } from '../_shared/anthropic.ts';
+import { apiErrorMessage, createWithFallback } from '../_shared/anthropic.ts';
 import { cors, env, fail, json } from '../_shared/http.ts';
 import { DELEGATE_SYSTEM } from '../_shared/prompts.ts';
 
@@ -42,10 +42,8 @@ Deno.serve(async (req) => {
       tools: [{ name: 'submit_delegation', description: 'Steps for the task and an optional message draft.', input_schema: schema, strict: true }],
       tool_choice: { type: 'auto' },
       messages: [{ role: 'user', content: `Task (JSON): ${JSON.stringify(body.task)}` }],
-      betas: ['server-side-fallback-2026-07-01'],
-      fallbacks: 'default',
     };
-    const res = await claude().beta.messages.create(params as unknown as Anthropic.Beta.MessageCreateParamsNonStreaming);
+    const res = await createWithFallback(params);
     if (res.stop_reason === 'refusal') return fail('The AI declined this task. Try rewording it.', 422);
     const call = res.content.find((b) => b.type === 'tool_use' && b.name === 'submit_delegation');
     if (!call || call.type !== 'tool_use') return fail('The AI did not return steps. Try again.', 502);

@@ -59,6 +59,7 @@ const visionFrom = (r: Row): Vision => ({
 
 const contractTo = (c: Contract): Row => ({
   terms: c.terms,
+  locked: c.locked,
   signed_name: c.signedName,
   signed_at: c.signedAt,
   graduation_date: c.graduationDate,
@@ -69,6 +70,7 @@ const contractTo = (c: Contract): Row => ({
 });
 const contractFrom = (r: Row): Contract => ({
   terms: r.terms as string[],
+  locked: !!r.locked,
   signedName: (r.signed_name as string) ?? null,
   signedAt: (r.signed_at as string) ?? null,
   graduationDate: (r.graduation_date as string) ?? null,

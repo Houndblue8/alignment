@@ -23,6 +23,8 @@ export interface WeekInput {
   now?: number | null;
   today: {
     wakeMin: number;
+    /** Last night's recommended wake. A later wake today counts as late. */
+    expectedWakeMin?: number;
     anchors: { coldShower: AnchorStatus; walk: AnchorStatus };
     big3: string[];
     mode: Mode;
@@ -103,6 +105,7 @@ export function planWeek(input: WeekInput): DayPlan[] {
       date,
       now: i === 0 ? input.now : null,
       wakeMin: wake,
+      expectedWakeMin: i === 0 ? input.today.expectedWakeMin : wake,
       anchors: i === 0 ? input.today.anchors : { coldShower: { done: false }, walk: { done: false } },
       events,
       tasks: open,

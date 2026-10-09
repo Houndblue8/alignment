@@ -29,6 +29,8 @@ export interface Vision {
 
 export interface Contract {
   terms: string[];
+  /** Locked contracts can be read but not edited. */
+  locked: boolean;
   signedName: string | null;
   signedAt: string | null;
   graduationDate: string | null;

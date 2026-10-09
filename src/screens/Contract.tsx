@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useApp } from '../state/store';
+import { ContractEditor } from '../ui/ContractEditor';
 import { ProfitBar } from '../ui/ProfitBar';
 
 /**
@@ -11,6 +12,7 @@ export function Contract() {
   const sign = useApp((a) => a.signContract);
   const [name, setName] = useState('');
   const [signed, setSigned] = useState<string | null>(null);
+  const [editing, setEditing] = useState(false);
   const saved = useRef(false);
 
   const finish = () => {
@@ -33,17 +35,28 @@ export function Contract() {
         <p className="small muted">Contract to Self</p>
         <h1 className="big">I already decided.</h1>
       </div>
-      <ol className="stack" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-        {s.contract.terms.map((t, i) => (
-          <li key={i} className="card row" style={{ alignItems: 'flex-start' }}>
-            <span className="chip" aria-hidden="true">
-              {i + 1}
-            </span>
-            <span>{t}</span>
-          </li>
-        ))}
-      </ol>
-      {!signed ? (
+      {editing ? (
+        <ContractEditor onSaved={() => setEditing(false)} />
+      ) : (
+        <>
+          <ol className="stack" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+            {s.contract.terms.map((t, i) => (
+              <li key={i} className="card row" style={{ alignItems: 'flex-start' }}>
+                <span className="chip" aria-hidden="true">
+                  {i + 1}
+                </span>
+                <span>{t}</span>
+              </li>
+            ))}
+          </ol>
+          {!signed && (
+            <button className="btn ghost" style={{ justifySelf: 'start' }} onClick={() => setEditing(true)}>
+              Edit the terms
+            </button>
+          )}
+        </>
+      )}
+      {editing ? null : !signed ? (
         <form
           className="stack lg"
           onSubmit={(e) => {

@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import { JOURNEYS, type Big3Item, type TaskRow } from '../data/model';
 import { journeyStyle, shortDuration } from '../lib/format';
 import type { Journey, WorkType } from '../planner';
+import { haptic } from '../lib/haptics';
 import { dayOf, isTaskDone } from '../state/planning';
 import { useApp } from '../state/store';
 import { Sheet } from './Sheet';
@@ -38,7 +39,10 @@ export function Big3Section() {
                 role="checkbox"
                 aria-checked={done}
                 aria-label={`${t.title} done`}
-                onClick={() => setTaskDone(t.id, !done)}
+                onClick={() => {
+                  if (!done) haptic();
+                  void setTaskDone(t.id, !done);
+                }}
               >
                 {done && <Check size={16} strokeWidth={3} />}
               </button>

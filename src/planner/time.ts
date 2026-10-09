@@ -54,7 +54,41 @@ export function fmtDuration(min: number): string {
   return `${hs} ${m} minutes`;
 }
 
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+/** True when Pacific Daylight Time applies: second Sunday of March to the first Sunday of November. */
+export function isPacificDst(date: string): boolean {
+  const y = Number(date.slice(0, 4));
+  const nthSunday = (month: number, n: number) => {
+    const first = `${y}-${String(month).padStart(2, '0')}-01`;
+    return addDays(first, ((7 - weekday(first)) % 7) + (n - 1) * 7);
+  };
+  return date >= nthSunday(3, 2) && date < nthSunday(11, 1);
+}
+
+/** San Luis Obispo, CA. */
+export const SLO = { lat: 35.2828, lon: -120.6596 };
+
+/** Local sunset (minutes from midnight, Pacific time) using the NOAA solar equations. Accurate to a few minutes. */
+export function sunsetMin(date: string, where = SLO): number {
+  const rad = Math.PI / 180;
+  const n = diffDays(`${date.slice(0, 4)}-01-01`, date) + 1;
+  const g = ((2 * Math.PI) / 365) * (n - 1);
+  const eqTime =
+    229.18 * (0.000075 + 0.001868 * Math.cos(g) - 0.032077 * Math.sin(g) - 0.014615 * Math.cos(2 * g) - 0.040849 * Math.sin(2 * g));
+  const decl =
+    0.006918 -
+    0.399912 * Math.cos(g) +
+    0.070257 * Math.sin(g) -
+    0.006758 * Math.cos(2 * g) +
+    0.000907 * Math.sin(2 * g) -
+    0.002697 * Math.cos(3 * g) +
+    0.00148 * Math.sin(3 * g);
+  const lat = where.lat * rad;
+  const ha = Math.acos(Math.cos(90.833 * rad) / (Math.cos(lat) * Math.cos(decl)) - Math.tan(lat) * Math.tan(decl)) / rad;
+  const utc = 720 - 4 * (where.lon - ha) - eqTime;
+  return Math.round(utc + (isPacificDst(date) ? -7 : -8) * 60);
+}
+
+const MONTHS =['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 /** "2026-10-14" -> "Wednesday, Oct 14". */

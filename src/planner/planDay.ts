@@ -9,7 +9,7 @@ import { isFlexibleEvent, pausedByCodeRed } from './expand';
 import { onCampus, placeName, travel, workPlace } from './places';
 import { isSchoolUrgent, rankTasks } from './priority';
 import { RULES } from './rules';
-import { ceil5, fmtDuration, fmtTime } from './time';
+import { ceil5, diffDays, fmtDuration, fmtTime, sunsetMin } from './time';
 import { HOME, Timeline, type Spacing } from './timeline';
 import type { Block, BlockKind, DayInput, DayPlan, EventInstance, Task, WorkoutType } from './types';
 
@@ -22,10 +22,14 @@ interface Built {
   unmet: boolean;
 }
 
-/** Cuts are only applied when they make room: the lowest level that fits everything protected wins. */
+/**
+ * Cuts (Part 5 step 12) only happen after a late wake, and only when they make room: the lowest level that
+ * fits everything protected wins. On a normal day nothing is cut; a warning names any Big 3 item with no time.
+ */
 export function planDay(input: DayInput): DayPlan {
   const base = buildDay(input, CUT.none);
-  if (input.mode === 'lostDay' || !base.unmet) return base.plan;
+  const lateWake = input.wakeMin > (input.expectedWakeMin ?? input.settings.wakeTargetMin) + RULES.lateWakeGrace;
+  if (input.mode === 'lostDay' || !base.unmet || !lateWake) return base.plan;
   for (let level = CUT.miscAndGeneral; level <= CUT.floor; level++) {
     const built = buildDay(input, level);
     if (!built.unmet) return built.plan;
@@ -48,8 +52,7 @@ function buildDay(input: DayInput, level: number): Built {
   const warnings: string[] = [];
   const notes: string[] = [];
   const cuts: { level: number; text: string }[] = [];
-  const late = W > settings.wakeTargetMin;
-  const cutPrefix = late ? `Late start at ${fmtTime(W)}. ` : 'Tight day. ';
+  const cutPrefix = `Late start at ${fmtTime(W)}. `;
   const tl = new Timeline(places, ws);
 
   const mk =
@@ -460,20 +463,30 @@ function buildDay(input: DayInput, level: number): Built {
     if (libraryWindow.end - at >= 15) tl.add(mk('library_work', '1', 'Library work', 'library')(at, libraryWindow.end - at));
   }
 
+  // Evenings are free: work and study end at sunset. Only something due within a day (or Code Red school
+  // work) may run later, at the library on campus days or at home, until the evening wind-down.
+  const workEnd = Math.min(dayEnd, Math.floor(sunsetMin(date) / 5) * 5);
+  const lateOk = (t: Task) => mode === 'codeRed' || (t.deadline !== null && diffDays(date, t.deadline) <= 1);
+  let eveningKept = false;
   const placeTask = (t: Task) => {
-    while ((remaining[t.id] ?? 0) > 0) {
-      const rem = remaining[t.id]!;
-      if (placedToday[t.id] && rem < RULES.absorbUnder) {
-        remaining[t.id] = 0;
-        return;
+    const passes: [string, number, number][] = [[workLoc, ws, workEnd]];
+    if (lateOk(t)) passes.push([campusDay ? 'library' : HOME, Math.max(ws, workEnd), dayEnd]);
+    for (const [loc, lo, hi] of passes) {
+      while ((remaining[t.id] ?? 0) > 0) {
+        const rem = remaining[t.id]!;
+        if (placedToday[t.id] && rem < RULES.absorbUnder) {
+          remaining[t.id] = 0;
+          return;
+        }
+        const n = (chunkCount[t.id] ?? 0) + 1;
+        const r = tl.findFlex(workMk('work', t, n, loc), Math.min(RULES.chunkMin, rem), Math.min(RULES.chunkMax, rem), lo, hi);
+        if (!r) break;
+        nextChunk(t);
+        tl.add(workMk('work', t, n, loc)(r.start, r.len));
+        record(t, r.len);
       }
-      const n = (chunkCount[t.id] ?? 0) + 1;
-      const r = tl.findFlex(workMk('work', t, n, workLoc), Math.min(RULES.chunkMin, rem), Math.min(RULES.chunkMax, rem), ws, dayEnd);
-      if (!r) return;
-      nextChunk(t);
-      tl.add(workMk('work', t, n, workLoc)(r.start, r.len));
-      record(t, r.len);
     }
+    if ((remaining[t.id] ?? 0) > 0 && !lateOk(t)) eveningKept = true;
   };
 
   let floorUnmet = false;
@@ -492,7 +505,7 @@ function buildDay(input: DayInput, level: number): Built {
         loc,
       );
     const findFloor = (len: number) =>
-      bestFlex(floorMk(len), [HOME, workLoc], len, len, 720, dayEnd) ?? bestFlex(floorMk(len), [HOME, workLoc], len, len, ws, dayEnd);
+      bestFlex(floorMk(len), [HOME, workLoc], len, len, 720, workEnd) ?? bestFlex(floorMk(len), [HOME, workLoc], len, len, ws, workEnd);
     if (!pinnedIds.has(floorMk(RULES.shsFloorMin)(HOME)(0, 0).id)) {
       const minimal = minimalFloor(mode, input.examWithin7, level);
       let len: number = minimal ? RULES.shsFloorMinimal : RULES.shsFloorMin;
@@ -586,6 +599,8 @@ function buildDay(input: DayInput, level: number): Built {
     }
     notes.unshift(`Lost Day. Salvage wins, easiest first: ${salvage.join(', ')}.`);
   }
+
+  if (eveningKept && working) notes.push(`Evening is free after sunset (${fmtTime(workEnd)}). Work that did not fit moves to another day.`);
 
   // 10. Overflow and deadlines.
   for (const t of pool) {

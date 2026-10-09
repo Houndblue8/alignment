@@ -301,7 +301,11 @@ function PlaceSheet({ initial, onClose }: { initial: Place; onClose: () => void 
   const savePlace = useApp((a) => a.savePlace);
   const [p, setP] = useState(initial);
   return (
-    <Sheet title={p.name} onClose={onClose}>
+    <Sheet title="Edit place" onClose={onClose}>
+      <label className="label">
+        Name
+        <input className="field" value={p.name} onChange={(e) => setP({ ...p, name: e.target.value })} />
+      </label>
       <label className="label">
         Minutes from home
         <input className="field" type="number" min={0} value={p.minutesFromHome} onChange={(e) => setP({ ...p, minutesFromHome: Number(e.target.value) })} />
@@ -316,8 +320,9 @@ function PlaceSheet({ initial, onClose }: { initial: Place; onClose: () => void 
       </label>
       <button
         className="btn primary block"
+        disabled={!p.name.trim()}
         onClick={async () => {
-          await savePlace(p);
+          await savePlace({ ...p, name: p.name.trim() });
           onClose();
         }}
       >

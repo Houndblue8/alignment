@@ -43,11 +43,16 @@ test('22. Big 3: remove one, add another, reload, the choice persists', async ({
     { id: 't3', title: 'Course outline', importance: 4 },
     { id: 't4', title: 'Inbox cleanup', importance: 3 },
   ]);
+  // The check-in offers the top 3; Eli swaps one before building the day.
+  await expect(page.getByRole('heading', { name: "Today's Big 3" })).toBeVisible();
+  await expect(page.getByText('3 of 3')).toBeVisible();
+  await page.getByRole('button', { name: /Course outline/ }).click();
+  await expect(page.getByText('2 of 3')).toBeVisible();
+  await page.getByRole('button', { name: /Course outline/ }).click();
   await checkIn(page);
   const items = page.getByTestId('big3-item');
   await expect(items).toHaveCount(3);
   await expect(items.first()).toContainText('Launch page');
-  await expect(items.first()).toContainText('Suggested');
 
   await page.getByRole('button', { name: 'Edit' }).first().click();
   await page.getByRole('button', { name: 'Remove Sales email' }).click();
@@ -62,8 +67,8 @@ test('22. Big 3: remove one, add another, reload, the choice persists', async ({
   await page.reload();
   await expect(items).toHaveCount(3);
   for (const [i, t] of expected.entries()) await expect(items.nth(i)).toContainText(t);
-  // Picked by hand: locked, not "Suggested".
-  await expect(items.nth(1)).not.toContainText('Suggested');
+  // Picked by hand: locked, never "Suggested".
+  for (let i = 0; i < 3; i++) await expect(items.nth(i)).not.toContainText('Suggested');
 });
 
 test('23. Replan shows the toast and updates blocks', async ({ page }) => {

@@ -113,7 +113,7 @@ export function DayDetail() {
               <span className="tl-time">{fmtTime(b.start)}</span>
               <div className={`tl-card ${b.kind === 'travel' ? 'travel small muted' : ''} ${b.status === 'done' ? 'done' : ''}`} style={journeyStyle(t?.journey ?? kindJourney(b.kind))}>
                 <span className="title clip">{b.title}</span>
-                {b.kind !== 'travel' && <span className="small muted">{shortDuration(b.end - b.start)}</span>}
+                {b.kind !== 'travel' && b.kind !== 'bed' && <span className="small muted">{shortDuration(b.end - b.start)}</span>}
               </div>
             </div>
           );

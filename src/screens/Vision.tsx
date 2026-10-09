@@ -1,6 +1,7 @@
 import { ChevronLeft } from 'lucide-react';
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { ContractEditor } from '../ui/ContractEditor';
 import { JOURNEYS, type Vision as VisionT } from '../data/model';
 import { useApp } from '../state/store';
 import { ProfitBar } from '../ui/ProfitBar';
@@ -12,6 +13,11 @@ export function Vision() {
   const [v, setV] = useState<VisionT>(s.vision);
   const [profit, setProfit] = useState(String(s.contract.profitEarned));
   const [grad, setGrad] = useState(s.contract.graduationDate ?? '');
+  const [editingContract, setEditingContract] = useState(false);
+  const { hash } = useLocation();
+  useEffect(() => {
+    if (hash) document.getElementById(hash.slice(1))?.scrollIntoView();
+  }, [hash]);
   const dirty = JSON.stringify(v) !== JSON.stringify(s.vision);
 
   return (
@@ -63,13 +69,35 @@ export function Vision() {
         </button>
       </section>
 
-      <section className="card stack lg">
-        <h2>Contract to Self</h2>
-        <ol className="small stack" style={{ margin: 0, paddingLeft: 18 }}>
-          {s.contract.terms.map((t) => (
-            <li key={t}>{t}</li>
-          ))}
-        </ol>
+      <section className="card stack lg" id="contract">
+        <div className="row between">
+          <h2>Contract to Self</h2>
+          <span className="chip">{s.contract.locked ? 'Locked' : 'Editable'}</span>
+        </div>
+        {editingContract ? (
+          <ContractEditor onSaved={() => setEditingContract(false)} />
+        ) : (
+          <ol className="stack" style={{ margin: 0, paddingLeft: 18 }}>
+            {s.contract.terms.map((t) => (
+              <li key={t}>{t}</li>
+            ))}
+          </ol>
+        )}
+        {!s.contract.locked && !editingContract && (
+          <div className="row wrap">
+            <button className="btn" onClick={() => setEditingContract(true)}>
+              Edit terms
+            </button>
+            <button
+              className="btn"
+              onClick={() => {
+                if (window.confirm('Lock the contract? You can still read it, but the terms can no longer be edited.')) void saveContract({ locked: true });
+              }}
+            >
+              Lock contract
+            </button>
+          </div>
+        )}
         {s.contract.signedName && (
           <p className="small muted">
             Signed by {s.contract.signedName} on {new Date(s.contract.signedAt!).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}

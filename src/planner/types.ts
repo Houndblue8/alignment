@@ -150,6 +150,8 @@ export interface DayInput {
   /** Minutes from midnight. When set, nothing new is planned before ceil5(now). */
   now?: number | null;
   wakeMin: number;
+  /** The wake time the plan expected (last night's recommendation). Later than this counts as a late wake. Default: the wake target. */
+  expectedWakeMin?: number;
   anchors: { coldShower: AnchorStatus; walk: AnchorStatus };
   events: EventInstance[];
   /** Open tasks. remaining maps task id to minutes still to plan (defaults to estimatedMinutes). */

@@ -30,7 +30,7 @@ interface AppState {
   showToast(text: string, kind?: Toast['kind']): void;
 
   signContract(name: string): Promise<void>;
-  checkIn(input: { wakeMin: number; coldShowerDone: boolean; walkDone: boolean }): Promise<void>;
+  checkIn(input: { wakeMin: number; coldShowerDone: boolean; walkDone: boolean; big3?: Big3Item[] }): Promise<void>;
   editWake(wakeMin: number): Promise<void>;
   setAnchor(kind: 'coldShower' | 'walk', done: boolean): Promise<void>;
   setBlockStatus(id: string, status: Block['status']): Promise<void>;
@@ -159,7 +159,7 @@ export const useApp = create<AppState>((set, get) => {
         return { ...s, contract };
       }),
 
-    checkIn: ({ wakeMin, coldShowerDone, walkDone }) =>
+    checkIn: ({ wakeMin, coldShowerDone, walkDone, big3 }) =>
       run(
         async (s) => {
           const date = today();
@@ -170,8 +170,9 @@ export const useApp = create<AppState>((set, get) => {
             checkinDone: true,
             coldShower: { done: coldShowerDone },
             walk: { done: walkDone },
+            // Eli's picks are the Big 3. Picking none leaves it to the automatic suggestions.
+            big3: big3 && big3.length ? big3 : fillBig3(s, date, rec.big3),
           };
-          day.big3 = fillBig3(s, date, day.big3);
           await repo.upsertDays([day]);
           return withDay(s, day);
         },

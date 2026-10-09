@@ -21,7 +21,7 @@ export function seedSnapshot(): Snapshot {
     graduationDate: settingsJson.graduationDate,
     lastOpenDate: null,
   };
-  const contract: Contract = { ...contractJson, signedName: null, signedAt: null, graduationDate: null };
+  const contract: Contract = { ...contractJson, locked: false, signedName: null, signedAt: null, graduationDate: null };
   return {
     settings,
     vision: visionJson as Vision,

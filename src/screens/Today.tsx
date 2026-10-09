@@ -6,6 +6,7 @@ import { fmtTime, fromHHMM, journeyStyle, kindJourney, shortDuration, toHHMM } f
 import type { Block } from '../planner';
 import { dayOf } from '../state/planning';
 import { useApp } from '../state/store';
+import { AnchorButton } from '../ui/AnchorButton';
 import { Big3Section } from '../ui/Big3';
 import { Sheet } from '../ui/Sheet';
 
@@ -52,14 +53,8 @@ export function Today() {
       {mode && <p className="banner warn">{mode} is on.</p>}
 
       <div className="anchors">
-        <button className="anchor" aria-pressed={rec.coldShower.done} onClick={() => setAnchor('coldShower', !rec.coldShower.done)}>
-          <span>Cold shower</span>
-          <span className="small">{rec.coldShower.done ? 'Done' : 'Not yet'}</span>
-        </button>
-        <button className="anchor" aria-pressed={rec.walk.done} onClick={() => setAnchor('walk', !rec.walk.done)}>
-          <span>Walk with God</span>
-          <span className="small">{rec.walk.done ? 'Done' : 'Not yet'}</span>
-        </button>
+        <AnchorButton kind="coldShower" done={rec.coldShower.done} onToggle={(d) => setAnchor('coldShower', d)} />
+        <AnchorButton kind="walk" done={rec.walk.done} onToggle={(d) => setAnchor('walk', d)} />
       </div>
 
       <Big3Section />
@@ -169,7 +164,11 @@ function BlockRow({ b, nowMin }: { b: Block; nowMin: number }) {
                 {place.name}
               </span>
             )}
-            <span className="chip">{shortDuration(b.end - b.start)}</span>
+            {b.kind === 'bed' ? (
+              <span className="chip">End of the day</span>
+            ) : (
+              <span className="chip">{shortDuration(b.end - b.start)}</span>
+            )}
           </span>
         </button>
         {open && (

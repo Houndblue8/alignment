@@ -64,6 +64,19 @@ Each entry: what was decided, who decided, and what it replaces in the brief. Pl
 - "Confirm email" is off (single user). New sign-ups are turned off once Eli's account exists.
 - Forgot password sends Supabase's standard reset email; the link opens a "New password" screen.
 
+### D10. Evenings are free (2026-10-10)
+- No study, work or Side Hustle Summit floor after sunset (computed daily for San Luis Obispo: about 6:35 PM in October, 4:55 PM in December).
+- Exception: something due within a day, or school work in Code Red, may run after sunset at the campus library (on campus days) or at home, until the evening wind-down.
+- Coffee shops are daytime only as a result.
+
+### D11. Feedback round after Checkpoint 2 (2026-10-10)
+- The Big 3 are chosen at the morning check-in (top tasks offered; tap to keep or swap; New task on the spot). The day is built around them.
+- The contract is editable before and after signing until Eli taps Lock contract. It stays readable on the Vision page (Home has a Contract link).
+- Late-wake cuts (Part 5 step 12) only happen when Eli wakes more than 15 minutes after last night's recommended wake. On an ordinary full day nothing is cut; a warning names any Big 3 item with no time.
+- Bed shows "End of the day" instead of a duration.
+- Place names are editable. Inputs use 16 px text so iPhone does not zoom.
+- Anchor taps play a fill, check and burst animation with a haptic tick (Android vibration; iOS 18 switch haptic). The full visual pass, the contract as a signed document, and optional Higgsfield video assets are Phase 4.
+
 ## Claude's defaults (change any by telling me)
 
 - 5 minute buffers between blocks, except inside the morning routine (D2).

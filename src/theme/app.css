@@ -321,11 +321,22 @@ input.field,
 select.field,
 textarea.field {
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
   min-height: 44px;
   padding: 10px 12px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border);
   background: var(--card);
+}
+/* 16 px or larger stops iPhone Safari from zooming in when a field is focused. */
+input,
+select,
+textarea,
+input.field,
+select.field,
+textarea.field {
+  font-size: max(16px, 1rem);
 }
 textarea.field {
   min-height: 88px;
@@ -352,7 +363,8 @@ label.label {
   color: var(--on-accent);
   padding: 0;
 }
-.check[aria-checked='true'] {
+.check[aria-checked='true'],
+.check.on {
   background: var(--accent);
 }
 
@@ -513,9 +525,66 @@ label.label {
   text-align: center;
   transition: background-color 0.2s var(--ease);
 }
+.anchor {
+  position: relative;
+  overflow: visible;
+}
 .anchor[aria-pressed='true'] {
   background: var(--accent);
   color: var(--on-accent);
+  animation: anchor-pop 0.45s var(--ease);
+}
+.anchor-icon {
+  display: grid;
+  place-items: center;
+  height: 40px;
+}
+.anchor-check {
+  stroke-dasharray: 30;
+  animation: draw 0.4s 0.1s var(--ease) both;
+}
+.anchor-burst {
+  position: absolute;
+  inset: -3px;
+  border-radius: 999px;
+  border: 3px solid var(--accent);
+  animation: burst 0.7s var(--ease) forwards;
+  pointer-events: none;
+}
+@keyframes anchor-pop {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(0.92);
+  }
+  70% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes burst {
+  from {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  to {
+    transform: scale(1.45);
+    opacity: 0;
+  }
+}
+@keyframes draw {
+  from {
+    stroke-dashoffset: 30;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.check[aria-checked='true'] {
+  animation: anchor-pop 0.4s var(--ease);
 }
 .anchor .small {
   color: inherit;

@@ -108,6 +108,7 @@ export function buildWeek(s: Snapshot, now: Now): WeekBuild {
     now: now.min,
     today: {
       wakeMin: record.wakeMin ?? s.settings.wakeTargetMin,
+      expectedWakeMin: s.days[addDays(today, -1)]?.plan.bedtime?.wakeMin ?? s.settings.wakeTargetMin,
       anchors: { coldShower: record.coldShower, walk: record.walk },
       big3: record.big3.map((i) => i.taskId),
       mode: modeFor(s, today),

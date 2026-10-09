@@ -84,17 +84,18 @@ export function Home() {
 
       <section className="card stack">
         <p className={whyOpen ? '' : 'clamp2'}>{firstLine}</p>
-        {whyOpen && (
-          <>
-            <p className="muted">{s.vision.whyShort}</p>
-            <Link to="/vision" className="small">
-              Vision and contract
-            </Link>
-          </>
-        )}
-        <button className="btn ghost" style={{ justifySelf: 'start', paddingLeft: 0 }} aria-expanded={whyOpen} onClick={() => setWhyOpen(!whyOpen)}>
-          {whyOpen ? 'Show less' : 'Read my why'}
-        </button>
+        {whyOpen && <p className="muted">{s.vision.whyShort}</p>}
+        <div className="row wrap">
+          <button className="btn ghost" style={{ paddingLeft: 0 }} aria-expanded={whyOpen} onClick={() => setWhyOpen(!whyOpen)}>
+            {whyOpen ? 'Show less' : 'Read my why'}
+          </button>
+          <Link to="/vision" className="btn ghost">
+            Vision
+          </Link>
+          <Link to="/vision#contract" className="btn ghost">
+            Contract
+          </Link>
+        </div>
       </section>
 
       {quote && (

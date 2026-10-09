@@ -23,6 +23,8 @@ export const RULES = {
   libraryMin: 30,
   /** Minutes to get ready between a library block and a practice (Monday D1: library until 9:30 for 9:45). */
   practicePrep: 15,
+  /** Waking more than this many minutes after the expected wake counts as a late wake. */
+  lateWakeGrace: 15,
   /** Minutes each Big 3 item should get today before flexible items are cut to make room. */
   big3Session: 60,
   chunkMin: 25,

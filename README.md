@@ -19,6 +19,10 @@ Eli's daily operating system. An installable web app (PWA) for iPhone, Android a
 ## Test
 
 - `npm test` runs the unit tests (Vitest).
+- `npm run test:coverage` also checks the planner stays fully tested (fails the run if coverage drops).
+- To see a whole seeded week as text, in PowerShell: `$env:PRINT='1'; npx vitest run week.print --silent=false`
+
+The planner lives in `src/planner/`. It is pure TypeScript: no network, no database, no clock. Its rules are constants in `src/planner/rules.ts`, and every decision that changes the original brief is in DECISIONS.md. Seed data (schedule, places, settings) is in `seed/`.
 
 ## Deploy
 

@@ -1,0 +1,11 @@
+{
+  "theme": "gold-cream",
+  "outreachCount": 10,
+  "wakeTargetMin": 390,
+  "sleepHours": 8,
+  "latestWakeMin": 540,
+  "practiceBlock": "A",
+  "codeRed": false,
+  "graduationDate": null,
+  "tz": "America/Los_Angeles"
+}

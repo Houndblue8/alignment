@@ -31,5 +31,12 @@ export default defineConfig({
   ],
   test: {
     include: ['src/**/*.test.ts'],
+    coverage: {
+      provider: 'v8',
+      include: ['src/planner/**'],
+      exclude: ['src/planner/__tests__/**', 'src/planner/index.ts', 'src/planner/types.ts'],
+      // The planner must stay fully tested. Remaining uncovered branches are defensive fallbacks.
+      thresholds: { lines: 100, functions: 100, statements: 98, branches: 85 },
+    },
   },
 });

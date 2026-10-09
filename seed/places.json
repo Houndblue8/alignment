@@ -1,0 +1,12 @@
+[
+  { "id": "home", "name": "Home", "notes": "No studying at home.", "minutesFromHome": 0, "minutesFromCampus": 18, "goodFor": ["meal"] },
+  { "id": "campus", "name": "Campus", "notes": "Classes, rec, fields.", "minutesFromHome": 18, "minutesFromCampus": 0, "goodFor": ["meal"] },
+  { "id": "library", "name": "Campus library", "notes": "Best for deep work, chargers everywhere, great in the morning.", "minutesFromHome": 18, "minutesFromCampus": 0, "goodFor": ["deep", "easy"] },
+  { "id": "scouts", "name": "Scout's Coffee", "notes": "Downtown. Best for deep work, limited chargers, paid parking.", "minutesFromHome": 12, "minutesFromCampus": 8, "goodFor": ["deep"] },
+  { "id": "public_market", "name": "Public Market", "notes": "Has chargers. Events sometimes block work. Best for easy study and friends.", "minutesFromHome": 10, "minutesFromCampus": 15, "goodFor": ["easy"] },
+  { "id": "starbucks", "name": "Starbucks", "notes": "Seat almost always available. Drink only.", "minutesFromHome": 3, "minutesFromCampus": 15, "goodFor": ["errand"] },
+  { "id": "whole_foods", "name": "Whole Foods", "notes": "Meals available, limited chargers and seats.", "minutesFromHome": 3, "minutesFromCampus": 15, "goodFor": ["errand", "meal"] },
+  { "id": "seven_sisters", "name": "Seven Sisters", "notes": "Limited parking. Not yet rated.", "minutesFromHome": 15, "minutesFromCampus": 15, "goodFor": [] },
+  { "id": "grover", "name": "Grover", "notes": "Practice location.", "minutesFromHome": 20, "minutesFromCampus": 30, "goodFor": [] },
+  { "id": "church", "name": "Church", "notes": "Drive times are an estimate. Correct in Settings.", "minutesFromHome": 15, "minutesFromCampus": 15, "goodFor": [] }
+]

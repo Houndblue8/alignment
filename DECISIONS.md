@@ -56,3 +56,38 @@ Each entry: what was decided, who decided, and what it replaces in the brief. Pl
 - Setup order: the Anthropic API key is created at the start of Phase 3 (first AI use) and VAPID keys at the start of Phase 5 (notifications), so nothing costs money or sits unused before it is needed. Playwright browsers are installed at the start of Phase 2.
 - Supabase uses the new publishable key (`sb_publishable_...`) in the client, named `VITE_SUPABASE_PUBLISHABLE_KEY`.
 - `vercel.json` rewrites app routes to `index.html` so deep links like `/today` work.
+
+### Planner defaults (Phase 1)
+
+Spacing and places
+- A drive replaces the 5 minute buffer: the drive block ends when the next block starts.
+- One work place per day: the campus library on class days, otherwise the closest place that is good for the top task (Scout's for deep work, Public Market for easy work). All tasks go there, so there is at most one extra move. Errands are not yet split off to Starbucks or Whole Foods, so the planner never makes a Starbucks block and "a meal before Starbucks" holds by default.
+- The Side Hustle Summit floor and the misc block may be at home (outreach and chores are not studying). Study and task blocks are never at home.
+- If two fixed events are too close for the drive between them, the app warns ("Expect to join about 8 minutes late"). First case: Nov 4, Tax Midterm II ends 4:20 PM on campus and ITP Zoom starts 4:30 PM at home.
+
+Morning
+- The walk is 15 minutes, grows to 30 only when there are at least 90 minutes before the next fixed item, and drops to 10 when under 15 minutes are left.
+- The snack is at home right after the walk. No snack is planned if the day starts or restarts after 11:00 AM.
+
+Meals, misc, workouts
+- Lunch: 30 minutes between 11:00 AM and 2:30 PM, else 15 minutes squeezed between commitments (a note, not a warning; Monday and Wednesday always need it). Dinner: 30 to 45 minutes between 5:30 and 8:00 PM, else 5:00 to 9:30 PM with a note (Sundays with 6 PM practice).
+- Misc: 30 to 45 minutes, preferably after 3:00 PM.
+- Workouts: 60 minutes by default, shrinking to 45 when needed, and to 30 only as a late-wake cut. They start right after the last campus class that ends by 4:00 PM (so the Monday and Wednesday lift comes out at 50 minutes before the Zoom class), otherwise from 1:00 PM, and never before the day's first class.
+- A missed workout is caught up later in the week, Saturday included.
+
+Tasks and cuts
+- Big 3 get the earliest focus slots (the library block first). Each Big 3 item should get at least 60 minutes (or all its time if shorter). If it can't, flexible items are cut in the brief's order (misc and general work, social, workout length, floor length), but only if a cut actually makes room. Otherwise nothing is cut and a warning names the Big 3 item with no time.
+- Tasks are split into 25 to 90 minute chunks. If a task already got time today and under 15 minutes are left, the rest is treated as done (estimates are guesses).
+- Social events move later the same day, otherwise to the next evening after 5:00 PM. They are never deleted. If they run past the planned week, a warning names them.
+
+Modes and replan
+- Code Red keeps meals and a 10 minute floor. It pauses workouts, misc, practices, Epic small group, social events and discipleship. Church and Epic large group are seeded as not paused by Code Red: tell me if that is wrong.
+- Lost Day salvage order: cold shower and walk (if not done), the next meal, the shortest Big 3 item, a 30 minute workout.
+- Replan keeps done, in-progress, pinned and manual blocks, plus past meals, events and misc. Missed anchors, work, the floor and workouts are planned again from now.
+- A day with an empty Big 3 is a Win when both anchors are done.
+
+Seed assumptions (correct any in Settings later)
+- Dancing with the Stars: Tuesday 9:35 to 10:35 PM, 60 minutes. Flex social: Saturday 7:00 to 9:00 PM at home. Discipleship with Isaac: Friday 9:00 to 10:00 AM on campus. Epic large group is on campus. One-on-one Epic breakfast: 9:35 to 10:35 AM near church. Church is 15 minutes from home (estimate).
+- Practice block B is at Grover only on Wednesday. Tuesday and Sunday B practices are on campus.
+- D1 practice, club practice and flag football are not immovable, so Code Red and Lost Day can pause them. Classes and exams are immovable.
+- Oct 22 concert is an all-day "no work" marker. Epic large group still shows that evening: delete it or tell the talk box if you will be in LA.

@@ -7,7 +7,7 @@ import { nowLocal } from './lib/clock';
 import { CheckIn } from './screens/CheckIn';
 import { Contract } from './screens/Contract';
 import { Home } from './screens/Home';
-import { Login } from './screens/Login';
+import { Login, SetPassword } from './screens/Login';
 import { Quotes } from './screens/Quotes';
 import { Settings } from './screens/Settings';
 import { Today } from './screens/Today';
@@ -29,12 +29,17 @@ export function App() {
 
 function AuthGate() {
   const [session, setSession] = useState<Session | null | undefined>(undefined);
+  const [recovering, setRecovering] = useState(false);
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
-    const { data } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
+    const { data } = supabase.auth.onAuthStateChange((event, s) => {
+      if (event === 'PASSWORD_RECOVERY') setRecovering(true);
+      setSession(s);
+    });
     return () => data.subscription.unsubscribe();
   }, []);
   if (session === undefined) return <Splash />;
+  if (recovering) return <SetPassword onDone={() => setRecovering(false)} />;
   if (!session) return <Login />;
   return <Loaded key={session.user.id} />;
 }

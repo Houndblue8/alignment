@@ -59,6 +59,11 @@ Each entry: what was decided, who decided, and what it replaces in the brief. Pl
 - BUS 3302 (9:00 AM) and Epic large group are skipped that day because of the 9:00 departure. (Assumption: Eli will say if he goes to class first.)
 - Dancing with the Stars is 90 minutes.
 
+### D9. Email and password sign-in (2026-10-09)
+- Replaces the brief's email magic link. Supabase's free plan cannot edit email templates without a custom email sender, and a magic link opens in Safari instead of the iPhone Home Screen app.
+- "Confirm email" is off (single user). New sign-ups are turned off once Eli's account exists.
+- Forgot password sends Supabase's standard reset email; the link opens a "New password" screen.
+
 ## Claude's defaults (change any by telling me)
 
 - 5 minute buffers between blocks, except inside the morning routine (D2).

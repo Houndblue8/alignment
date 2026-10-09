@@ -29,7 +29,8 @@ The planner lives in `src/planner/`. It is pure TypeScript: no network, no datab
 ## Deploy
 
 - **Web app:** pushing to `main` on GitHub deploys to Vercel automatically.
-- **Database changes:** new files in `supabase/migrations/` are run once in the Supabase SQL Editor (paste and Run).
+- **Database changes:** new files in `supabase/migrations/` are run once, either pasted into the Supabase SQL Editor or sent to the Management API (`POST https://api.supabase.com/v1/projects/<ref>/database/query` with the access token).
+- **Notifications:** `send-due` is deployed with `--no-verify-jwt` (pg_cron calls it every minute with the `CRON_SECRET` header). Secrets: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, `CRON_SECRET`.
 - **AI functions** (`supabase/functions/`): the Supabase access token is saved as the Windows user variable `SUPABASE_ACCESS_TOKEN`. In PowerShell:
   `$env:SUPABASE_ACCESS_TOKEN = [Environment]::GetEnvironmentVariable('SUPABASE_ACCESS_TOKEN','User'); npx.cmd supabase functions deploy parse-dump --project-ref rmuknpoaqjsdtpcwjblj --use-api`
   (same for `coach` and `delegate`). After changing `src/ops/schema.ts`, run `npm run gen:schema` first.

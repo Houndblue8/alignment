@@ -20,6 +20,10 @@ export function seedSnapshot(): Snapshot {
     codeRedLevel: 'standard',
     graduationDate: settingsJson.graduationDate,
     lastOpenDate: null,
+    notifyMorning: true,
+    notifyEvening: true,
+    notifyBedtime: true,
+    notifyBlocks: false,
   };
   const contract: Contract = { ...contractJson, locked: false, signedName: null, signedAt: null, graduationDate: null };
   return {

@@ -17,6 +17,7 @@ import { dayOf } from './state/planning';
 import { useApp } from './state/store';
 import { Nav } from './ui/Nav';
 import { TalkBox } from './ui/TalkBox';
+import { useInAppReminders } from './ui/Notifications';
 import { PaletteButton } from './ui/ThemePicker';
 import { fmtDate } from './planner';
 import { ToastView } from './ui/Toast';
@@ -62,6 +63,7 @@ function Loaded() {
   const now = useApp((a) => a.now);
   const init = useApp((a) => a.init);
   const tick = useApp((a) => a.tick);
+  useInAppReminders();
 
   useEffect(() => {
     void init();

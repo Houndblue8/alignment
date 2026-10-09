@@ -24,6 +24,10 @@ const settingsTo = (s: Settings): Row => ({
   code_red_level: s.codeRedLevel,
   graduation_date: s.graduationDate,
   last_open_date: s.lastOpenDate,
+  notify_morning: s.notifyMorning,
+  notify_evening: s.notifyEvening,
+  notify_bedtime: s.notifyBedtime,
+  notify_blocks: s.notifyBlocks,
   updated_at: new Date().toISOString(),
 });
 const settingsFrom = (r: Row): Settings => ({
@@ -37,6 +41,10 @@ const settingsFrom = (r: Row): Settings => ({
   codeRedLevel: r.code_red_level as Settings['codeRedLevel'],
   graduationDate: (r.graduation_date as string) ?? null,
   lastOpenDate: (r.last_open_date as string) ?? null,
+  notifyMorning: r.notify_morning !== false,
+  notifyEvening: r.notify_evening !== false,
+  notifyBedtime: r.notify_bedtime !== false,
+  notifyBlocks: r.notify_blocks === true,
 });
 
 const visionTo = (v: Vision): Row => ({

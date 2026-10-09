@@ -10,6 +10,7 @@ import { LIVE_CASES, runLiveCheck, type LiveResult } from '../ops/liveCheck';
 import { useApp } from '../state/store';
 import { Sheet } from '../ui/Sheet';
 import { ThemePicker } from '../ui/ThemePicker';
+import { NotificationSettings } from '../ui/Notifications';
 import { themeName } from '../theme/themes';
 
 const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -141,6 +142,10 @@ export function Settings() {
 
       <Group title="Theme" summary={themeName(s.settings.theme)}>
         <ThemePicker />
+      </Group>
+
+      <Group title="Notifications" summary="Morning, close-out, bedtime">
+        <NotificationSettings />
       </Group>
 
       <Group title="Talk box check" summary="Live AI test, about 5 cents">

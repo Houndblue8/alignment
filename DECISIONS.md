@@ -98,6 +98,19 @@ Each entry: what was decided, who decided, and what it replaces in the brief. Pl
 - Install hint: an Install button where the browser offers one (Android, desktop Chrome or Edge); on iPhone, "tap Share, then Add to Home Screen". Dismissible once.
 - Higgsfield: optional background clips listed in public/media/manifest.json, with prompts and export specs in docs/HIGGSFIELD.md. Nothing renders until a clip is added.
 
+### D14. Notifications (Phase 5, 2026-10-10)
+- Web Push with VAPID keys (private key only in the Edge Function secrets). pg_cron calls the send-due function every minute; it is protected by a shared secret kept in the Supabase Vault and the function secrets, not by sign-in.
+- Reminders, computed from the saved plan by one shared module (supabase/functions/_shared/reminders.ts) used by both the server and the app:
+  - Morning: at last night's recommended wake (or the wake target), unless already checked in with both anchors done.
+  - Evening close-out: at the wind-down block (or an hour before bed).
+  - Bedtime: at the recommended bedtime.
+  - Optional, off by default: 5 minutes before each block (not travel, wind-down, bed, anchors, done or skipped blocks).
+- Each reminder is logged once (unique per day and kind) before sending, so it never goes out twice. Expired devices are removed automatically.
+- Permission is asked only after tapping Enable. On iPhone outside the Home Screen app, the app explains it must be installed first. When push is blocked or unsupported, the same reminders appear as in-app banners while the app is open, and Settings says so plainly.
+- Blooio (iMessage) is not used: Web Push covers iPhone 16.4+ Home Screen apps, Android and desktop.
+- The service worker is now our own (src/sw.ts, Workbox precache plus push and notification-click handlers).
+- Database migrations now run from Claude's side through the Supabase Management API with the saved access token (no more pasting SQL).
+
 ## Claude's defaults (change any by telling me)
 
 - 5 minute buffers between blocks, except inside the morning routine (D2).

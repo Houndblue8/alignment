@@ -16,6 +16,10 @@ export interface Settings {
   codeRedLevel: CodeRedLevel;
   graduationDate: string | null;
   lastOpenDate: string | null;
+  notifyMorning: boolean;
+  notifyEvening: boolean;
+  notifyBedtime: boolean;
+  notifyBlocks: boolean;
 }
 
 export interface Vision {

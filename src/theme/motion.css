@@ -99,9 +99,10 @@
 .sig-text {
   font-family: var(--font-script);
   font-size: clamp(2.2rem, 9vw, 3.2rem);
-  line-height: 1.1;
+  /* Room above and below for the script's tall loops; the reveal clips sideways only. */
+  line-height: 1.5;
+  padding: 0.15em 0.25em 0.1em 0;
   white-space: nowrap;
-  overflow: hidden;
   clip-path: inset(0 100% 0 0);
   animation: write 2s cubic-bezier(0.45, 0.05, 0.3, 1) 0.15s forwards;
 }

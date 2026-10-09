@@ -24,14 +24,28 @@ describe('8. Code Red', () => {
     expect(plan.blocks.some((b) => b.taskId === 'study')).toBe(true);
   });
 
-  test('pauses overridable events and non-school tasks', () => {
-    expect(byEvent(plan, 'club-a-tue')).toBeUndefined();
+  test('pauses social events, non-school tasks, workouts and misc; practices keep running', () => {
+    expect(byEvent(plan, 'club-a-tue')).toBeDefined();
     expect(byEvent(plan, 'dwts-tue')).toBeUndefined();
     expect(plan.blocks.some((b) => b.taskId === 'course')).toBe(false);
     expect(plan.belowTheLine).toContainEqual(expect.objectContaining({ taskId: 'course', reason: 'Paused by Code Red.' }));
-    expect(plan.notes.join(' ')).toContain('Paused by Code Red: Club volleyball practice, Dancing with the Stars.');
+    expect(plan.notes.join(' ')).toContain('Paused by Code Red: Dancing with the Stars.');
     expect(ofKind(plan, 'workout')).toHaveLength(0);
     expect(ofKind(plan, 'misc')).toHaveLength(0);
+  });
+
+  test('church and Epic large group keep running', () => {
+    expect(byEvent(planDay(dayInput('2026-10-18', { mode: 'codeRed' })), 'church-sun')).toBeDefined();
+    expect(byEvent(planDay(dayInput('2026-10-15', { mode: 'codeRed' })), 'epic-large-thu')).toBeDefined();
+  });
+
+  test('all in (severe) also pauses practices', () => {
+    const severe = planDay(dayInput(TUE, { mode: 'codeRed', codeRedLevel: 'severe' }));
+    expectValidPlan(severe);
+    expect(byEvent(severe, 'club-a-tue')).toBeUndefined();
+    expect(byEvent(planDay(dayInput(MON, { mode: 'codeRed', codeRedLevel: 'severe' })), 'flag-mon')).toBeUndefined();
+    expect(byEvent(planDay(dayInput(MON, { mode: 'codeRed' })), 'flag-mon')).toBeDefined();
+    expect(byEvent(severe, 'bus-tue')).toBeDefined();
   });
 
   test('the Side Hustle Summit floor drops to 10 minutes (D4)', () => {

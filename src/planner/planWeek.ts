@@ -1,10 +1,22 @@
 // planWeek: today plus the next 6 days, in order, carrying unfinished tasks and moved events forward.
-import { expandEvents, isFlexibleEvent, isSchoolEvent } from './expand';
+import { expandEvents, isFlexibleEvent, pausedByCodeRed } from './expand';
 import { planDay } from './planDay';
 import { pickBig3 } from './priority';
 import { RULES, WEEKLY_TARGET, WORKOUT_BY_WEEKDAY } from './rules';
 import { addDays, fmtDate, weekday } from './time';
-import type { AnchorStatus, Block, DayPlan, EventDef, EventInstance, Mode, Place, PlannerSettings, Task, WorkoutType } from './types';
+import type {
+  AnchorStatus,
+  Block,
+  CodeRedLevel,
+  DayPlan,
+  EventDef,
+  EventInstance,
+  Mode,
+  Place,
+  PlannerSettings,
+  Task,
+  WorkoutType,
+} from './types';
 
 export interface WeekInput {
   startDate: string;
@@ -17,6 +29,7 @@ export interface WeekInput {
   };
   /** Code Red stays on for every planned day until switched off. */
   codeRed: boolean;
+  codeRedLevel?: CodeRedLevel;
   eventDefs: EventDef[];
   tasks: Task[];
   places: Place[];
@@ -50,11 +63,11 @@ function modeFor(i: number, input: WeekInput): Mode {
 }
 
 /** The first timed commitment of a day that bedtime has to protect. */
-export function firstCommitment(events: EventInstance[], mode: Mode): EventInstance | null {
+export function firstCommitment(events: EventInstance[], mode: Mode, level: CodeRedLevel = 'standard'): EventInstance | null {
   return (
     events
       .filter((e) => !e.allDay && !isFlexibleEvent(e))
-      .filter((e) => (mode === 'codeRed' ? e.immovable || isSchoolEvent(e) || !e.overridableByCodeRed : true))
+      .filter((e) => (mode === 'codeRed' ? !pausedByCodeRed(e, level) : true))
       .filter((e) => (mode === 'lostDay' ? e.immovable : true))
       .sort((a, b) => a.start - b.start || (a.id < b.id ? -1 : 1))[0] ?? null
   );
@@ -81,7 +94,7 @@ export function planWeek(input: WeekInput): DayPlan[] {
     const mode = modeFor(i, input);
     const events = [...expandEvents(input.eventDefs, date, input.settings), ...carried];
     const next = expandEvents(input.eventDefs, addDays(date, 1), input.settings);
-    const first = firstCommitment(next, modeFor(i + 1, input));
+    const first = firstCommitment(next, modeFor(i + 1, input), input.codeRedLevel);
     const examWithin7 = examWithinWindow(input.eventDefs, date, input.settings);
     const open = input.tasks.filter((t) => (remaining[t.id] ?? 0) > 0);
     const big3 = i === 0 ? input.today.big3 : pickBig3(open, date).ids;
@@ -98,6 +111,7 @@ export function planWeek(input: WeekInput): DayPlan[] {
       places: input.places,
       settings: input.settings,
       mode,
+      codeRedLevel: input.codeRedLevel,
       pinned: input.pinnedByDate?.[date] ?? [],
       workout: chooseWorkout(date, done),
       tomorrowFirst: first ? { start: first.start, location: first.location, title: first.title } : null,

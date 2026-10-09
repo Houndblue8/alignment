@@ -7,7 +7,10 @@ export type WorkType = 'deep' | 'easy' | 'errand';
 export type Mode = 'normal' | 'codeRed' | 'lostDay';
 export type WorkoutType = 'field' | 'weights';
 
+export type CodeRedLevel = 'standard' | 'severe';
+
 export type RankKey =
+  | 'trip'
   | 'church'
   | 'epic_large'
   | 'retreat'
@@ -93,6 +96,8 @@ export interface EventDef {
   allDay?: boolean;
   noWork?: boolean;
   away?: boolean;
+  /** A weekly "maybe" (discipleship with Isaac). Never planned until confirmed for a date as a one-time event. */
+  tentative?: boolean;
 }
 
 /** An event expanded onto one date. */
@@ -154,6 +159,8 @@ export interface DayInput {
   places: Place[];
   settings: PlannerSettings;
   mode: Mode;
+  /** Only used in Code Red. Standard keeps practices; severe pauses them too. Default standard. */
+  codeRedLevel?: CodeRedLevel;
   pinned: Block[];
   workout: WorkoutType | null;
   tomorrowFirst: { start: number; location: string; title: string } | null;

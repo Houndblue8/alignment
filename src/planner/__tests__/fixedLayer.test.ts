@@ -1,6 +1,6 @@
 // Part 5 step 1 (fixed layer) and Part 13 conflicts.
 import { describe, expect, test } from 'vitest';
-import { toInstance } from '../expand';
+import { confirmTentative, toInstance } from '../expand';
 import { planDay } from '../planDay';
 import { rankTasks } from '../priority';
 import type { EventDef } from '../types';
@@ -43,7 +43,29 @@ describe('fixed layer', () => {
     expect(byEvent(plan, 'isaac-fri')).toBeUndefined();
     expect(plan.blocks.some((b) => b.taskId === 'a')).toBe(false);
     expect(plan.notes).toContain('No work planned today: Epic fall retreat.');
-    expect(plan.carryEvents.map((e) => e.id)).toEqual(['isaac-fri']);
+  });
+
+  test('Oct 22: blocked from 9:00 AM for the concert, with a work session before leaving', () => {
+    const plan = planDay(dayInput('2026-10-22', { tasks: [task('a', { estimatedMinutes: 120 })], big3: ['a'] }));
+    expectValidPlan(plan);
+    expect(byEvent(plan, 'bryson-tiller-2026-10-22')).toMatchObject({ start: at(9), end: 1440 });
+    expect(byEvent(plan, 'bus-thu')).toBeUndefined();
+    expect(byEvent(plan, 'epic-large-thu')).toBeUndefined();
+    const work = plan.blocks.filter((b) => b.taskId === 'a');
+    expect(work.length).toBeGreaterThan(0);
+    for (const b of work) expect(b.end).toBeLessThanOrEqual(at(9));
+    expect(plan.notes).toContain('Lunch happens during Bryson Tiller concert trip to LA.');
+    expect(plan.notes).toContain('Dinner happens during Bryson Tiller concert trip to LA.');
+    expect(plan.warnings.filter((w) => /lunch|dinner/i.test(w))).toEqual([]);
+  });
+
+  test('discipleship with Isaac is never planned until confirmed for a date', () => {
+    expect(byEvent(planDay(dayInput(FRI)), 'isaac-fri')).toBeUndefined();
+    const confirmed = confirmTentative(def('isaac-fri'), FRI, at(10), at(11));
+    expect(confirmed).toMatchObject({ id: `isaac-fri-${FRI}`, date: FRI, start: at(10), end: at(11), recurringWeekly: false });
+    expect(confirmed.tentative).toBeUndefined();
+    const plan = planDay(dayInput(FRI, { events: [...dayInput(FRI).events, toInstance(confirmed)] }));
+    expect(byEvent(plan, `isaac-fri-${FRI}`)).toMatchObject({ start: at(10), end: at(11) });
   });
 
   test('events before the wake time are noted, not planned', () => {

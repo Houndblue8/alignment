@@ -1,11 +1,11 @@
-﻿// planDay: builds one day's blocks. Pure and deterministic.
+// planDay: builds one day's blocks. Pure and deterministic.
 // Order (Part 5 as changed by DECISIONS.md): fixed events, bedtime and evening, morning anchors and snack,
 // discipleship, library before class, workout and shower, meals, social events, tasks (Big 3 first),
 // Side Hustle Summit floor, misc, the rest of the tasks, then drive blocks.
 // When the day is too full for the Big 3, the floor or the workout, flexible items are cut in the
 // order of Part 5 step 12 and each cut becomes a warning.
 import { computeBedtime } from './bedtime';
-import { isFlexibleEvent, isSchoolEvent } from './expand';
+import { isFlexibleEvent, pausedByCodeRed } from './expand';
 import { onCampus, placeName, travel, workPlace } from './places';
 import { isSchoolUrgent, rankTasks } from './priority';
 import { RULES } from './rules';
@@ -109,7 +109,7 @@ function buildDay(input: DayInput, level: number): Built {
   let timed = input.events.filter((e) => !e.allDay);
 
   if (mode === 'codeRed') {
-    const paused = timed.filter((e) => !(e.immovable || isSchoolEvent(e) || !e.overridableByCodeRed));
+    const paused = timed.filter((e) => pausedByCodeRed(e, input.codeRedLevel));
     timed = timed.filter((e) => !paused.includes(e));
     if (paused.length) notes.push(`Paused by Code Red: ${paused.map((e) => e.title).join(', ')}.`);
   } else if (mode === 'lostDay') {
@@ -313,7 +313,9 @@ function buildDay(input: DayInput, level: number): Built {
   let workoutPlaced: WorkoutType | null = null;
   let workoutLen = 0;
   let workoutUnmet = false;
-  if (input.workout && mode === 'normal' && !noWork) {
+  const trip = placedEvents.find((e) => e.rankKey === 'trip');
+  if (trip && input.workout) notes.push(`No workout today: ${trip.title}.`);
+  if (input.workout && mode === 'normal' && !noWork && !trip) {
     const type = input.workout;
     const wMk = mk('workout', type, type === 'field' ? 'Field session' : 'Weights at the rec', 'campus');
     const shMk = mk('shower', '1', 'Shower at home', HOME);
@@ -356,6 +358,9 @@ function buildDay(input: DayInput, level: number): Built {
   }
 
   // 6. Meals.
+  /** A fixed event that covers most of a meal window (a trip, a dinner event): the meal happens there. */
+  const coveringEvent = (from: number, to: number) =>
+    placedEvents.find((e) => Math.min(e.end, to) - Math.max(e.start, from) >= (to - from) * 0.75);
   const lunchLocs = [campusDay ? 'campus' : HOME, HOME, workLoc];
   const dinnerLocs = [HOME, 'campus', workLoc];
   const placeMeal = (
@@ -391,7 +396,9 @@ function buildDay(input: DayInput, level: number): Built {
             [RULES.lunch.to, RULES.lunch.lastResortTo, { tight: true }],
           ],
         );
-        if (fallback === null) warnings.push('No time for lunch today.');
+        const during = coveringEvent(RULES.lunch.from, RULES.lunch.to);
+        if (fallback === null && during) notes.push(`Lunch happens during ${during.title}.`);
+        else if (fallback === null) warnings.push('No time for lunch today.');
         else notes.push('Lunch is 15 minutes today, between commitments.');
       }
     }
@@ -400,7 +407,9 @@ function buildDay(input: DayInput, level: number): Built {
       const r = placeMeal('dinner', 'Dinner', sizes, [[RULES.dinner.from, RULES.dinner.to, {}]], dinnerLocs);
       if (r === null) {
         const late = placeMeal('dinner', 'Dinner', sizes, [[RULES.dinner.lastResortFrom, RULES.dinner.lastResortTo, {}]], dinnerLocs);
-        if (late === null) warnings.push('No time for dinner today.');
+        const during = coveringEvent(RULES.dinner.from, RULES.dinner.to);
+        if (late === null && during) notes.push(`Dinner happens during ${during.title}.`);
+        else if (late === null) warnings.push('No time for dinner today.');
         else notes.push('Dinner falls outside 5:30 to 8:00 PM today because of evening commitments.');
       }
     }

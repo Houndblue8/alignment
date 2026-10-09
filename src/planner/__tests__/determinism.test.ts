@@ -59,7 +59,9 @@ describe('every rule holds across wake times, days and modes', () => {
             dayInput(date, { wakeMin, mode, tasks, big3: ['memo', 'course', 'email'], workout: 'weights', now: mode === 'lostDay' ? wakeMin + 120 : null }),
           );
           expectValidPlan(plan);
-          expect(plan.blocks.some((b) => b.kind === 'anchor_cold_shower')).toBe(true);
+          // Anchors are always planned, unless the whole day is already taken (then a warning says so).
+          const shower = plan.blocks.some((b) => b.kind === 'anchor_cold_shower');
+          expect(shower || plan.warnings.includes('No room for the cold shower today.')).toBe(true);
         }
       }
     });

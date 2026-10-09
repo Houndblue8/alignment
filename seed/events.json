@@ -9,7 +9,7 @@
   { "id": "bus-tue", "title": "BUS 3302", "kind": "class", "weekday": 2, "start": 540, "end": 620, "location": "campus", "rankKey": "school", "immovable": true, "overridableByCodeRed": false, "recurringWeekly": true },
   { "id": "club-a-tue", "title": "Club volleyball practice", "kind": "practice", "weekday": 2, "start": 1200, "end": 1290, "location": "campus", "rankKey": "club_practice", "immovable": false, "overridableByCodeRed": true, "recurringWeekly": true, "practiceBlock": "A" },
   { "id": "club-b-tue", "title": "Club volleyball practice", "kind": "practice", "weekday": 2, "start": 1290, "end": 1380, "location": "campus", "rankKey": "club_practice", "immovable": false, "overridableByCodeRed": true, "recurringWeekly": true, "practiceBlock": "B" },
-  { "id": "dwts-tue", "title": "Dancing with the Stars", "kind": "social", "weekday": 2, "start": 1295, "end": 1355, "location": "home", "rankKey": "social", "immovable": false, "overridableByCodeRed": true, "recurringWeekly": true },
+  { "id": "dwts-tue", "title": "Dancing with the Stars", "kind": "social", "weekday": 2, "start": 1295, "end": 1385, "location": "home", "rankKey": "social", "immovable": false, "overridableByCodeRed": true, "recurringWeekly": true },
 
   { "id": "acct2-wed", "title": "Intermediate Accounting 2", "kind": "class", "weekday": 3, "start": 720, "end": 800, "location": "campus", "rankKey": "school", "immovable": true, "overridableByCodeRed": false, "recurringWeekly": true, "skipDates": ["2026-10-28"] },
   { "id": "tax-wed", "title": "Tax class", "kind": "class", "weekday": 3, "start": 810, "end": 890, "location": "campus", "rankKey": "school", "immovable": true, "overridableByCodeRed": false, "recurringWeekly": true, "skipDates": ["2026-11-04"] },
@@ -17,10 +17,10 @@
   { "id": "d1-wed", "title": "D1 practice", "kind": "practice", "weekday": 3, "start": 585, "end": 705, "location": "campus", "rankKey": "club_practice", "immovable": false, "overridableByCodeRed": true, "recurringWeekly": true },
   { "id": "club-b-wed", "title": "Club volleyball practice", "kind": "practice", "weekday": 3, "start": 1260, "end": 1380, "location": "grover", "rankKey": "club_practice", "immovable": false, "overridableByCodeRed": true, "recurringWeekly": true, "practiceBlock": "B" },
 
-  { "id": "bus-thu", "title": "BUS 3302", "kind": "class", "weekday": 4, "start": 540, "end": 620, "location": "campus", "rankKey": "school", "immovable": true, "overridableByCodeRed": false, "recurringWeekly": true },
-  { "id": "epic-large-thu", "title": "Epic large group", "kind": "event", "weekday": 4, "start": 1140, "end": 1320, "location": "campus", "rankKey": "epic_large", "immovable": false, "overridableByCodeRed": false, "recurringWeekly": true },
+  { "id": "bus-thu", "title": "BUS 3302", "kind": "class", "weekday": 4, "start": 540, "end": 620, "location": "campus", "rankKey": "school", "immovable": true, "overridableByCodeRed": false, "recurringWeekly": true, "skipDates": ["2026-10-22"] },
+  { "id": "epic-large-thu", "title": "Epic large group", "kind": "event", "weekday": 4, "start": 1140, "end": 1320, "location": "campus", "rankKey": "epic_large", "immovable": false, "overridableByCodeRed": false, "recurringWeekly": true, "skipDates": ["2026-10-22"] },
 
-  { "id": "isaac-fri", "title": "Discipleship with Isaac", "kind": "event", "weekday": 5, "start": 540, "end": 600, "location": "campus", "rankKey": "discipleship", "immovable": false, "overridableByCodeRed": true, "recurringWeekly": true },
+  { "id": "isaac-fri", "title": "Discipleship with Isaac", "kind": "event", "weekday": 5, "start": 540, "end": 600, "location": "campus", "rankKey": "discipleship", "immovable": false, "overridableByCodeRed": true, "recurringWeekly": true, "tentative": true },
 
   { "id": "social-sat", "title": "Flex social or video games", "kind": "social", "weekday": 6, "start": 1140, "end": 1260, "location": "home", "rankKey": "social", "immovable": false, "overridableByCodeRed": true, "recurringWeekly": true },
 
@@ -29,7 +29,7 @@
   { "id": "club-a-sun", "title": "Club volleyball practice", "kind": "practice", "weekday": 0, "start": 1080, "end": 1200, "location": "campus", "rankKey": "club_practice", "immovable": false, "overridableByCodeRed": true, "recurringWeekly": true, "practiceBlock": "A" },
   { "id": "club-b-sun", "title": "Club volleyball practice", "kind": "practice", "weekday": 0, "start": 1200, "end": 1320, "location": "campus", "rankKey": "club_practice", "immovable": false, "overridableByCodeRed": true, "recurringWeekly": true, "practiceBlock": "B" },
 
-  { "id": "concert-2026-10-22", "title": "Concert in LA (leave early)", "kind": "event", "date": "2026-10-22", "allDay": true, "noWork": true, "start": 0, "end": 1440, "location": "other", "rankKey": "social", "immovable": true, "overridableByCodeRed": false, "recurringWeekly": false },
+  { "id": "bryson-tiller-2026-10-22", "title": "Bryson Tiller concert trip to LA", "kind": "event", "date": "2026-10-22", "start": 540, "end": 1440, "location": "home", "rankKey": "trip", "immovable": true, "overridableByCodeRed": false, "recurringWeekly": false },
   { "id": "retreat-2026-10-23", "title": "Epic fall retreat", "kind": "event", "date": "2026-10-23", "endDate": "2026-10-24", "allDay": true, "noWork": true, "away": true, "start": 0, "end": 1440, "location": "other", "rankKey": "retreat", "immovable": true, "overridableByCodeRed": false, "recurringWeekly": false },
   { "id": "dayoff-2026-10-25", "title": "Day off", "kind": "event", "date": "2026-10-25", "allDay": true, "noWork": true, "start": 0, "end": 1440, "location": "home", "rankKey": "general", "immovable": true, "overridableByCodeRed": false, "recurringWeekly": false },
   { "id": "acct-exam2-2026-10-28", "title": "Accounting Exam 2", "kind": "exam", "date": "2026-10-28", "start": 720, "end": 800, "location": "campus", "rankKey": "school", "immovable": true, "overridableByCodeRed": false, "recurringWeekly": false },

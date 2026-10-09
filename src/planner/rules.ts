@@ -39,6 +39,7 @@ export const RULES = {
 
 /** Priority ladder, highest first (Appendix B). Church sits with the top tier. */
 export const RANK: Record<RankKey, number> = {
+  trip: 1,
   church: 1,
   epic_large: 1,
   retreat: 1,

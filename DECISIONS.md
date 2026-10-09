@@ -44,6 +44,21 @@ Each entry: what was decided, who decided, and what it replaces in the brief. Pl
 - Oct 28: Accounting Exam 2 (12:00 PM, immovable) replaces the 12:00 Intermediate Accounting class. Tax stays at 1:30 to 2:50 PM and the lift follows it.
 - Replaces: Part 13 "on exam days tax class moves to 3:00 to 4:20 PM", Appendix B tax times (1:30 to 2:55), and the earlier Oct 28 default.
 
+### D6. Code Red has two levels (2026-10-09)
+- Church and Epic large group keep running in every Code Red.
+- **Code Red** (standard): practices (club, D1, flag football) keep running. Social events, Epic small group, discipleship, workouts, misc and non-school tasks pause. The floor drops to 10 minutes.
+- **Code Red: all in** (severe): practices pause too. For bad situations.
+- Eli picks the level. The app will suggest "all in" when an exam is 2 days away (Phase 2 UI), and Eli decides.
+
+### D7. Discipleship with Isaac is a weekly "maybe" (2026-10-09)
+- No fixed time. Never planned on its own.
+- Each Thursday the app asks "Dship with Isaac tomorrow?" with Yes (pick a time) or Not this week. Yes adds a one-time event on Friday. The talk box can also add it.
+
+### D8. Oct 22 Bryson Tiller concert (2026-10-09)
+- Blocked from 9:00 AM (leave for LA) through the night. A work session fits before leaving. No workout that day. Meals happen on the trip.
+- BUS 3302 (9:00 AM) and Epic large group are skipped that day because of the 9:00 departure. (Assumption: Eli will say if he goes to class first.)
+- Dancing with the Stars is 90 minutes.
+
 ## Claude's defaults (change any by telling me)
 
 - 5 minute buffers between blocks, except inside the morning routine (D2).
@@ -81,13 +96,13 @@ Tasks and cuts
 - Social events move later the same day, otherwise to the next evening after 5:00 PM. They are never deleted. If they run past the planned week, a warning names them.
 
 Modes and replan
-- Code Red keeps meals and a 10 minute floor. It pauses workouts, misc, practices, Epic small group, social events and discipleship. Church and Epic large group are seeded as not paused by Code Red: tell me if that is wrong.
+- Code Red keeps meals and a 10 minute floor (see D6 for which events pause).
 - Lost Day salvage order: cold shower and walk (if not done), the next meal, the shortest Big 3 item, a 30 minute workout.
 - Replan keeps done, in-progress, pinned and manual blocks, plus past meals, events and misc. Missed anchors, work, the floor and workouts are planned again from now.
 - A day with an empty Big 3 is a Win when both anchors are done.
 
 Seed assumptions (correct any in Settings later)
-- Dancing with the Stars: Tuesday 9:35 to 10:35 PM, 60 minutes. Flex social: Saturday 7:00 to 9:00 PM at home. Discipleship with Isaac: Friday 9:00 to 10:00 AM on campus. Epic large group is on campus. One-on-one Epic breakfast: 9:35 to 10:35 AM near church. Church is 15 minutes from home (estimate).
+- Dancing with the Stars: Tuesday from 9:35 PM, 90 minutes (moves when it doesn't fit). Flex social: Saturday 7:00 to 9:00 PM at home. Discipleship with Isaac: see D7 (default time when confirmed: 1 hour on campus). Epic large group is on campus. One-on-one Epic breakfast: 9:35 to 10:35 AM near church. Church is 15 minutes from home (estimate).
 - Practice block B is at Grover only on Wednesday. Tuesday and Sunday B practices are on campus.
-- D1 practice, club practice and flag football are not immovable, so Code Red and Lost Day can pause them. Classes and exams are immovable.
-- Oct 22 concert is an all-day "no work" marker. Epic large group still shows that evening: delete it or tell the talk box if you will be in LA.
+- D1 practice, club practice and flag football are not immovable, so Code Red "all in" and Lost Day can pause them. Classes and exams are immovable.
+- Trips (rank "trip", top of the ladder) are one-time commitments Eli sets himself, such as the Oct 22 concert.

@@ -77,9 +77,15 @@ describe('6. workouts', () => {
     expect(chooseWorkout(FRI, { field: 3, weights: 3 })).toBeNull();
   });
 
-  test('no workout on a day with no work planned (concert day)', () => {
+  test('no workout on a trip day (concert)', () => {
     const p = planDay(dayInput('2026-10-22', { workout: 'field' }));
     expect(p.workoutPlaced).toBeNull();
-    expect(p.notes).toContain('No work planned today: Concert in LA (leave early).');
+    expect(p.notes).toContain('No workout today: Bryson Tiller concert trip to LA.');
+  });
+
+  test('no workout on a no-work day (day off)', () => {
+    const p = planDay(dayInput('2026-10-25', { workout: 'field' }));
+    expect(p.workoutPlaced).toBeNull();
+    expect(p.notes).toContain('No work planned today: Day off.');
   });
 });

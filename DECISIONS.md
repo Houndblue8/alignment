@@ -53,3 +53,6 @@ Each entry: what was decided, who decided, and what it replaces in the brief. Pl
 - Oct 23 to 25: retreat and day off. Only anchors, meals, and immovable events.
 - When a fixed event leaves no room, lunch, dinner, and misc are moved or shortened first, with a note.
 - Plain CSS variables, no Tailwind.
+- Setup order: the Anthropic API key is created at the start of Phase 3 (first AI use) and VAPID keys at the start of Phase 5 (notifications), so nothing costs money or sits unused before it is needed. Playwright browsers are installed at the start of Phase 2.
+- Supabase uses the new publishable key (`sb_publishable_...`) in the client, named `VITE_SUPABASE_PUBLISHABLE_KEY`.
+- `vercel.json` rewrites app routes to `index.html` so deep links like `/today` work.

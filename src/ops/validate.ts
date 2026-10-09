@@ -105,6 +105,7 @@ export function validateOps(reply: ParseReply, s: Snapshot, now: Now): string[] 
         if (op.op === 'move_block') {
           const start = toMin(op.start);
           if (b.date === now.date && wake !== null && start < wake) fail(`nothing can start before the wake time.`);
+          if (b.date === now.date && start < now.min - 5) fail('that time has already passed. Pick a time after now.');
           if (start + (b.end - b.start) > 1440) fail('the block would run past midnight.');
           const clash = s.blocks.find((x) => x.date === b.date && x.eventId && x.id !== b.id && start < x.end && x.start < start + (b.end - b.start));
           if (clash) fail(`that time overlaps ${clash.title} (${fmtTime(clash.start)} to ${fmtTime(clash.end)}). Pick a free time.`);
@@ -116,6 +117,7 @@ export function validateOps(reply: ParseReply, s: Snapshot, now: Now): string[] 
         if (!inRange(op.date, 0, 60)) fail(`date ${op.date} must be today or within 60 days.`);
         if (toMin(op.end) <= toMin(op.start)) fail('end must be after start.');
         if (op.date === now.date && wake !== null && toMin(op.start) < wake) fail('nothing can start before the wake time.');
+        if (op.date === now.date && toMin(op.start) < now.min - 5) fail('that time has already passed. Pick a time after now.');
         if (op.location && !places.has(op.location)) fail(`location "${op.location}" is not a place id.`);
         break;
       default:

@@ -4,12 +4,15 @@ import type { Snapshot } from '../data/model';
 import type { Now } from '../lib/clock';
 import type { AI } from './ai';
 import { runDump } from './pipeline';
+import { fmtTime } from '../planner';
 import type { ParseReply } from './schema';
 
 export interface LiveCase {
   name: string;
   text: string;
-  check: (r: ParseReply, s: Snapshot) => string | null;
+  /** Builds the phrase from today's plan. Null skips the case (nothing suitable today). */
+  build?: (s: Snapshot, now: Now) => { text: string; expect: { id: string; start: string } } | null;
+  check: (r: ParseReply, s: Snapshot, now: Now, expect?: { id: string; start: string }) => string | null;
 }
 
 const has = (r: ParseReply, op: string) => r.ops.some((o) => o.op === op);
@@ -23,12 +26,27 @@ export const LIVE_CASES: LiveCase[] = [
   {
     name: '14. Move the library block',
     text: 'Move my library block to 1 PM',
-    check: (r, s) => {
-      const hasLibrary = s.blocks.some((b) => b.kind === 'library_work');
-      if (has(r, 'move_block')) return null;
-      if (!hasLibrary && (r.unhandled.length > 0 || has(r, 'ask'))) return null;
-      return hasLibrary ? 'Expected move_block for the library block.' : 'No library block today, so it should say so.';
+    check: (r, s, now) => {
+      const lib = s.blocks.find((b) => b.date === now.date && b.kind === 'library_work');
+      // Only expect a move when today has a library block and 1 PM is still ahead.
+      if (lib && now.min < 780) return r.ops.some((o) => o.op === 'move_block' && o.block_id === lib.id) ? null : 'Expected move_block for the library block.';
+      return r.unhandled.length > 0 || has(r, 'ask') ? null : 'No library block left today before 1 PM, so it should say so.';
     },
+  },
+  {
+    name: '14b. Move a missed block to later',
+    text: '',
+    build: (s, now) => {
+      const missed = s.blocks
+        .filter((b) => b.date === now.date && !b.eventId && b.status !== 'done' && b.start < now.min && ['work', 'library_work', 'shs_floor', 'misc', 'meal'].includes(b.kind))
+        .sort((a, b) => b.start - a.start)[0];
+      if (!missed) return null;
+      const t = Math.min(1380, Math.ceil((now.min + 60) / 15) * 15);
+      const hhmm = `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`;
+      return { text: `I missed my ${missed.title}. Move it to ${fmtTime(t)}.`, expect: { id: missed.id, start: hhmm } };
+    },
+    check: (r, _s, _now, expect) =>
+      r.ops.some((o) => o.op === 'move_block' && o.block_id === expect?.id && o.start === expect?.start) ? null : 'Expected move_block of the missed block to the time given.',
   },
   {
     name: '15. Running late',
@@ -60,12 +78,17 @@ export interface LiveResult {
 
 export async function runLiveCheck(s: Snapshot, now: Now, client: Pick<AI, 'parse'>, onResult: (r: LiveResult) => void): Promise<void> {
   for (const c of LIVE_CASES) {
-    const out = await runDump(c.text, s, now, client);
+    const built = c.build ? c.build(s, now) : null;
+    if (c.build && !built) {
+      onResult({ name: c.name, pass: true, detail: "Skipped: no missed block on today's plan to move.", ops: [] });
+      continue;
+    }
+    const out = await runDump(built?.text ?? c.text, s, now, client);
     if (!out.ok) {
       onResult({ name: c.name, pass: false, detail: out.message, ops: [] });
       continue;
     }
-    const problem = c.check(out.reply, s);
+    const problem = c.check(out.reply, s, now, built?.expect);
     onResult({
       name: c.name,
       pass: problem === null,

@@ -33,7 +33,8 @@ Brain dumps
 Events and blocks
 - Recurring commitments are events: add_event (weekly: weekday set, date null; one time: date set, weekday null). Changes go through update_event; "only this week" is scope this with the date of that occurrence.
 - Classes, exams, retreats and tournaments are immovable. Never move them; put such requests in unhandled with the reason.
-- move_block, resize_block and delete_block act on today's (or this week's) planned blocks by id. Nothing may be placed before today's wake time.
+- move_block, resize_block and delete_block act on today's (or this week's) planned blocks by id. Nothing may be placed before today's wake time or before now.
+- Missed blocks: "I missed my study block, move it to 5" is move_block to that time. "Push it to later" or "do it tonight" with no time: pick the first sensible free time after now from today's blocks and use move_block; if there is no free time today, use replan (the planner places missed work in the next free time) and say so in summary.
 - "Practice is block B this week" = set_practice_block.
 
 What the app cannot do (put these in unhandled)

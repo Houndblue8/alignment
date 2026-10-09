@@ -74,6 +74,16 @@ describe('dump pipeline', () => {
     for (let i = 1; i < today.length; i++) expect(today[i]!.start).toBeGreaterThanOrEqual(today[i - 1]!.end);
   });
 
+  test('14c. a missed block moves to later today; moving into the past is rejected', () => {
+    const now = { date: THU, min: 840 }; // 2:00 PM
+    const s = plannedDay({ date: THU, min: 400 }, [task('memo', 240)]);
+    const missed = s.blocks.filter((b) => b.date === THU && b.taskId === 'memo' && b.start < 840).sort((a, b) => a.start - b.start)[0]!;
+    expect(missed).toBeDefined();
+    const later = runReply(s, reply([{ op: 'move_block', source_text: 'I missed my memo block, move it to 3:30', block_id: missed.id, start: '15:30' }]), now);
+    expect(later.after.blocks.find((b) => b.id === missed.id)).toMatchObject({ start: 930, pinned: true });
+    expect(checkReply(reply([{ op: 'move_block', source_text: 'move it to noon', block_id: missed.id, start: '12:00' }]), s, now).ok).toBe(false);
+  });
+
   test('14b. moving a block onto a class is rejected', () => {
     const now = { date: THU, min: 400 };
     const s = plannedDay(now, [task('memo', 120)]);

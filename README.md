@@ -28,4 +28,13 @@ The planner lives in `src/planner/`. It is pure TypeScript: no network, no datab
 
 ## Deploy
 
-Pushing to `main` on GitHub deploys to Vercel automatically (set up in Phase 0).
+- **Web app:** pushing to `main` on GitHub deploys to Vercel automatically.
+- **Database changes:** new files in `supabase/migrations/` are run once in the Supabase SQL Editor (paste and Run).
+- **AI functions** (`supabase/functions/`): the Supabase access token is saved as the Windows user variable `SUPABASE_ACCESS_TOKEN`. In PowerShell:
+  `$env:SUPABASE_ACCESS_TOKEN = [Environment]::GetEnvironmentVariable('SUPABASE_ACCESS_TOKEN','User'); npx.cmd supabase functions deploy parse-dump --project-ref rmuknpoaqjsdtpcwjblj --use-api`
+  (same for `coach` and `delegate`). After changing `src/ops/schema.ts`, run `npm run gen:schema` first.
+- **Secrets** (Supabase dashboard, Edge Functions, Secrets): `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL_PARSE`, `ANTHROPIC_MODEL_COACH`.
+
+## Talk box
+
+Words go to the `parse-dump` function, which asks Claude for operations. The app checks every operation (shape, ids, times, hard rules), retries once with the errors, then applies them, replans, and logs the change for Undo. To test the live AI: Settings, Talk box check.

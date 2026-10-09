@@ -295,4 +295,20 @@ export const supabaseRepo: Repo = {
   },
   upsertQuote: async (q) => void (await must(supabase.from('quotes').upsert({ id: q.id, text: q.text, tags: q.tags }))),
   deleteQuote: async (id) => void (await must(supabase.from('quotes').delete().eq('id', id))),
+  async addOpsLog(entry) {
+    const row = await must(
+      supabase
+        .from('ops_log')
+        .insert({ input_text: entry.inputText, ops: entry.ops, unhandled: entry.unhandled, snapshot_before: entry.snapshotBefore })
+        .select('id')
+        .single(),
+    );
+    return (row as { id: string }).id;
+  },
+  markUndone: async (id) => void (await must(supabase.from('ops_log').update({ undone: true }).eq('id', id))),
+  async getCoach(date, kind) {
+    const row = await must(supabase.from('coach_cache').select('text').eq('date', date).eq('kind', kind).maybeSingle());
+    return (row as { text: string } | null)?.text ?? null;
+  },
+  saveCoach: async (date, kind, text) => void (await must(supabase.from('coach_cache').upsert({ date, kind, text }))),
 };

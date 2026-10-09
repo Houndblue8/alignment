@@ -58,6 +58,8 @@ export interface PlanMeta {
   notes: string[];
   bedtime: Bedtime | null;
   belowTheLine: BelowTheLine[];
+  /** Block ids Eli took off the plan (talk box). Kept across replans. */
+  suppressed?: string[];
 }
 
 export interface DayRecord {

@@ -20,6 +20,19 @@ export interface Repo {
   replaceBlocks(dates: string[], blocks: Block[]): Promise<void>;
   upsertQuote(q: Quote): Promise<void>;
   deleteQuote(id: string): Promise<void>;
+  /** Log a talk box dump with what it changed and the state before, for Undo. Returns the log id. */
+  addOpsLog(entry: OpsLogEntry): Promise<string>;
+  markUndone(id: string): Promise<void>;
+  /** Cached coach text per day (one AI call per day for the Home line). */
+  getCoach(date: string, kind: string): Promise<string | null>;
+  saveCoach(date: string, kind: string, text: string): Promise<void>;
+}
+
+export interface OpsLogEntry {
+  inputText: string;
+  ops: unknown[];
+  unhandled: unknown[];
+  snapshotBefore: unknown;
 }
 
 export const DATA_MODE: 'local' | 'supabase' = import.meta.env.VITE_DATA_MODE === 'local' ? 'local' : 'supabase';

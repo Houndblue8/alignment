@@ -37,6 +37,8 @@ export interface WeekInput {
   places: Place[];
   settings: PlannerSettings;
   pinnedByDate?: Record<string, Block[]>;
+  /** Block ids taken off the plan, per date. */
+  suppressByDate?: Record<string, string[]>;
   /** Workouts already done this week (Monday to Sunday) before startDate. */
   workoutsThisWeek: Record<WorkoutType, number>;
   /** Events moved into startDate from an earlier day. */
@@ -116,6 +118,7 @@ export function planWeek(input: WeekInput): DayPlan[] {
       mode,
       codeRedLevel: input.codeRedLevel,
       pinned: input.pinnedByDate?.[date] ?? [],
+      suppress: input.suppressByDate?.[date] ?? [],
       workout: chooseWorkout(date, done),
       tomorrowFirst: first ? { start: first.start, location: first.location, title: first.title } : null,
       examWithin7,

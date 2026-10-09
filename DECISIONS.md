@@ -77,6 +77,17 @@ Each entry: what was decided, who decided, and what it replaces in the brief. Pl
 - Place names are editable. Inputs use 16 px text so iPhone does not zoom.
 - Anchor taps play a fill, check and burst animation with a haptic tick (Android vibration; iOS 18 switch haptic). The full visual pass, the contract as a signed document, and optional Higgsfield video assets are Phase 4.
 
+### D12. Talk box (Phase 3, 2026-10-10)
+- Models: `claude-sonnet-5-5` for the talk box and Delegate, `claude-haiku-5-5` for the coach line (Edge Function secrets ANTHROPIC_MODEL_PARSE and ANTHROPIC_MODEL_COACH).
+- Sonnet 5.5 rejects forced tool_choice, so `submit_ops` is offered with tool_choice auto and the prompt requires it. Strict mode is off for submit_ops because 21 operation shapes exceed strict schema limits. Instead the app checks every reply with the same Zod schema (generated into the tool definition) plus id, time and hard-rule checks, retries once with the errors, then fails without changing anything.
+- Server-side refusal fallback is on (`fallbacks: "default"`): if a safety classifier declines, the API reruns the request on a fallback model.
+- The system prompt and tool schema are fixed text, so prompt caching makes repeat calls cheaper. Context (date, plan, tasks, events, vision) travels in the user message.
+- Operations take times as HH:MM and dates as YYYY-MM-DD. "Delete this block" hides it from the planner for that day (kept across replans). "Move this block" pins it at the new time and the rest of the day is rebuilt around it.
+- Undo restores today and the next 7 days of plan, plus settings, tasks, events and quotes, exactly as they were.
+- The live-AI dump test is a "Talk box check" button in Settings (5 AI calls, no data changes) instead of a terminal script.
+- Coach line: one Haiku call per day, cached. Away 2 or more days: the brief's message plus a 5 minute start. Away 5 or more: a firm message and a Lost Day reset button.
+- Decision after 3 deferrals: Do it today (top of the Big 3), Schedule it (sets the date as its deadline), Delegate (AI writes steps and any message draft onto the task), Drop it.
+
 ## Claude's defaults (change any by telling me)
 
 - 5 minute buffers between blocks, except inside the morning routine (D2).

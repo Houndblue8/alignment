@@ -54,4 +54,24 @@ export const localRepo: Repo = {
     }),
   upsertQuote: (q) => update((s) => void (s.quotes = upsertById(s.quotes, [q]))),
   deleteQuote: (id) => update((s) => void (s.quotes = s.quotes.filter((q) => q.id !== id))),
+  addOpsLog: async (entry) => {
+    const id = crypto.randomUUID();
+    const log = JSON.parse(localStorage.getItem(LOG_KEY) ?? '[]') as unknown[];
+    log.push({ id, createdAt: new Date().toISOString(), undone: false, ...entry });
+    localStorage.setItem(LOG_KEY, JSON.stringify(log.slice(-50)));
+    return id;
+  },
+  markUndone: async (id) => {
+    const log = JSON.parse(localStorage.getItem(LOG_KEY) ?? '[]') as { id: string; undone: boolean }[];
+    localStorage.setItem(LOG_KEY, JSON.stringify(log.map((e) => (e.id === id ? { ...e, undone: true } : e))));
+  },
+  getCoach: async (date, kind) => (JSON.parse(localStorage.getItem(COACH_KEY) ?? '{}') as Record<string, string>)[`${date}:${kind}`] ?? null,
+  saveCoach: async (date, kind, text) => {
+    const all = JSON.parse(localStorage.getItem(COACH_KEY) ?? '{}') as Record<string, string>;
+    all[`${date}:${kind}`] = text;
+    localStorage.setItem(COACH_KEY, JSON.stringify(all));
+  },
 };
+
+const LOG_KEY = 'alignment.opslog';
+const COACH_KEY = 'alignment.coach';

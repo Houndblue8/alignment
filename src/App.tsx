@@ -16,6 +16,7 @@ import { DayDetail, Week } from './screens/Week';
 import { dayOf } from './state/planning';
 import { useApp } from './state/store';
 import { Nav } from './ui/Nav';
+import { TalkBox } from './ui/TalkBox';
 import { ToastView } from './ui/Toast';
 
 export function App() {
@@ -102,6 +103,7 @@ function Loaded() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
+      <TalkBox />
     </div>
   );
 }

@@ -591,6 +591,58 @@ label.label {
   opacity: 0.8;
 }
 
+.coach {
+  border-left: 4px solid var(--accent);
+  font-family: var(--font-heading);
+  font-size: 1.0625rem;
+}
+
+/* Talk box */
+.talk-fab {
+  position: fixed;
+  right: var(--s2);
+  bottom: calc(var(--tabbar-h) + var(--s2) + env(safe-area-inset-bottom));
+  z-index: 25;
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  border: 0;
+  background: var(--text);
+  color: var(--bg);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.18);
+}
+@media (min-width: 900px) {
+  .talk-fab {
+    bottom: var(--s3);
+    right: var(--s3);
+  }
+}
+.talk-input {
+  min-height: 120px;
+}
+.mic {
+  border: 1px solid var(--border);
+}
+.mic.on {
+  background: var(--accent);
+  color: var(--on-accent);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+@keyframes pulse {
+  50% {
+    box-shadow: 0 0 0 8px var(--accent-soft);
+  }
+}
+/* Keep the sticky Replan button clear of the talk button on phones. */
+@media (max-width: 899px) {
+  .sticky-bottom {
+    margin-right: 64px;
+  }
+}
+
 /* Overlays */
 .sheet-backdrop {
   position: fixed;

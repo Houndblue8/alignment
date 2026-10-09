@@ -4,6 +4,9 @@ import { DATA_MODE } from '../data/repo';
 import { supabase } from '../data/supabase';
 import { fmtDate, fmtTime, fromHHMM, toHHMM } from '../lib/format';
 import type { EventDef, EventKind, Place, RankKey } from '../planner';
+import { nowLocal } from '../lib/clock';
+import { ai } from '../ops/ai';
+import { LIVE_CASES, runLiveCheck, type LiveResult } from '../ops/liveCheck';
 import { useApp } from '../state/store';
 import { Sheet } from '../ui/Sheet';
 
@@ -138,6 +141,10 @@ export function Settings() {
         <p className="small muted">Gold and Cream. Five more themes arrive in Phase 4.</p>
       </Group>
 
+      <Group title="Talk box check" summary="Live AI test, about 5 cents">
+        <LiveCheck />
+      </Group>
+
       <Group title="Account">
         {DATA_MODE === 'supabase' ? (
           <button className="btn danger" onClick={() => supabase.auth.signOut()}>
@@ -151,6 +158,38 @@ export function Settings() {
       {editing && <EventSheet initial={editing === 'new' ? null : editing} onClose={() => setEditing(null)} />}
       {place && <PlaceSheet initial={place} onClose={() => setPlace(null)} />}
     </>
+  );
+}
+
+function LiveCheck() {
+  const [results, setResults] = useState<LiveResult[]>([]);
+  const [running, setRunning] = useState(false);
+  return (
+    <div className="stack">
+      <p className="small muted">Sends the five dump test phrases to the real AI and checks each reply. Nothing in your plan changes.</p>
+      <button
+        className="btn"
+        disabled={running}
+        onClick={async () => {
+          setRunning(true);
+          setResults([]);
+          await runLiveCheck(useApp.getState().s!, nowLocal(), ai, (r) => setResults((cur) => [...cur, r]));
+          setRunning(false);
+        }}
+      >
+        {running ? `Running ${results.length + 1} of ${LIVE_CASES.length}` : 'Run the talk box check'}
+      </button>
+      {results.map((r) => (
+        <div key={r.name} className="card stack">
+          <span className="row">
+            <span className={`chip ${r.pass ? '' : 'outline'}`}>{r.pass ? 'Pass' : 'Fail'}</span>
+            <span>{r.name}</span>
+          </span>
+          <span className="small muted">{r.detail}</span>
+          {r.ops.length > 0 && <span className="small muted">{r.ops.join(', ')}</span>}
+        </div>
+      ))}
+    </div>
   );
 }
 

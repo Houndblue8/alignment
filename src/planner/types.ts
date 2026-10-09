@@ -164,6 +164,8 @@ export interface DayInput {
   /** Only used in Code Red. Standard keeps practices; severe pauses them too. Default standard. */
   codeRedLevel?: CodeRedLevel;
   pinned: Block[];
+  /** Block ids Eli took off the plan for this day. The planner leaves that time free. */
+  suppress?: string[];
   workout: WorkoutType | null;
   tomorrowFirst: { start: number; location: string; title: string } | null;
   examWithin7: boolean;

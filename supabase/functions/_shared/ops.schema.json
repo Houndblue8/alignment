@@ -1,0 +1,871 @@
+{
+  "type": "object",
+  "properties": {
+    "ops": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "op": {
+                "type": "string",
+                "const": "set_wake_time"
+              },
+              "source_text": {
+                "type": "string",
+                "minLength": 1,
+                "description": "The exact clause of what Eli said that this operation comes from."
+              },
+              "time": {
+                "type": "string",
+                "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+              }
+            },
+            "required": [
+              "op",
+              "source_text",
+              "time"
+            ],
+            "additionalProperties": false,
+            "description": "Eli says when he woke up today."
+          },
+          {
+            "type": "object",
+            "properties": {
+              "op": {
+                "type": "string",
+                "const": "set_anchor"
+              },
+              "source_text": {
+                "type": "string",
+                "minLength": 1,
+                "description": "The exact clause of what Eli said that this operation comes from."
+              },
+              "anchor": {
+                "type": "string",
+                "enum": [
+                  "cold_shower",
+                  "walk"
+                ]
+              },
+              "done": {
+                "type": "boolean"
+              },
+              "time": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "op",
+              "source_text",
+              "anchor",
+              "done",
+              "time"
+            ],
+            "additionalProperties": false,
+            "description": "Cold shower or walk with God done (or not). time only if Eli said when."
+          },
+          {
+            "type": "object",
+            "properties": {
+              "op": {
+                "type": "string",
+                "const": "add_task"
+              },
+              "source_text": {
+                "type": "string",
+                "minLength": 1,
+                "description": "The exact clause of what Eli said that this operation comes from."
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 120
+              },
+              "journey": {
+                "type": "string",
+                "enum": [
+                  "body",
+                  "sport",
+                  "shs",
+                  "school",
+                  "faith",
+                  "life"
+                ]
+              },
+              "importance": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 5
+              },
+              "deadline": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "minutes": {
+                "type": "integer",
+                "minimum": 5,
+                "maximum": 600
+              },
+              "work_type": {
+                "type": "string",
+                "enum": [
+                  "deep",
+                  "easy",
+                  "errand"
+                ]
+              },
+              "steps": {
+                "maxItems": 8,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "text": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "guess": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "text",
+                    "guess"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "op",
+              "source_text",
+              "title",
+              "journey",
+              "importance",
+              "deadline",
+              "minutes",
+              "work_type",
+              "steps"
+            ],
+            "additionalProperties": false,
+            "description": "A new task. Grade importance 1 to 5 against the vision. Steps you had to guess get guess: true."
+          },
+          {
+            "type": "object",
+            "properties": {
+              "op": {
+                "type": "string",
+                "const": "update_task"
+              },
+              "source_text": {
+                "type": "string",
+                "minLength": 1,
+                "description": "The exact clause of what Eli said that this operation comes from."
+              },
+              "task_id": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 120
+              },
+              "journey": {
+                "type": "string",
+                "enum": [
+                  "body",
+                  "sport",
+                  "shs",
+                  "school",
+                  "faith",
+                  "life"
+                ]
+              },
+              "importance": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 5
+              },
+              "deadline": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "minutes": {
+                "type": "integer",
+                "minimum": 5,
+                "maximum": 600
+              }
+            },
+            "required": [
+              "op",
+              "source_text",
+              "task_id"
+            ],
+            "additionalProperties": false,
+            "description": "Change fields of an existing open task."
+          },
+          {
+            "type": "object",
+            "properties": {
+              "op": {
+                "type": "string",
+                "const": "complete_task"
+              },
+              "source_text": {
+                "type": "string",
+                "minLength": 1,
+                "description": "The exact clause of what Eli said that this operation comes from."
+              },
+              "task_id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "op",
+              "source_text",
+              "task_id"
+            ],
+            "additionalProperties": false,
+            "description": "Eli finished a task."
+          },
+          {
+            "type": "object",
+            "properties": {
+              "op": {
+                "type": "string",
+                "const": "delete_task"
+              },
+              "source_text": {
+                "type": "string",
+                "minLength": 1,
+                "description": "The exact clause of what Eli said that this operation comes from."
+              },
+              "task_id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "op",
+              "source_text",
+              "task_id"
+            ],
+            "additionalProperties": false,
+            "description": "Eli wants a task gone."
+          },
+          {
+            "type": "object",
+            "properties": {
+              "op": {
+                "type": "string",
+                "const": "add_event"
+              },
+              "source_text": {
+                "type": "string",
+                "minLength": 1,
+                "description": "The exact clause of what Eli said that this operation comes from."
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 120
+              },
+              "date": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "weekday": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 6
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "start": {
+                "type": "string",
+                "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+              },
+              "end": {
+                "type": "string",
+                "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+              },
+              "location": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "event",
+                  "social",
+                  "class",
+                  "practice",
+                  "exam"
+                ]
+              },
+              "immovable": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "op",
+              "source_text",
+              "title",
+              "date",
+              "weekday",
+              "start",
+              "end",
+              "location",
+              "kind",
+              "immovable"
+            ],
+            "additionalProperties": false,
+            "description": "A fixed commitment. One-time: date set, weekday null. Weekly: weekday set (0 = Sunday), date null. location is a place id or null."
+          },
+          {
+            "type": "object",
+            "properties": {
+              "op": {
+                "type": "string",
+                "const": "update_event"
+              },
+              "source_text": {
+                "type": "string",
+                "minLength": 1,
+                "description": "The exact clause of what Eli said that this operation comes from."
+              },
+              "event_id": {
+                "type": "string"
+              },
+              "scope": {
+                "type": "string",
+                "enum": [
+                  "this",
+                  "all"
+                ]
+              },
+              "date": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 120
+              },
+              "start": {
+                "type": "string",
+                "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+              },
+              "end": {
+                "type": "string",
+                "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+              },
+              "location": {
+                "type": "string"
+              },
+              "weekday": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 6
+              }
+            },
+            "required": [
+              "op",
+              "source_text",
+              "event_id",
+              "scope",
+              "date"
+            ],
+            "additionalProperties": false,
+            "description": "Change an event. scope this = only the occurrence on date; all = every occurrence."
+          },
+          {
+            "type": "object",
+            "properties": {
+              "op": {
+                "type": "string",
+                "const": "delete_event"
+              },
+              "source_text": {
+                "type": "string",
+                "minLength": 1,
+                "description": "The exact clause of what Eli said that this operation comes from."
+              },
+              "event_id": {
+                "type": "string"
+              },
+              "scope": {
+                "type": "string",
+                "enum": [
+                  "this",
+                  "all"
+                ]
+              },
+              "date": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "op",
+              "source_text",
+              "event_id",
+              "scope",
+              "date"
+            ],
+            "additionalProperties": false,
+            "description": "Remove an event: only the occurrence on date (this) or every occurrence (all)."
+          },
+          {
+            "type": "object",
+            "properties": {
+              "op": {
+                "type": "string",
+                "const": "move_block"
+              },
+              "source_text": {
+                "type": "string",
+                "minLength": 1,
+                "description": "The exact clause of what Eli said that this operation comes from."
+              },
+              "block_id": {
+                "type": "string"
+              },
+              "start": {
+                "type": "string",
+                "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+              }
+            },
+            "required": [
+              "op",
+              "source_text",
+              "block_id",
+              "start"
+            ],
+            "additionalProperties": false,
+            "description": "Move a planned block to a new start time. Everything after it is replanned."
+          },
+          {
+            "type": "object",
+            "properties": {
+              "op": {
+                "type": "string",
+                "const": "resize_block"
+              },
+              "source_text": {
+                "type": "string",
+                "minLength": 1,
+                "description": "The exact clause of what Eli said that this operation comes from."
+              },
+              "block_id": {
+                "type": "string"
+              },
+              "minutes": {
+                "type": "integer",
+                "minimum": 5,
+                "maximum": 600
+              }
+            },
+            "required": [
+              "op",
+              "source_text",
+              "block_id",
+              "minutes"
+            ],
+            "additionalProperties": false,
+            "description": "Change how long a block lasts."
+          },
+          {
+            "type": "object",
+            "properties": {
+              "op": {
+                "type": "string",
+                "const": "delete_block"
+              },
+              "source_text": {
+                "type": "string",
+                "minLength": 1,
+                "description": "The exact clause of what Eli said that this operation comes from."
+              },
+              "block_id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "op",
+              "source_text",
+              "block_id"
+            ],
+            "additionalProperties": false,
+            "description": "Take a block off the plan (for example \"I skipped lunch\")."
+          },
+          {
+            "type": "object",
+            "properties": {
+              "op": {
+                "type": "string",
+                "const": "add_block"
+              },
+              "source_text": {
+                "type": "string",
+                "minLength": 1,
+                "description": "The exact clause of what Eli said that this operation comes from."
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 120
+              },
+              "date": {
+                "type": "string",
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+              },
+              "start": {
+                "type": "string",
+                "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+              },
+              "end": {
+                "type": "string",
+                "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+              },
+              "location": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "op",
+              "source_text",
+              "title",
+              "date",
+              "start",
+              "end",
+              "location"
+            ],
+            "additionalProperties": false,
+            "description": "Put something on the plan at a set time that is not a task or a recurring event."
+          },
+          {
+            "type": "object",
+            "properties": {
+              "op": {
+                "type": "string",
+                "const": "set_big3"
+              },
+              "source_text": {
+                "type": "string",
+                "minLength": 1,
+                "description": "The exact clause of what Eli said that this operation comes from."
+              },
+              "task_ids": {
+                "minItems": 1,
+                "maxItems": 3,
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "op",
+              "source_text",
+              "task_ids"
+            ],
+            "additionalProperties": false,
+            "description": "Set today's Big 3, in order."
+          },
+          {
+            "type": "object",
+            "properties": {
+              "op": {
+                "type": "string",
+                "const": "shift_day"
+              },
+              "source_text": {
+                "type": "string",
+                "minLength": 1,
+                "description": "The exact clause of what Eli said that this operation comes from."
+              },
+              "minutes": {
+                "type": "integer",
+                "minimum": 5,
+                "maximum": 240
+              }
+            },
+            "required": [
+              "op",
+              "source_text",
+              "minutes"
+            ],
+            "additionalProperties": false,
+            "description": "Eli is running behind by this many minutes."
+          },
+          {
+            "type": "object",
+            "properties": {
+              "op": {
+                "type": "string",
+                "const": "set_practice_block"
+              },
+              "source_text": {
+                "type": "string",
+                "minLength": 1,
+                "description": "The exact clause of what Eli said that this operation comes from."
+              },
+              "block": {
+                "type": "string",
+                "enum": [
+                  "A",
+                  "B"
+                ]
+              }
+            },
+            "required": [
+              "op",
+              "source_text",
+              "block"
+            ],
+            "additionalProperties": false,
+            "description": "Which club volleyball practice block applies."
+          },
+          {
+            "type": "object",
+            "properties": {
+              "op": {
+                "type": "string",
+                "const": "set_code_red"
+              },
+              "source_text": {
+                "type": "string",
+                "minLength": 1,
+                "description": "The exact clause of what Eli said that this operation comes from."
+              },
+              "on": {
+                "type": "boolean"
+              },
+              "level": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "enum": [
+                      "standard",
+                      "severe"
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "op",
+              "source_text",
+              "on",
+              "level"
+            ],
+            "additionalProperties": false,
+            "description": "Code Red on or off. severe = all in, practices pause too."
+          },
+          {
+            "type": "object",
+            "properties": {
+              "op": {
+                "type": "string",
+                "const": "start_lost_day"
+              },
+              "source_text": {
+                "type": "string",
+                "minLength": 1,
+                "description": "The exact clause of what Eli said that this operation comes from."
+              },
+              "reason": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 140
+              }
+            },
+            "required": [
+              "op",
+              "source_text",
+              "reason"
+            ],
+            "additionalProperties": false,
+            "description": "Start a Lost Day with a one-line reason."
+          },
+          {
+            "type": "object",
+            "properties": {
+              "op": {
+                "type": "string",
+                "const": "add_quote"
+              },
+              "source_text": {
+                "type": "string",
+                "minLength": 1,
+                "description": "The exact clause of what Eli said that this operation comes from."
+              },
+              "text": {
+                "type": "string",
+                "minLength": 1
+              },
+              "tags": {
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "regret",
+                    "hard_day",
+                    "win",
+                    "general"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "op",
+              "source_text",
+              "text",
+              "tags"
+            ],
+            "additionalProperties": false,
+            "description": "Save a quote."
+          },
+          {
+            "type": "object",
+            "properties": {
+              "op": {
+                "type": "string",
+                "const": "replan"
+              },
+              "source_text": {
+                "type": "string",
+                "minLength": 1,
+                "description": "The exact clause of what Eli said that this operation comes from."
+              }
+            },
+            "required": [
+              "op",
+              "source_text"
+            ],
+            "additionalProperties": false,
+            "description": "Rebuild the rest of today from now."
+          },
+          {
+            "type": "object",
+            "properties": {
+              "op": {
+                "type": "string",
+                "const": "ask"
+              },
+              "source_text": {
+                "type": "string",
+                "minLength": 1,
+                "description": "The exact clause of what Eli said that this operation comes from."
+              },
+              "question": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              }
+            },
+            "required": [
+              "op",
+              "source_text",
+              "question"
+            ],
+            "additionalProperties": false,
+            "description": "One short clarifying question when something is ambiguous. At most one."
+          }
+        ]
+      }
+    },
+    "unhandled": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "minLength": 1
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "text",
+          "reason"
+        ],
+        "additionalProperties": false
+      },
+      "description": "Every clause that did not become an operation, with a plain reason."
+    },
+    "summary": {
+      "type": "string",
+      "description": "One short line summarizing what will change."
+    }
+  },
+  "required": [
+    "ops",
+    "unhandled",
+    "summary"
+  ],
+  "additionalProperties": false
+}

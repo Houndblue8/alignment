@@ -5,7 +5,10 @@ import { DATA_MODE, type Repo } from '../data/repo';
 import { seedSnapshot } from '../data/seedData';
 import { supabaseRepo } from '../data/supabaseRepo';
 import { nowLocal, type Now } from '../lib/clock';
-import { addDays, confirmTentative, diffBlocks, fmtTime, weekday, type Block, type EventDef, type Place } from '../planner';
+import { addDays, confirmTentative, diffBlocks, diffDays, fmtDate, fmtTime, weekday, type Block, type EventDef, type Place } from '../planner';
+import { ai } from '../ops/ai';
+import { anchorLines, applyOps, restoreSnapshot, undoSnapshot, type UndoSnapshot } from '../ops/apply';
+import { runDump } from '../ops/pipeline';
 import { applyTheme } from '../theme/theme';
 import { buildWeek, dayOf, fillBig3, finalizePast, suggestAgain as suggestAgainPure } from './planning';
 
@@ -56,6 +59,31 @@ interface AppState {
   saveContract(patch: Partial<Contract>): Promise<void>;
   addQuote(text: string, tags: QuoteTag[]): Promise<void>;
   deleteQuote(id: string): Promise<void>;
+
+  /** Days since the app was last opened before today (0 when opened yesterday or today). */
+  awayDays: number;
+  coachLine: string | null;
+  loadCoachLine(): Promise<void>;
+  /** The decision after 3 deferrals (Appendix B 7). */
+  decideTask(id: string, choice: 'today' | 'schedule' | 'delegate' | 'drop', date?: string): Promise<{ draft: string | null } | void>;
+
+  /** The talk box result card. */
+  lastDump: DumpCard | null;
+  dump(text: string): Promise<{ ok: boolean; message?: string }>;
+  undoDump(): Promise<void>;
+  dismissDump(): void;
+}
+
+export interface DumpCard {
+  logId: string;
+  text: string;
+  done: string[];
+  cantDo: { text: string; reason: string }[];
+  question: string | null;
+  undone: boolean;
+  before: UndoSnapshot;
+  /** Manual blocks this dump added beyond the planned week (removed on Undo). */
+  farBlockIds: string[];
 }
 
 let toastId = 0;
@@ -71,11 +99,14 @@ export const useApp = create<AppState>((set, get) => {
   /** Replace a day record in the snapshot. */
   const withDay = (s: Snapshot, d: DayRecord): Snapshot => ({ ...s, days: { ...s.days, [d.date]: d } });
 
-  /** Re-run the planner for today and the next 6 days, save, and return how many of today's blocks changed. */
-  async function rebuild(s: Snapshot): Promise<{ s: Snapshot; changed: number }> {
+  /**
+   * Re-run the planner for today and the next 6 days, save, and return how many of today's blocks changed.
+   * fromMin rebuilds from a later time than now ("I'm running 30 minutes behind").
+   */
+  async function rebuild(s: Snapshot, fromMin: number | null = null): Promise<{ s: Snapshot; changed: number }> {
     const now = nowLocal();
     const before = s.blocks.filter((b) => b.date === now.date);
-    const built = buildWeek(s, now);
+    const built = buildWeek(s, fromMin === null ? now : { date: now.date, min: Math.max(now.min, fromMin) });
     const blocks = [...s.blocks.filter((b) => !built.dates.includes(b.date)), ...built.blocks];
     const days = { ...s.days };
     for (const d of built.days) days[d.date] = d;
@@ -132,6 +163,8 @@ export const useApp = create<AppState>((set, get) => {
           await repo.upsertDays(fin.days);
           if (fin.taskIds.length) await repo.upsertTasks(tasks.filter((t) => fin.taskIds.includes(t.id)));
         }
+        const prevOpen = s.settings.lastOpenDate;
+        set({ awayDays: prevOpen && prevOpen < now.date ? diffDays(prevOpen, now.date) - 1 : 0 });
         if (s.settings.lastOpenDate !== now.date) {
           s = { ...s, settings: { ...s.settings, lastOpenDate: now.date } };
           await repo.saveSettings(s.settings);
@@ -405,5 +438,151 @@ export const useApp = create<AppState>((set, get) => {
         await repo.deleteQuote(id);
         return { ...s, quotes: s.quotes.filter((q) => q.id !== id) };
       }),
+
+    awayDays: 0,
+    coachLine: null,
+
+    async loadCoachLine() {
+      const s = get().s;
+      if (!s) return;
+      const date = nowLocal().date;
+      try {
+        const cached = await repo.getCoach(date, 'daily');
+        if (cached) return void set({ coachLine: cached });
+        const rec = s.days[addDays(date, -1)];
+        const big3 = dayOf(s, date).big3.map((i) => s.tasks.find((t) => t.id === i.taskId)?.title).filter(Boolean);
+        const text = await ai.coach({
+          kind: 'daily',
+          name: s.contract.signedName?.split(' ')[0] || 'Eli',
+          whyShort: s.vision.whyShort,
+          facts: { yesterday: rec?.result ?? 'not scored', today_big3: big3, weekday: fmtDate(date).split(',')[0], away_days: get().awayDays },
+        });
+        if (text) {
+          await repo.saveCoach(date, 'daily', text);
+          set({ coachLine: text });
+        }
+      } catch {
+        // No coach line today; Home works without it.
+      }
+    },
+
+    async decideTask(id, choice, date) {
+      const s = get().s;
+      const t = s?.tasks.find((x) => x.id === id);
+      if (!s || !t) return;
+      if (choice === 'delegate') {
+        set({ busy: true });
+        try {
+          const r = await ai.delegate({ task: { title: t.title, journey: t.journey, notes: t.notes, steps: t.steps ?? [] } });
+          const notes = r.draft ? `Draft:\n${r.draft}` : t.notes;
+          const row = { ...t, steps: r.steps, notes, deferralCount: 0 };
+          await repo.upsertTasks([row]);
+          set({ s: { ...s, tasks: s.tasks.map((x) => (x.id === id ? row : x)) } });
+          await rebuild(get().s!);
+          return { draft: r.draft };
+        } catch (e) {
+          get().showToast(`Delegate failed. ${message(e)}`, 'error');
+          return;
+        } finally {
+          set({ busy: false });
+        }
+      }
+      return run(
+        async (cur) => {
+          const today = nowLocal().date;
+          let next = cur;
+          if (choice === 'drop') {
+            next = { ...cur, tasks: cur.tasks.map((x) => (x.id === id ? { ...x, status: 'dropped' as const } : x)) };
+          } else if (choice === 'schedule') {
+            next = { ...cur, tasks: cur.tasks.map((x) => (x.id === id ? { ...x, deadline: date ?? x.deadline, deferralCount: 0 } : x)) };
+          } else {
+            const rec = dayOf(cur, today);
+            const big3 = [...rec.big3.filter((i) => i.taskId !== id && (i.locked || i.accepted)), ...rec.big3.filter((i) => i.taskId !== id && !i.locked && !i.accepted)].slice(0, 2);
+            const day = { ...rec, big3: [{ taskId: id, locked: true, accepted: true }, ...big3] };
+            next = withDay({ ...cur, tasks: cur.tasks.map((x) => (x.id === id ? { ...x, deferralCount: 0 } : x)) }, day);
+            await repo.upsertDays([day]);
+          }
+          await repo.upsertTasks(next.tasks.filter((x) => x.id === id));
+          return next;
+        },
+        { replan: true },
+      );
+    },
+
+    lastDump: null,
+
+    async dump(text) {
+      const s = get().s;
+      if (!s || !text.trim()) return { ok: false };
+      set({ busy: true });
+      try {
+        const now = nowLocal();
+        const out = await runDump(text.trim(), s, now, ai);
+        if (!out.ok) return { ok: false, message: out.message };
+        const before = undoSnapshot(s, now.date);
+        const applied = applyOps(s, out.reply, now);
+        await persistDiff(s, applied.next);
+        // Blocks added beyond the planned week are saved directly; the week itself is saved by the rebuild.
+        const week = new Set(before.dates);
+        const farDates = [...new Set(applied.next.blocks.filter((b) => b.source === 'manual' && !week.has(b.date)).map((b) => b.date))];
+        for (const d of farDates) await repo.replaceBlocks([d], applied.next.blocks.filter((b) => b.date === d));
+        const { s: rebuilt } = await rebuild(applied.next, applied.replanFromMin);
+        const done = [...applied.done, ...anchorLines(rebuilt, now.date, out.reply.ops)];
+        const logId = await repo.addOpsLog({ inputText: text.trim(), ops: out.reply.ops, unhandled: out.reply.unhandled, snapshotBefore: before });
+        const farBlockIds = applied.next.blocks.filter((x) => farDates.includes(x.date) && !s.blocks.some((y) => y.id === x.id)).map((x) => x.id);
+        set({ lastDump: { logId, text: text.trim(), done, cantDo: applied.cantDo, question: applied.question, undone: false, before, farBlockIds } });
+        return { ok: true };
+      } catch (e) {
+        return { ok: false, message: message(e) };
+      } finally {
+        set({ busy: false });
+      }
+    },
+
+    async undoDump() {
+      const s = get().s;
+      const card = get().lastDump;
+      if (!s || !card || card.undone) return;
+      set({ busy: true });
+      try {
+        const b = card.before;
+        const restored = restoreSnapshot(s, b, card.farBlockIds);
+        await persistDiff(s, restored);
+        await repo.replaceBlocks(b.dates, b.blocks);
+        for (const d of [...new Set(s.blocks.filter((x) => card.farBlockIds.includes(x.id)).map((x) => x.date))]) {
+          await repo.replaceBlocks([d], restored.blocks.filter((x) => x.date === d));
+        }
+        await repo.markUndone(card.logId);
+        applyTheme(restored.settings.theme);
+        set({ s: restored, lastDump: { ...card, undone: true } });
+        get().showToast('Undone. Everything is back the way it was.');
+      } catch (e) {
+        get().showToast(`Undo failed. ${message(e)}`, 'error');
+      } finally {
+        set({ busy: false });
+      }
+    },
+
+    dismissDump: () => set({ lastDump: null }),
   };
 });
+
+/** Save every row that differs between two snapshots (blocks are saved by the caller). */
+async function persistDiff(a: Snapshot, b: Snapshot): Promise<void> {
+  const same = (x: unknown, y: unknown) => JSON.stringify(x) === JSON.stringify(y);
+  if (!same(a.settings, b.settings)) await repo.saveSettings(b.settings);
+  const byId = <T extends { id: string }>(list: T[]) => new Map(list.map((x) => [x.id, x]));
+  const ta = byId(a.tasks);
+  const tasks = b.tasks.filter((t) => !same(ta.get(t.id), t));
+  if (tasks.length) await repo.upsertTasks(tasks);
+  for (const t of a.tasks) if (!b.tasks.some((x) => x.id === t.id)) await repo.deleteTask(t.id);
+  const ea = byId(a.events);
+  const events = b.events.filter((e) => !same(ea.get(e.id), e));
+  if (events.length) await repo.upsertEvents(events);
+  for (const e of a.events) if (!b.events.some((x) => x.id === e.id)) await repo.deleteEvent(e.id);
+  const qa = byId(a.quotes);
+  for (const q of b.quotes) if (!same(qa.get(q.id), q)) await repo.upsertQuote(q);
+  for (const q of a.quotes) if (!b.quotes.some((x) => x.id === q.id)) await repo.deleteQuote(q.id);
+  const days = Object.values(b.days).filter((d) => !same(a.days[d.date], d));
+  if (days.length) await repo.upsertDays(days);
+}

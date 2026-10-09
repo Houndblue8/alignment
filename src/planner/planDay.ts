@@ -435,7 +435,13 @@ function buildDay(input: DayInput, level: number): Built {
       howto: t.steps?.map((s) => s.text) ?? null,
     });
   const chunkCount: Record<string, number> = {};
-  const nextChunk = (t: Task) => (chunkCount[t.id] = (chunkCount[t.id] ?? 0) + 1);
+  /** Next chunk number whose id is free (a pinned or moved chunk keeps its id). */
+  const freeChunk = (t: Task) => {
+    let n = (chunkCount[t.id] ?? 0) + 1;
+    while (['work', 'library_work'].some((k) => pinnedIds.has(`${date}:${k}:${n === 1 ? t.id : `${t.id}#${n}`}`))) n += 1;
+    return n;
+  };
+  const nextChunk = (t: Task) => (chunkCount[t.id] = freeChunk(t));
   const record = (t: Task, len: number) => {
     remaining[t.id] = remaining[t.id]! - len;
     placedToday[t.id] = (placedToday[t.id] ?? 0) + len;
@@ -478,7 +484,7 @@ function buildDay(input: DayInput, level: number): Built {
           remaining[t.id] = 0;
           return;
         }
-        const n = (chunkCount[t.id] ?? 0) + 1;
+        const n = freeChunk(t);
         const r = tl.findFlex(workMk('work', t, n, loc), Math.min(RULES.chunkMin, rem), Math.min(RULES.chunkMax, rem), lo, hi);
         if (!r) break;
         nextChunk(t);
@@ -571,10 +577,11 @@ function buildDay(input: DayInput, level: number): Built {
     const easiest = [...big3].sort((a, b) => remaining[a.id]! - remaining[b.id]! || (a.id < b.id ? -1 : 1))[0];
     if (easiest) {
       const rem = remaining[easiest.id]!;
-      const r = tl.findFlex(workMk('work', easiest, 1, workLoc), Math.min(RULES.chunkMin, rem), Math.min(RULES.chunkMax, rem), ws, dayEnd);
+      const n = freeChunk(easiest);
+      const r = tl.findFlex(workMk('work', easiest, n, workLoc), Math.min(RULES.chunkMin, rem), Math.min(RULES.chunkMax, rem), ws, dayEnd);
       if (r) {
         nextChunk(easiest);
-        tl.add(workMk('work', easiest, 1, workLoc)(r.start, r.len));
+        tl.add(workMk('work', easiest, n, workLoc)(r.start, r.len));
         record(easiest, r.len);
         salvage.push(easiest.title);
       }
@@ -623,7 +630,8 @@ function buildDay(input: DayInput, level: number): Built {
   // Cut warnings in the order of Part 5 step 12 (stable sort keeps the order within a level).
   for (const c of [...cuts].sort((a, b) => a.level - b.level)) warnings.push(cutPrefix + c.text);
 
-  const blocks = withTravel(date, [...tl.blocks].filter((b) => b.id !== libWin(0, 0).id), places);
+  const suppressed = new Set(input.suppress ?? []);
+  const blocks = withTravel(date, [...tl.blocks].filter((b) => b.id !== libWin(0, 0).id && !(suppressed.has(b.id) && !pinnedIds.has(b.id))), places);
   return {
     plan: {
       date,

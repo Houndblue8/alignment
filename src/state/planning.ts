@@ -120,11 +120,12 @@ export function buildWeek(s: Snapshot, now: Now): WeekBuild {
     places: s.places,
     settings: s.settings,
     pinnedByDate,
+    suppressByDate: Object.fromEntries(dates.map((d) => [d, dayOf(s, d).plan.suppressed ?? []])),
     workoutsThisWeek: workoutsBefore(s, today),
   });
   const days = plans.map((p) => ({
     ...dayOf(s, p.date),
-    plan: { warnings: p.warnings, notes: p.notes, bedtime: p.bedtime, belowTheLine: p.belowTheLine },
+    plan: { warnings: p.warnings, notes: p.notes, bedtime: p.bedtime, belowTheLine: p.belowTheLine, suppressed: dayOf(s, p.date).plan.suppressed ?? [] },
   }));
   return { dates, blocks: plans.flatMap((p) => p.blocks), days, plans };
 }

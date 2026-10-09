@@ -6,6 +6,7 @@ import { addDays, expandEvents, weekStart, weekday } from '../planner';
 import { anchorStreaks, dayOf, nextBlock, quoteFor, seasonRecord, todayProgress, weekResults } from '../state/planning';
 import { useApp } from '../state/store';
 import { Big3Section } from '../ui/Big3';
+import { AwayMessage, CoachLine, Decisions } from '../ui/HomeExtras';
 import { Ring } from '../ui/Ring';
 import { SeriesBar, WeekCircles } from '../ui/Series';
 
@@ -26,8 +27,11 @@ export function Home() {
 
   return (
     <>
+      <AwayMessage />
+      <CoachLine />
       <IsaacPrompt />
       <CodeRedHint />
+      <Decisions />
 
       <section className="card pad stack lg" style={{ justifyItems: 'center' }}>
         <Ring value={progress.done} max={progress.total} label={`${progress.done} of ${progress.total} done today`}>

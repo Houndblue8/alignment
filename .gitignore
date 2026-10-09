@@ -1,0 +1,15 @@
+node_modules/
+dist/
+dev-dist/
+.env
+.env.*
+!.env.example
+*.local
+.vercel/
+supabase/.temp/
+supabase/.branches/
+test-results/
+playwright-report/
+coverage/
+.DS_Store
+*.tsbuildinfo

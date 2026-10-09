@@ -1,0 +1,99 @@
+/* Every color in the app comes from these variables. Other themes are added in Phase 4. */
+:root,
+[data-theme='gold-cream'] {
+  --bg: #fbf7ee;
+  --card: #ffffff;
+  --text: #2a2418;
+  --muted: #7a6f5a;
+  --accent: #b8892b;
+  --accent-soft: #f1e4bf;
+  --border: #e7dcc0;
+  --win: #b8892b;
+  --half: #f1e4bf;
+  --loss: #d9cfbd;
+
+  --font-heading: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+  --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --radius: 18px;
+  --space: 8px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+h1 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 2rem;
+  margin: 0;
+}
+
+.muted {
+  color: var(--muted);
+  margin: 0;
+}
+
+.hello {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: calc(var(--space) * 2);
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: calc(var(--space) * 4);
+  display: grid;
+  justify-items: center;
+  gap: calc(var(--space) * 2);
+  width: min(100%, 360px);
+}
+
+.ring {
+  width: 120px;
+  height: 120px;
+  transform: rotate(-90deg);
+}
+
+.ring circle {
+  fill: none;
+  stroke-width: 10;
+}
+
+.ring-track {
+  stroke: var(--accent-soft);
+}
+
+.ring-fill {
+  stroke: var(--accent);
+  stroke-linecap: round;
+  stroke-dasharray: 327;
+  stroke-dashoffset: 327;
+  animation: fill 1.2s ease-out forwards;
+}
+
+@keyframes fill {
+  to {
+    stroke-dashoffset: 82;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ring-fill {
+    animation: none;
+    stroke-dashoffset: 82;
+  }
+}

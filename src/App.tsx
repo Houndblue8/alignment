@@ -1,5 +1,14 @@
+import { useEffect, useState } from 'react';
+import { backendReachable } from './data/supabase';
+
 // Phase 0 placeholder. Replaced by the router and screens in Phase 2.
 export function App() {
+  const [backend, setBackend] = useState<'checking' | 'connected' | 'offline'>('checking');
+
+  useEffect(() => {
+    backendReachable().then((ok) => setBackend(ok ? 'connected' : 'offline'));
+  }, []);
+
   return (
     <main className="hello">
       <div className="card">
@@ -9,6 +18,9 @@ export function App() {
         </svg>
         <h1>Alignment</h1>
         <p className="muted">Hello. The app shell is live.</p>
+        <p className="chip" data-state={backend}>
+          Backend: {backend === 'checking' ? 'checking' : backend === 'connected' ? 'connected' : 'not reachable'}
+        </p>
       </div>
     </main>
   );

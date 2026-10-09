@@ -62,6 +62,19 @@ h1 {
   width: min(100%, 360px);
 }
 
+.chip {
+  margin: 0;
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--accent-soft);
+  font-size: 0.875rem;
+}
+
+.chip[data-state='offline'] {
+  background: var(--loss);
+}
+
 .ring {
   width: 120px;
   height: 120px;

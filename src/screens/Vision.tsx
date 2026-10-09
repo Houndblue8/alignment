@@ -88,6 +88,9 @@ export function Vision() {
             <button className="btn" onClick={() => setEditingContract(true)}>
               Edit terms
             </button>
+            <button className="btn" onClick={() => saveContract({ signedName: null, signedAt: null })}>
+              Sign again
+            </button>
             <button
               className="btn"
               onClick={() => {

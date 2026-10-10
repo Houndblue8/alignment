@@ -3,7 +3,7 @@ import { emptyDay, type Snapshot, type TaskRow } from '../data/model';
 import { seedSnapshot } from '../data/seedData';
 import type { Block } from '../planner';
 import { reshapedLine } from '../ops/apply';
-import { buildingFor, buildingLine, pillarFromTitle, pillarHistory, pillarSteps } from './pillars';
+import { pillarFromTitle, pillarHistory, pillarSteps } from './pillars';
 
 const D = '2026-10-12';
 const blk = (id: string, over: Partial<Block>): Block => ({
@@ -78,21 +78,6 @@ describe('pillars', () => {
     expect(pillarFromTitle('Study at Whole Foods')).toBe('school');
     expect(pillarFromTitle('Dinner and hangout')).toBe('life');
     expect(pillarFromTitle('Haircut')).toBeNull();
-  });
-
-  test('the building stands when the foundation and the roof are done', () => {
-    const base = snap({ tasks: [task('a', 'school', 'done')] });
-    const day = base.days[D]!;
-    const now = { date: D, min: 800 };
-    expect(buildingLine(buildingFor(base, D, now))).toBe('Lay the foundation first: the cold shower, then the walk.');
-    const half = { ...base, days: { [D]: { ...day, coldShower: { done: true } } } };
-    expect(buildingLine(buildingFor(half, D, now))).toMatch(/^Half the foundation is set/);
-    const laid = { ...base, days: { [D]: { ...day, coldShower: { done: true }, walk: { done: true } } } };
-    expect(buildingLine(buildingFor(laid, D, now))).toBe('Foundation laid. Pick your Big 3 to light the torches. 2 of 6 pillars rose today.');
-    const all = { ...base, days: { [D]: { ...day, coldShower: { done: true }, walk: { done: true }, big3: [{ taskId: 'a', locked: true, accepted: true }] } } };
-    const b = buildingFor(all, D, now);
-    expect(b.complete).toBe(true);
-    expect(buildingLine(b)).toBe('All three torches lit. The building stands. That day is a Win. 3 of 6 pillars rose today.');
   });
 
   test('history: which of the last 7 days each pillar rose', () => {

@@ -167,6 +167,18 @@ Each entry: what was decided, who decided, and what it replaces in the brief. Pl
 - Supabase uses the new publishable key (`sb_publishable_...`) in the client, named `VITE_SUPABASE_PUBLISHABLE_KEY`.
 - `vercel.json` rewrites app routes to `index.html` so deep links like `/today` work.
 
+
+### D20. Weekly temple, open time, the veil, the flame and its little flames (Eli, 2026-10-10)
+- The temple is weekly. Each pillar has a weekly target, editable in Settings (Weekly temple): Faith 7 days with God, Body 6 workouts, Sports every practice on the calendar (or a number), Academics 5 study days, Side Hustle 6 committed days, Social 3 connections. Exam weeks add a study day and ease Side Hustle by two. Columns rise Monday to Sunday with the week's progress; a column glows on a day it counted.
+- What counts (src/state/temple.ts): set-time things count when they happen unless skipped (practice, the workout, Epic, church, discipleship, social plans and manual social blocks); effort counts when checked or logged (Big 3 items and tasks by pillar, the Side Hustle Summit floor, library work, steps logged on a pillar or through the talk box's new log_step); Faith also counts the walk with God.
+- The night tap (in Tonight's check): six pillar chips; what the app saw is already checked, Eli taps the rest. Skipping it never counts against him. Stored in day_records.showed_up.
+- Finished temples are saved when each week closes as a few numbers (about 200 bytes: done and target per pillar, the series record) in reports (type temple). Week shows this week's temple and a "Season of temples" row drawn from the numbers.
+- The daily view puts the fire and the Big 3 first: the Big 3 are little flames (colored by their pillar) that hop into the fire when checked and pop back out when unchecked.
+- 3D: Roman columns (20 flutes, entasis, attic bases, Ionic capitals with volutes); God is a soft veil of light over the whole temple, always there, with a small soft cross at the top; no altar bowl or light beam. The fire is a little flame character with eyes, a smile and blush: sleepy as an Ember, beaming when bright; on a refiner's day it is white-hot at the core with a blue edge. It blinks and faces you as the temple turns.
+- Schedule: set times stay (classes, practices, events, the workout and its shower, the morning anchors, manual blocks, pinned blocks, the night, and drives to set things); meals float. The gaps are open time, each with its length and best use (the planner's picks: Big 3 work first, then urgent work, the floor, a meal); with no picks, the pillar furthest behind this week; after sunset, "Evening is yours." Ticking a Big 3 item in open time checks the Big 3 item itself.
+- Open-time notification (on by default, Settings): when an open window of 30 minutes or more with a best use starts: "Open time: 1h 10m. Until 3:00 PM. Best use: Tax memo (Big 3), then ...". Shared with the in-app fallback.
+- Sheets no longer focus a text box when they open (the phone keyboard covered the options); only the talk box does.
+
 ### Planner defaults (Phase 1)
 
 Spacing and places

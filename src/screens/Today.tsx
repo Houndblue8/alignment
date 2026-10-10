@@ -1,10 +1,12 @@
-import { CalendarX, Car, Check, MapPin, MoreVertical, Pin, RefreshCw, SkipForward } from 'lucide-react';
+import { CalendarX, Car, Check, Clock, MapPin, MoreVertical, Pin, RefreshCw, SkipForward } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { journeyLabel } from '../data/model';
 import { fmtTime, fromHHMM, journeyStyle, kindJourney, shortDuration, toHHMM } from '../lib/format';
-import type { Block } from '../planner';
+import { sunsetMin, weekStart, type Block } from '../planner';
 import { dayOf } from '../state/planning';
+import { weekTemple } from '../state/temple';
+import { openWindows, setBlocks, type OpenWindow } from '../../supabase/functions/_shared/reminders.ts';
 import { useApp } from '../state/store';
 import { AnchorButton } from '../ui/AnchorButton';
 import { Big3Section } from '../ui/Big3';
@@ -28,6 +30,11 @@ export function Today() {
     if (hash) document.getElementById(decodeURIComponent(hash.slice(1)))?.scrollIntoView({ block: 'center' });
   }, [hash]);
 
+  // Set times stay on the schedule; the gaps between them are open time, with the planner's picks as the best use.
+  const from = blocks.find((b) => b.kind === 'anchor_cold_shower')?.start ?? rec.wakeMin ?? s.settings.wakeTargetMin;
+  const until = blocks.find((b) => b.kind === 'winddown')?.start ?? rec.plan.bedtime?.bedMin ?? 1440;
+  const windows = openWindows(blocks, from, until);
+  const schedule: (Block | OpenWindow)[] = [...setBlocks(blocks), ...windows].sort((a, b) => a.start - b.start || ('uses' in a ? 1 : -1));
   const mode = rec.lostDay ? 'Lost Day' : s.settings.codeRed ? (s.settings.codeRedLevel === 'severe' ? 'Code Red: all in' : 'Code Red') : null;
 
   return (
@@ -88,13 +95,15 @@ export function Today() {
 
       <div className="stack" style={{ gap: 4 }}>
         <h2>Schedule</h2>
-        <p className="small muted">A guide, not a checklist. Only the foundation and the Big 3 decide the Win. Plans changed? Tap a block and choose Cancelled, or tell the talk box.</p>
+        <p className="small muted">
+          Set times, and the open time between them: {shortDuration(windows.reduce((m, w) => m + w.end - w.start, 0))} today. Plans changed? Tap a block and choose Cancelled, or tell the talk box.
+        </p>
       </div>
       <section aria-label="Schedule" className="timeline" data-testid="timeline">
         {blocks.length === 0 && <p className="muted">No plan yet. Tap Replan to build it.</p>}
-        {blocks.map((b) => (
-          <BlockRow key={b.id} b={b} nowMin={now.min} />
-        ))}
+        {schedule.map((item) =>
+          'uses' in item ? <OpenCard key={`open-${item.start}`} w={item} nowMin={now.min} /> : <BlockRow key={item.id} b={item} nowMin={now.min} />,
+        )}
       </section>
 
       {rec.plan.belowTheLine.length > 0 && (
@@ -314,5 +323,75 @@ function CodeRedSheet({ onClose }: { onClose: () => void }) {
         Off
       </button>
     </Sheet>
+  );
+}
+
+/** A stretch with nothing set: how long it is and the best use of it. No fixed times inside. */
+function OpenCard({ w, nowMin }: { w: OpenWindow; nowMin: number }) {
+  const s = useApp((a) => a.s)!;
+  const now = useApp((a) => a.now);
+  const setStatus = useApp((a) => a.setBlockStatus);
+  const big3 = new Set(dayOf(s, now.date).big3.map((i) => i.taskId));
+  const setTaskDone = useApp((a) => a.setTaskDone);
+  const doneOf = (u: OpenWindow['uses'][number]) => (u.taskId && big3.has(u.taskId) ? s.tasks.find((x) => x.id === u.taskId)?.status === 'done' : u.done);
+  const isNow = w.start <= nowMin && nowMin < w.end;
+  const past = w.end <= nowMin;
+  const len = w.end - w.start;
+  const evening = w.start >= sunsetMin(now.date);
+  // Nothing planned here: the pillar furthest behind this week.
+  const behind = weekTemple(s, weekStart(now.date), now)
+    .pillars.filter((p) => p.done < p.target)
+    .sort((a, b) => a.ratio - b.ratio)[0];
+  const uses = w.uses.filter((u) => u.kind !== 'misc' || w.uses.length === 1);
+  return (
+    <div className="tl-row" id={`open-${w.start}`}>
+      <span className="tl-time">{fmtTime(w.start)}</span>
+      <section className={`open-card ${isNow ? 'now' : ''} ${past ? 'past' : ''}`} aria-label={`Open time ${fmtTime(w.start)} to ${fmtTime(w.end)}`} data-testid="open-time">
+        <div className="row between">
+          <span className="row" style={{ gap: 6 }}>
+            <Clock size={16} aria-hidden="true" />
+            <strong>Open time</strong>
+          </span>
+          <span className="chip">{isNow ? `${shortDuration(w.end - nowMin)} left` : shortDuration(len)}</span>
+        </div>
+        <span className="small muted">
+          {fmtTime(w.start)} to {fmtTime(w.end)}
+        </span>
+        {uses.length > 0 ? (
+          <ul className="open-uses" aria-label="Best use">
+            {uses.map((u, i) => (
+              <li key={u.id} className="row">
+                <button
+                  className="check sm"
+                  role="checkbox"
+                  aria-checked={doneOf(u)}
+                  aria-label={`Mark ${u.title} done`}
+                  onClick={() => {
+                    // A Big 3 task checks off the Big 3 item (the score); anything else marks the time used.
+                    if (u.taskId && big3.has(u.taskId)) void setTaskDone(u.taskId, !doneOf(u));
+                    else void setStatus(u.id, u.done ? 'planned' : 'done');
+                  }}
+                >
+                  {doneOf(u) && <Check size={12} strokeWidth={3} />}
+                </button>
+                <span className="grow clip">
+                  {i === 0 && !doneOf(u) ? <span className="small muted">Best use: </span> : null}
+                  {u.title}
+                </span>
+                {u.taskId && big3.has(u.taskId) && <span className="chip big3-tag">Big 3</span>}
+              </li>
+            ))}
+          </ul>
+        ) : evening ? (
+          <p className="small muted">Evening is yours. Rest is part of the plan.</p>
+        ) : behind ? (
+          <p className="small">
+            A step toward {behind.label}: {behind.done} of {behind.target} this week.
+          </p>
+        ) : (
+          <p className="small muted">Free. Every pillar is at its target this week.</p>
+        )}
+      </section>
+    </div>
   );
 }

@@ -791,6 +791,44 @@
             "properties": {
               "op": {
                 "type": "string",
+                "const": "log_step"
+              },
+              "source_text": {
+                "type": "string",
+                "minLength": 1,
+                "description": "The exact clause of what Eli said that this operation comes from."
+              },
+              "pillar": {
+                "type": "string",
+                "enum": [
+                  "body",
+                  "sport",
+                  "shs",
+                  "school",
+                  "faith",
+                  "life"
+                ]
+              },
+              "text": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 120
+              }
+            },
+            "required": [
+              "op",
+              "source_text",
+              "pillar",
+              "text"
+            ],
+            "additionalProperties": false,
+            "description": "Eli did something today toward a pillar that is not a task or a block (\"studied two hours\", \"sent outreach\", \"called my mom\"). Adds a stone to that pillar."
+          },
+          {
+            "type": "object",
+            "properties": {
+              "op": {
+                "type": "string",
                 "const": "replan"
               },
               "source_text": {

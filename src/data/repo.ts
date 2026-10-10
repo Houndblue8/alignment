@@ -29,6 +29,8 @@ export interface Repo {
   /** Weekly scouting reports and monthly recaps, by the period's first day. */
   getReport(type: ReportType, periodStart: string): Promise<unknown | null>;
   saveReport(type: ReportType, periodStart: string, body: unknown): Promise<void>;
+  /** Every saved report of a type, oldest first. */
+  listReports(type: ReportType): Promise<{ periodStart: string; body: unknown }[]>;
   /** Upload the day's photo file; returns its storage path. */
   uploadPhoto(date: string, file: Blob): Promise<string>;
   savePhoto(p: PhotoRow): Promise<void>;
@@ -37,7 +39,7 @@ export interface Repo {
   photoUrls(paths: string[]): Promise<Record<string, string>>;
 }
 
-export type ReportType = 'weekly' | 'monthly';
+export type ReportType = 'weekly' | 'monthly' | 'temple';
 
 export interface OpsLogEntry {
   inputText: string;

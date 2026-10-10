@@ -6,13 +6,14 @@ import { seedSnapshot } from '../data/seedData';
 import { supabaseRepo } from '../data/supabaseRepo';
 import { nowLocal, type Now } from '../lib/clock';
 import { shrinkPhoto } from '../lib/image';
-import { addDays, confirmTentative, diffBlocks, diffDays, fmtDate, fmtTime, sameThing, weekday, type Block, type EventDef, type Journey, type Place } from '../planner';
+import { addDays, confirmTentative, diffBlocks, diffDays, fmtDate, fmtTime, sameThing, weekday, weekStart, type Block, type EventDef, type Journey, type Place } from '../planner';
 import { ai } from '../ops/ai';
 import { anchorLines, applyOps, reshapedLine, restoreSnapshot, undoSnapshot, type UndoSnapshot } from '../ops/apply';
 import type { RecentMessage } from '../ops/context';
 import { runDump } from '../ops/pipeline';
 import { applyTheme } from '../theme/theme';
 import { cleanReport, draftReport, factsForCoach, weekClosed, weekFacts, type StoredReport } from './report';
+import { saveableTemple, type SavedTemple } from './temple';
 import { buildWeek, dayOf, fillBig3, finalizePast, resultFor, suggestAgain as suggestAgainPure } from './planning';
 
 const repo: Repo = DATA_MODE === 'local' ? localRepo : supabaseRepo;
@@ -47,6 +48,8 @@ interface AppState {
   removeStep(index: number): Promise<void>;
   /** Tonight's one thing to do 1% better tomorrow. */
   setKaizen(text: string): Promise<void>;
+  /** The night tap: a pillar Eli showed up for today that the app could not see. */
+  toggleShowedUp(pillar: Journey): Promise<void>;
   /** The night check: Mind, Heart, Spirit (1 to 5) and an optional line. */
   setInner(inner: NonNullable<DayRecord['inner']>): Promise<void>;
   /**
@@ -98,6 +101,8 @@ interface AppState {
   captionQuestion(): Promise<string | null>;
   /** The scouting report for a closed week: saved one, or written now (rewrite = write it again). */
   scoutingReport(weekStart: string, rewrite?: boolean): Promise<StoredReport | null>;
+  /** Finished temples, oldest first (saved as numbers when each week closes). */
+  temples(): Promise<SavedTemple[]>;
 
   /** The talk box result card. */
   lastDump: DumpCard | null;
@@ -343,6 +348,15 @@ export const useApp = create<AppState>((set, get) => {
       run(async (s) => {
         const rec = dayOf(s, today());
         const day = { ...rec, steps: (rec.steps ?? []).filter((_, i) => i !== index) };
+        await repo.upsertDays([day]);
+        return withDay(s, day);
+      }),
+
+    toggleShowedUp: (pillar) =>
+      run(async (s) => {
+        const rec = dayOf(s, today());
+        const cur = rec.showedUp ?? [];
+        const day = { ...rec, showedUp: cur.includes(pillar) ? cur.filter((p) => p !== pillar) : [...cur, pillar] };
         await repo.upsertDays([day]);
         return withDay(s, day);
       }),
@@ -753,6 +767,28 @@ export const useApp = create<AppState>((set, get) => {
         return text || null;
       } catch {
         return null;
+      }
+    },
+
+    async temples() {
+      const s = get().s;
+      if (!s) return [];
+      const now = nowLocal();
+      try {
+        const saved = (await repo.listReports('temple')).map((r) => r.body as SavedTemple);
+        // Save any closed week from the last four that has days in it and is not saved yet.
+        const thisWeek = weekStart(now.date);
+        for (let k = 0; k <= 4; k++) {
+          const start = addDays(thisWeek, -7 * k);
+          if (!weekClosed(s, start, now) || saved.some((t) => t.weekStart === start)) continue;
+          if (!Object.keys(s.days).some((d) => d >= start && d <= addDays(start, 6))) continue;
+          const t = saveableTemple(s, start, now);
+          await repo.saveReport('temple', start, t);
+          saved.push(t);
+        }
+        return saved.sort((a, b) => a.weekStart.localeCompare(b.weekStart));
+      } catch {
+        return [];
       }
     },
 

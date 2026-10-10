@@ -11,7 +11,7 @@ test('the building: foundation, pillars and roof rise as the day goes; tap a pil
 
   await page.getByRole('button', { name: 'Cold shower Not yet' }).click();
   await page.getByRole('button', { name: 'Walk with God Not yet' }).click();
-  await expect(focus.getByTestId('focus-line')).toHaveText('Foundation laid. Now light the torches: your Big 3. 2 of 6 pillars rose today.');
+  await expect(focus.getByTestId('focus-line')).toHaveText(/^Foundation laid\. Now feed the fire: your Big 3\. Temple this week: \d of 6 pillars at target\.$/);
 
   await focus.getByRole('button', { name: 'Social and Community: 0 steps today' }).click();
   await page.getByRole('button', { name: 'Called family' }).click();
@@ -19,8 +19,8 @@ test('the building: foundation, pillars and roof rise as the day goes; tap a pil
   await page.getByRole('button', { name: 'Close' }).click();
   await expect(focus.getByRole('button', { name: 'Social and Community: 1 step today' })).toBeVisible();
 
-  await page.getByRole('checkbox', { name: 'Tax memo done' }).click();
-  await expect(focus.getByTestId('focus-line')).toHaveText('All three torches lit. The building stands. That day is a Win. 4 of 6 pillars rose today.');
+  await page.getByRole('checkbox', { name: 'Tax memo done', exact: true }).click();
+  await expect(focus.getByTestId('focus-line')).toHaveText(/^All three little flames are in the fire\. That day is a Win\./);
 });
 
 test('plans changed: Cancelled frees the time and the day rebuilds around it', async ({ page }) => {
@@ -97,4 +97,35 @@ test('the fire: night check, faith steps, and a refiner\'s day when everything e
   await expect(focus.getByTestId('fire-meter')).toContainText("Refiner's fire");
   await focus.getByTestId('fire-meter').click();
   await expect(page.getByRole('dialog')).toContainText('brighter than ever');
+});
+
+test('the schedule shows set times and open time with its best use; tapping a pillar keeps the keyboard closed', async ({ page }) => {
+  await signedWithTasks(page, '2026-10-12T07:45', [{ id: 'memo', title: 'Tax memo', importance: 5, estimatedMinutes: 120 }]);
+  await checkIn(page, '7:30');
+  await page.getByRole('link', { name: 'Today', exact: true }).click();
+  const timeline = page.getByTestId('timeline');
+  await expect(timeline.getByTestId('block').filter({ hasText: 'D1 practice' })).toBeVisible();
+  const open = timeline.getByTestId('open-time');
+  expect(await open.count()).toBeGreaterThan(1);
+  await expect(open.filter({ hasText: 'Tax memo' }).first()).toContainText('Big 3');
+  // Study is a suggestion inside open time, never a fixed block.
+  await expect(timeline.getByTestId('block').filter({ hasText: 'Tax memo' })).toHaveCount(0);
+
+  await page.getByRole('region', { name: 'Focus' }).getByRole('button', { name: /^Academics:/ }).click();
+  const sheet = page.getByRole('dialog', { name: 'Academics' });
+  await expect(sheet).toContainText('study days this week');
+  await expect(sheet.getByRole('button', { name: 'Reviewed notes' })).toBeVisible();
+  expect(await page.evaluate(() => document.activeElement?.tagName)).not.toBe('INPUT');
+});
+
+test('the night tap: pillars the app saw are checked, tap the rest; it builds the weekly temple', async ({ page }) => {
+  await signedWithTasks(page, '2026-10-12T21:00', []);
+  await checkIn(page, '7:30');
+  await page.getByRole('link', { name: 'Today', exact: true }).click();
+  const tap = page.getByRole('group', { name: 'Showed up for' });
+  await expect(tap.getByRole('button', { name: 'Sports, seen today' })).toHaveAttribute('aria-pressed', 'true');
+  await tap.getByRole('button', { name: 'Academics' }).click();
+  await expect(tap.getByRole('button', { name: 'Academics' })).toHaveAttribute('aria-pressed', 'true');
+  await page.getByRole('link', { name: 'Week' }).click();
+  await expect(page.getByRole('region', { name: 'Temple this week' }).getByLabel(/^Academics: 1 of 5 study days$/)).toBeVisible();
 });

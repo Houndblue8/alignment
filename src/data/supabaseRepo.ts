@@ -1,7 +1,7 @@
 // Supabase implementation of Repo. Maps camelCase models to snake_case rows. RLS scopes every query to Eli.
 import type { Block, EventDef, Place } from '../planner';
-import type { Contract, DayRecord, Quote, Settings, TaskRow, Vision } from './model';
-import { emptyPlan } from './model';
+import type { Contract, DayRecord, Quote, Settings, TaskRow, Vision, WeeklyTargets } from './model';
+import { DEFAULT_TARGETS, emptyPlan } from './model';
 import type { Repo } from './repo';
 import { supabase } from './supabase';
 
@@ -30,6 +30,8 @@ const settingsTo = (s: Settings): Row => ({
   notify_evening: s.notifyEvening,
   notify_bedtime: s.notifyBedtime,
   notify_blocks: s.notifyBlocks,
+  notify_open: s.notifyOpen,
+  weekly_targets: s.weeklyTargets,
   updated_at: new Date().toISOString(),
 });
 const settingsFrom = (r: Row): Settings => ({
@@ -49,6 +51,8 @@ const settingsFrom = (r: Row): Settings => ({
   notifyBlocks: r.notify_blocks === true,
   notifyPhoto: r.notify_photo !== false,
   photoReminderMin: (r.photo_reminder_min as number) ?? 720,
+  notifyOpen: r.notify_open !== false,
+  weeklyTargets: { ...DEFAULT_TARGETS, ...((r.weekly_targets as Partial<WeeklyTargets>) ?? {}) },
 });
 
 const visionTo = (v: Vision): Row => ({
@@ -206,6 +210,7 @@ const dayTo = (d: DayRecord): Row => ({
   pillar_steps: d.steps ?? [],
   kaizen: d.kaizen ?? null,
   inner_check: d.inner ?? null,
+  showed_up: d.showedUp ?? [],
   updated_at: new Date().toISOString(),
 });
 const dayFrom = (r: Row): DayRecord => ({
@@ -225,6 +230,7 @@ const dayFrom = (r: Row): DayRecord => ({
   steps: (r.pillar_steps as DayRecord['steps']) ?? [],
   kaizen: (r.kaizen as string) ?? null,
   inner: (r.inner_check as DayRecord['inner']) ?? null,
+  showedUp: (r.showed_up as DayRecord['showedUp']) ?? [],
 });
 
 const blockTo = (b: Block): Row => ({
@@ -334,6 +340,10 @@ export const supabaseRepo: Repo = {
   async getReport(type, periodStart) {
     const row = await must(supabase.from('reports').select('body').eq('type', type).eq('period_start', periodStart).maybeSingle());
     return (row as { body: unknown } | null)?.body ?? null;
+  },
+  async listReports(type) {
+    const rows = await must(supabase.from('reports').select('period_start, body').eq('type', type).order('period_start'));
+    return ((rows ?? []) as { period_start: string; body: unknown }[]).map((r) => ({ periodStart: r.period_start, body: r.body }));
   },
   saveReport: async (type, periodStart, body) =>
     void (await must(supabase.from('reports').upsert({ type, period_start: periodStart, body, created_at: new Date().toISOString() }))),

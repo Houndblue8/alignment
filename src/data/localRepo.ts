@@ -75,6 +75,11 @@ export const localRepo: Repo = {
     localStorage.setItem(COACH_KEY, JSON.stringify(all));
   },
   getReport: async (type, periodStart) => (JSON.parse(localStorage.getItem(REPORT_KEY) ?? '{}') as Record<string, unknown>)[`${type}:${periodStart}`] ?? null,
+  listReports: async (type) =>
+    Object.entries(JSON.parse(localStorage.getItem(REPORT_KEY) ?? '{}') as Record<string, unknown>)
+      .filter(([k]) => k.startsWith(`${type}:`))
+      .map(([k, body]) => ({ periodStart: k.slice(type.length + 1), body }))
+      .sort((a, b) => a.periodStart.localeCompare(b.periodStart)),
   saveReport: async (type, periodStart, body) => {
     const all = JSON.parse(localStorage.getItem(REPORT_KEY) ?? '{}') as Record<string, unknown>;
     all[`${type}:${periodStart}`] = body;

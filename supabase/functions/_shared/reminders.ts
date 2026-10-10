@@ -3,6 +3,8 @@
 
 export interface ReminderPrefs {
   photo?: boolean;
+  /** A ping when an open window of 30 minutes or more starts. */
+  open?: boolean;
   morning: boolean;
   evening: boolean;
   bedtime: boolean;
@@ -16,6 +18,10 @@ export interface ReminderBlock {
   kind: string;
   title: string;
   status: string;
+  source?: string;
+  pinned?: boolean;
+  taskId?: string | null;
+  placeId?: string | null;
 }
 
 export interface ReminderInput {
@@ -30,12 +36,14 @@ export interface ReminderInput {
   /** The photo can be taken any time; the reminder goes out at this time if today has none yet. */
   photoMin?: number;
   photoTaken?: boolean;
+  /** Today's Big 3 task ids (open-time suggestions name them first). */
+  big3?: string[];
 }
 
 export interface Reminder {
   /** Unique per day: the sender logs it so it goes out once. */
   key: string;
-  kind: 'morning' | 'photo' | 'evening' | 'bedtime' | 'block';
+  kind: 'morning' | 'photo' | 'evening' | 'bedtime' | 'block' | 'open';
   dueMin: number;
   title: string;
   body: string;
@@ -96,6 +104,21 @@ export function remindersFor(r: ReminderInput): Reminder[] {
       url: '/',
     });
   }
+  if (r.prefs.open) {
+    const wake = r.blocks.find((b) => b.kind === 'anchor_cold_shower')?.start ?? r.expectedWakeMin;
+    for (const w of openWindows(r.blocks, wake, winddown?.start ?? r.bedMin ?? 1440)) {
+      if (w.end - w.start < OPEN_PING_MIN || !w.uses.length) continue;
+      const names = w.uses.slice(0, 2).map((u) => (r.big3?.includes(u.taskId ?? '') ? `${u.title} (Big 3)` : u.title));
+      out.push({
+        key: `${r.date}:open:${w.start}`,
+        kind: 'open',
+        dueMin: w.start,
+        title: `Open time: ${span(w.end - w.start)}`,
+        body: `Until ${clock(w.end)}. Best use: ${names.join(', then ')}.`,
+        url: `/today#open-${w.start}`,
+      });
+    }
+  }
   if (r.prefs.blocks) {
     for (const b of r.blocks) {
       if (QUIET.has(b.kind) || b.status === 'done' || b.status === 'skipped') continue;
@@ -110,6 +133,83 @@ export function remindersFor(r: ReminderInput): Reminder[] {
     }
   }
   return out.sort((a, b) => a.dueMin - b.dueMin || a.key.localeCompare(b.key));
+}
+
+/** Open windows long enough to ping about. */
+export const OPEN_PING_MIN = 30;
+
+const span = (m: number) => (m >= 60 ? `${Math.floor(m / 60)}h${m % 60 ? ` ${m % 60}m` : ''}` : `${m}m`);
+
+/** Things with a real time: they shape the day. Everything else floats in open time. */
+const SET_KINDS = new Set(['anchor_cold_shower', 'anchor_walk', 'breakfast', 'class', 'event', 'practice', 'workout', 'shower', 'winddown', 'bed']);
+/** What the planner suggests for open time (shown as the best use, never as a fixed time). */
+const FLEX_KINDS = new Set(['work', 'library_work', 'shs_floor', 'misc', 'meal']);
+
+export const isSetBlock = (b: ReminderBlock): boolean => SET_KINDS.has(b.kind) || b.source === 'manual' || !!b.pinned;
+
+/** The blocks that keep a time on the schedule. A drive counts when it leads to something set. */
+export function setBlocks<T extends ReminderBlock>(blocks: T[]): T[] {
+  const sorted = [...blocks].sort((a, b) => a.start - b.start || a.end - b.end);
+  return sorted.filter((b) => {
+    if (b.kind !== 'travel') return isSetBlock(b);
+    // A drive stays when it takes Eli to something set there, before the next drive.
+    const after = sorted.filter((x) => x.start >= b.end - 1);
+    const nextDrive = after.find((x) => x.kind === 'travel' && x !== b);
+    const until = nextDrive ? nextDrive.start : Infinity;
+    return after.some((x) => x.kind !== 'travel' && x.start < until && isSetBlock(x) && (x.placeId ?? 'home') === (b.placeId ?? 'home'));
+  });
+}
+
+export interface OpenWindow {
+  start: number;
+  end: number;
+  /** The planner's picks for this time, in its order: Big 3 work first, then urgent work, the floor, a meal, misc. */
+  uses: { id: string; title: string; kind: string; taskId: string | null; done: boolean }[];
+}
+
+/**
+ * The gaps between things with a set time, from `from` to `until`. Drives to set things count as set;
+ * drives to planner work do not. Gaps under 15 minutes are not open time.
+ */
+export function openWindows(blocks: ReminderBlock[], from: number, until: number, minLen = 15): OpenWindow[] {
+  const sorted = [...blocks].sort((a, b) => a.start - b.start || a.end - b.end);
+  const set = setBlocks(sorted);
+  const out: OpenWindow[] = [];
+  let cursor = from;
+  const push = (end: number) => {
+    if (end - cursor >= minLen) {
+      const s0 = cursor;
+      const uses = sorted
+        .filter((b) => FLEX_KINDS.has(b.kind) && !isSetBlock(b) && b.start < end && b.end > s0 && b.status !== 'skipped')
+        .sort((a, b) => order(a) - order(b) || a.start - b.start)
+        .map((b) => ({ id: b.id, title: b.kind === 'meal' ? `${b.title} (whenever it fits)` : b.kind === 'misc' && b.title === 'Misc' ? 'Errands and catch-up' : b.title, kind: b.kind, taskId: b.taskId ?? null, done: b.status === 'done' }));
+      out.push({ start: s0, end, uses: dedupe(uses) });
+    }
+  };
+  for (const b of set) {
+    if (b.end <= cursor) continue;
+    if (b.start >= until) break;
+    if (b.start > cursor) push(Math.min(b.start, until));
+    cursor = Math.max(cursor, b.end);
+  }
+  if (cursor < until) push(until);
+  return out;
+}
+
+/** Work first (the planner already put the Big 3 first), then the floor, then a meal, then misc. */
+function order(b: ReminderBlock): number {
+  return b.kind === 'work' || b.kind === 'library_work' ? 0 : b.kind === 'shs_floor' ? 1 : b.kind === 'meal' ? 2 : 3;
+}
+
+/** One line per task: a task split into two chunks in the same window is one use. */
+function dedupe(uses: OpenWindow['uses']): OpenWindow['uses'] {
+  const seen = new Set<string>();
+  return uses.filter((u) => {
+    const k = u.taskId ?? u.title;
+    if (seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  });
 }
 
 /** Reminders whose time has come within the last `windowMin` minutes. */

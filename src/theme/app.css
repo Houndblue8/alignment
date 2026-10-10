@@ -1323,10 +1323,15 @@ details.collapse > summary::-webkit-details-marker {
   }
 }
 
-/* Scrolling to a control (keyboard focus, links to a block) keeps it clear of the tab bar and the Replan bar. */
-html {
-  scroll-padding-top: 16px;
-  scroll-padding-bottom: calc(var(--tabbar-h) + 96px + env(safe-area-inset-bottom));
+/* Scrolling to a control (keyboard focus, links to a block) keeps it clear of the tab bar and the Replan bar.
+   On the controls, not the page, so the sticky and fixed bars themselves are never pushed around. */
+main .check,
+main .card,
+main .tl-row,
+main .chip,
+main .pillar-chip {
+  scroll-margin-top: 16px;
+  scroll-margin-bottom: calc(var(--tabbar-h) + 96px + env(safe-area-inset-bottom));
 }
 
 /* The fire (Oct 10). Warm in every theme; white and blue at the core on a refiner's day. */
@@ -1561,4 +1566,116 @@ html {
 .pillar-chip span:not(.count) {
   font-size: 0.8rem;
   max-width: 100%;
+}
+
+/* Open time on the schedule */
+.open-card {
+  display: grid;
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1.5px dashed color-mix(in srgb, var(--accent) 55%, var(--border));
+  background: color-mix(in srgb, var(--accent-soft) 45%, var(--card));
+}
+.open-card.now {
+  border-style: solid;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+.open-card.past {
+  opacity: 0.6;
+}
+.open-uses {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.check.sm {
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+}
+.sheet:focus {
+  outline: none;
+}
+.pillar-chip:disabled {
+  cursor: default;
+  opacity: 1;
+}
+.building .face ellipse {
+  fill: #3b2316;
+}
+.building .face path {
+  fill: none;
+  stroke: #3b2316;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+.building .buddy path {
+  fill: color-mix(in srgb, var(--jc) 55%, #ffb04a);
+  stroke: var(--jc);
+  stroke-width: 1;
+  animation: flicker 1.2s ease-in-out infinite alternate;
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+
+/* Weekly temple on Week */
+.temple-row {
+  gap: 8px;
+}
+.temple-dots {
+  display: flex;
+  gap: 4px;
+}
+.temple-dots span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1.5px solid var(--jc);
+}
+.temple-dots span.on {
+  background: var(--jc);
+}
+.temple-gallery {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scroll-snap-type: x mandatory;
+}
+.temple-thumb {
+  margin: 0;
+  flex: none;
+  width: 92px;
+  text-align: center;
+  scroll-snap-align: start;
+}
+.temple-thumb svg {
+  width: 100%;
+  display: block;
+}
+.temple-thumb .veil {
+  fill: color-mix(in srgb, var(--accent) 12%, transparent);
+  stroke: color-mix(in srgb, var(--accent) 55%, transparent);
+  stroke-width: 1.5;
+}
+.temple-thumb .base {
+  fill: var(--border);
+}
+.temple-thumb.complete .base {
+  fill: var(--accent);
+}
+.open-card,
+.tl-row > *,
+.open-uses li > * {
+  min-width: 0;
+}
+.open-card {
+  grid-template-columns: minmax(0, 1fr);
+}
+.open-uses {
+  grid-template-columns: minmax(0, 1fr);
 }

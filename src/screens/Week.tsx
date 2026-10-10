@@ -8,6 +8,7 @@ import { useApp } from '../state/store';
 import { SeriesBar } from '../ui/Series';
 import { missedRitual } from './Memory';
 import { weekClosed } from '../state/report';
+import { TempleGallery, WeekTempleCard } from '../ui/TempleWeek';
 import { CloseOut, canCloseOut } from '../ui/CloseOut';
 
 const DAY = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -39,6 +40,8 @@ export function Week() {
         <SeriesBar results={results} />
       </section>
 
+      <WeekTempleCard start={start} />
+
       <div className="tiles">
         <div className="tile">
           <span className="num">
@@ -66,6 +69,8 @@ export function Week() {
           </Link>
         )}
       </div>
+
+      <TempleGallery />
 
       <div className="stack" data-testid="week-days">
         {results.map((r, i) => {

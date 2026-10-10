@@ -2,7 +2,7 @@ import { ChevronRight, Plus } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { DATA_MODE } from '../data/repo';
 import { supabase } from '../data/supabase';
-import { fmtDate, fmtTime, fromHHMM, toHHMM } from '../lib/format';
+import { fmtDate, fmtTime, fromHHMM, journeyStyle, toHHMM } from '../lib/format';
 import type { EventDef, EventKind, Place, RankKey } from '../planner';
 import { nowLocal } from '../lib/clock';
 import { ai } from '../ops/ai';
@@ -12,6 +12,9 @@ import { NumberField } from '../ui/NumberField';
 import { Sheet } from '../ui/Sheet';
 import { ThemePicker } from '../ui/ThemePicker';
 import { NotificationSettings } from '../ui/Notifications';
+import { DEFAULT_TARGETS, JOURNEYS } from '../data/model';
+import { UNIT } from '../state/temple';
+import type { Journey } from '../planner';
 import { themeName } from '../theme/themes';
 
 const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -139,6 +142,10 @@ export function Settings() {
             if (v > 0 && v !== s.settings.outreachCount) void save({ outreachCount: v });
           }} />
         </label>
+      </Group>
+
+      <Group title="Weekly temple" summary="Targets for each pillar">
+        <WeeklyTargetsEditor />
       </Group>
 
       <Group title="Theme" summary={themeName(s.settings.theme)}>
@@ -376,5 +383,38 @@ function PlaceSheet({ initial, onClose }: { initial: Place; onClose: () => void 
         Save
       </button>
     </Sheet>
+  );
+}
+
+/** The guardrails for each pillar's week. Exam weeks add a study day and ease Side Hustle by two. */
+function WeeklyTargetsEditor() {
+  const s = useApp((a) => a.s)!;
+  const save = useApp((a) => a.saveSettings);
+  const targets = { ...DEFAULT_TARGETS, ...(s.settings.weeklyTargets ?? {}) };
+  const set = (id: Journey, v: number | null) => void save({ weeklyTargets: { ...targets, [id]: v } });
+  return (
+    <div className="stack">
+      {JOURNEYS.map((j) => (
+        <div key={j.id} className="row" style={journeyStyle(j.id)}>
+          <span className="grow">
+            {j.label} <span className="small muted">{UNIT[j.id]}</span>
+          </span>
+          {j.id === 'sport' && (
+            <button className="chip" aria-pressed={targets.sport === null} onClick={() => set('sport', targets.sport === null ? 5 : null)}>
+              Every practice
+            </button>
+          )}
+          {!(j.id === 'sport' && targets.sport === null) && (
+            <NumberField
+              value={targets[j.id] ?? 0}
+              onValue={(n) => set(j.id, Math.max(1, Math.min(7, n)))}
+              aria-label={`${j.label} target per week`}
+              style={{ width: 64, textAlign: 'center' }}
+            />
+          )}
+        </div>
+      ))}
+      <p className="small muted">1 to 7 a week. Exam weeks add one study day and ease Side Hustle by two on their own.</p>
+    </div>
   );
 }

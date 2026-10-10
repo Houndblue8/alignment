@@ -256,6 +256,12 @@ export function applyOps(s: Snapshot, reply: ParseReply, now: Now): ApplyResult 
         next.quotes.push({ id: crypto.randomUUID(), text: op.text, tags: op.tags });
         done.push('Quote saved.');
         break;
+      case 'log_step': {
+        const rec = day();
+        setDay({ ...rec, steps: [...(rec.steps ?? []), { pillar: op.pillar, text: op.text }] });
+        done.push(`${journeyLabel(op.pillar)}: ${op.text}. A stone for the temple.`);
+        break;
+      }
       case 'replan':
         done.push('Replanned from now.');
         break;

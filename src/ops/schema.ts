@@ -84,6 +84,9 @@ export const OpSchema = z.discriminatedUnion('op', [
   z
     .object({ op: z.literal('add_quote'), ...src, text: z.string().min(1), tags: z.array(z.enum(['regret', 'hard_day', 'win', 'general'])).min(1) })
     .describe('Save a quote.'),
+  z
+    .object({ op: z.literal('log_step'), ...src, pillar: journey, text: z.string().min(1).max(120) })
+    .describe('Eli did something today toward a pillar that is not a task or a block ("studied two hours", "sent outreach", "called my mom"). Adds a stone to that pillar.'),
   z.object({ op: z.literal('replan'), ...src }).describe('Rebuild the rest of today from now.'),
   z.object({ op: z.literal('ask'), ...src, question: z.string().min(1).max(200) }).describe('One short clarifying question when something is ambiguous. At most one.'),
 ]);

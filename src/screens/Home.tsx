@@ -12,7 +12,7 @@ import { PhotoCard } from '../ui/PhotoCard';
 import { reportToOffer } from '../state/report';
 import { ScoutingCard } from './Report';
 import { Building } from '../ui/Building';
-import { buildingFor, buildingLine } from '../state/pillars';
+import { buildingFor, buildingLine } from '../state/temple';
 import { fireFor } from '../state/fire';
 import { SeriesBar, WeekCircles } from '../ui/Series';
 

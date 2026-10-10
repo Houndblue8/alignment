@@ -54,7 +54,7 @@ function TalkSheet({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <Sheet title="Talk" onClose={onClose}>
+    <Sheet title="Talk" onClose={onClose} focusInput>
       <label className="sr-only" htmlFor="talk-input">
         Tell Alignment what changed
       </label>

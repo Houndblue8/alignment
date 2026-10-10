@@ -124,36 +124,3 @@ export function pillarHistory(s: Snapshot, now: Now): Record<Journey, { week: bo
     }),
   ) as Record<Journey, { week: boolean[]; last30: number }>;
 }
-
-export interface BuildingState {
-  foundation: { coldShower: boolean; walk: boolean };
-  pillars: { id: Journey; label: string; steps: number }[];
-  /** The Big 3: each one finished lights a torch by the fire. */
-  torches: { done: number; total: number };
-  complete: boolean;
-}
-
-export function buildingFor(s: Snapshot, date: string, now: Now): BuildingState {
-  const rec = dayOf(s, date);
-  const steps = pillarSteps(s, date, now);
-  const done = rec.big3.filter((i) => isItemDone(s, i)).length;
-  const foundation = { coldShower: rec.coldShower.done, walk: rec.walk.done };
-  return {
-    foundation,
-    pillars: JOURNEYS.map((j) => ({ id: j.id, label: j.label, steps: steps[j.id].length })),
-    torches: { done, total: rec.big3.length },
-    complete: foundation.coldShower && foundation.walk && rec.big3.length > 0 && done === rec.big3.length,
-  };
-}
-
-/** One line under the building, in the coach voice. */
-export function buildingLine(b: BuildingState): string {
-  const risen = b.pillars.filter((p) => p.steps > 0).length;
-  const pillars = `${risen} of 6 pillars rose today.`;
-  if (b.complete) return `All three torches lit. The building stands. That day is a Win. ${pillars}`;
-  if (!b.foundation.coldShower && !b.foundation.walk) return 'Lay the foundation first: the cold shower, then the walk.';
-  if (!b.foundation.coldShower || !b.foundation.walk) return `Half the foundation is set. Finish it. ${pillars}`;
-  if (b.torches.total === 0) return `Foundation laid. Pick your Big 3 to light the torches. ${pillars}`;
-  if (b.torches.done === 0) return `Foundation laid. Now light the torches: your Big 3. ${pillars}`;
-  return `${b.torches.done} of ${b.torches.total} torches lit. ${pillars}`;
-}

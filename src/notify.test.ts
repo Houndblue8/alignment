@@ -1,6 +1,6 @@
 // Reminder rules shared by the send-due function and the in-app fallback (Appendix E 4).
 import { describe, expect, test } from 'vitest';
-import { clock, dueNow, remindersFor, type ReminderInput } from '../supabase/functions/_shared/reminders.ts';
+import { clock, dueNow, openWindows, remindersFor, setBlocks, type ReminderBlock, type ReminderInput } from '../supabase/functions/_shared/reminders.ts';
 
 const base: ReminderInput = {
   date: '2026-10-12',
@@ -72,5 +72,47 @@ describe('reminders', () => {
     for (const x of remindersFor({ ...base, prefs: { ...base.prefs, blocks: true } })) {
       expect(/[–—]|\p{Extended_Pictographic}/u.test(x.title + x.body)).toBe(false);
     }
+  });
+});
+
+describe('open time', () => {
+  const b = (id: string, kind: string, start: number, end: number, over: Partial<ReminderBlock> = {}): ReminderBlock => ({ id, kind, start, end, title: id, status: 'planned', placeId: 'home', ...over });
+  const day: ReminderBlock[] = [
+    b('shower', 'anchor_cold_shower', 455, 465),
+    b('walk', 'anchor_walk', 465, 480),
+    b('drive1', 'travel', 482, 500, { placeId: 'campus' }),
+    b('lib', 'library_work', 500, 570, { placeId: 'campus', taskId: 'memo', title: 'Library: Tax memo' }),
+    b('class', 'class', 720, 800, { placeId: 'campus' }),
+    b('work', 'work', 810, 870, { taskId: 'memo', title: 'Tax memo' }),
+    b('floor', 'shs_floor', 880, 910, { title: 'Side Hustle Summit floor' }),
+    b('lunch', 'meal', 700, 715, { title: 'Lunch' }),
+    b('epic', 'event', 1110, 1200),
+    b('hang', 'misc', 1210, 1260, { source: 'manual', title: 'Hangout with Josh' }),
+    b('wind', 'winddown', 1320, 1350),
+  ];
+
+  test('set times stay; planner work, the floor, meals and misc float; a drive stays when it leads to something set there', () => {
+    expect(setBlocks(day).map((x) => x.id)).toEqual(['shower', 'walk', 'drive1', 'class', 'epic', 'hang', 'wind']);
+  });
+
+  test('the gaps are open windows, with the planner picks as the best use', () => {
+    const w = openWindows(day, 455, 1320);
+    expect(w.map((x) => [x.start, x.end])).toEqual([
+      [500, 720],
+      [800, 1110],
+      [1260, 1320],
+    ]);
+    expect(w[0]!.uses.map((u) => u.title)).toEqual(['Library: Tax memo', 'Lunch (whenever it fits)']);
+    expect(w[1]!.uses.map((u) => u.title)).toEqual(['Tax memo', 'Side Hustle Summit floor']);
+    expect(w[2]!.uses).toEqual([]);
+  });
+
+  test('a ping when a window of 30 minutes or more starts, naming the Big 3 first; only when it has a use', () => {
+    const r = remindersFor({ ...base, blocks: day, prefs: { ...base.prefs, open: true }, big3: ['memo'] }).filter((x) => x.kind === 'open');
+    expect(r.map((x) => [x.dueMin, x.title, x.body])).toEqual([
+      [500, 'Open time: 3h 40m', 'Until 12:00 PM. Best use: Library: Tax memo (Big 3), then Lunch (whenever it fits).'],
+      [800, 'Open time: 5h 10m', 'Until 6:30 PM. Best use: Tax memo (Big 3), then Side Hustle Summit floor.'],
+    ]);
+    expect(remindersFor({ ...base, blocks: day }).some((x) => x.kind === 'open')).toBe(false);
   });
 });

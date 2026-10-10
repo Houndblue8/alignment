@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Journey } from '../planner';
 import type { FireState } from '../state/fire';
-import type { BuildingState } from '../state/pillars';
-import { Building, buildingLabel, rise } from './Building';
-import type { TempleColors, TempleHandle } from './temple/scene';
+import type { BuildingState } from '../state/temple';
+import { Building, buildingLabel } from './Building';
+import type { TempleColors, TempleHandle, TempleState } from './temple/scene';
 
 function webglAvailable(): boolean {
   // Automated test browsers draw WebGL in software; they get the flat drawing so tests stay fast.
@@ -44,12 +44,12 @@ export function Temple3D({ b, fire, theme, onPillar, onFire }: { b: BuildingStat
   const [failed, setFailed] = useState(() => typeof window === 'undefined' || !webglAvailable());
   const cb = useRef({ onPillar, onFire });
   cb.current = { onPillar, onFire };
-  const state = {
+  const state: TempleState = {
     foundation: b.foundation,
-    pillars: b.pillars.map((p) => ({ id: p.id, rise: rise(p.steps) })),
-    torches: b.torches,
+    pillars: b.pillars.map((p) => ({ id: p.id, rise: p.ratio, today: p.today })),
+    buddies: b.torches.items.map((i) => ({ pillar: i.pillar, done: i.done })),
     fire: fire.value,
-    refiner: fire.level === 'refiner',
+    level: fire.level,
   };
   const latest = useRef(state);
   latest.current = state;

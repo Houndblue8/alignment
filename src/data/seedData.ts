@@ -6,7 +6,7 @@ import quotesJson from '../../seed/quotes.json';
 import settingsJson from '../../seed/settings.json';
 import visionJson from '../../seed/vision.json';
 import type { EventDef, Place } from '../planner';
-import type { Contract, Quote, Settings, Snapshot, Vision } from './model';
+import { DEFAULT_TARGETS, type Contract, type Quote, type Settings, type Snapshot, type Vision } from './model';
 
 export function seedSnapshot(): Snapshot {
   const settings: Settings = {
@@ -26,6 +26,8 @@ export function seedSnapshot(): Snapshot {
     notifyBlocks: false,
     notifyPhoto: true,
     photoReminderMin: 720,
+    notifyOpen: true,
+    weeklyTargets: { ...DEFAULT_TARGETS },
   };
   const contract: Contract = { ...contractJson, locked: false, signedName: null, signedAt: null, graduationDate: null };
   return {

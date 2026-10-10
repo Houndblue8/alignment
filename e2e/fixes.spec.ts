@@ -28,7 +28,7 @@ test('forgot to check off last night: close out yesterday at check-in and the da
   await expect(card.getByTestId('closeout-result')).toHaveText('Loss');
   await card.getByRole('checkbox', { name: 'Cold shower done' }).click();
   await card.getByRole('checkbox', { name: 'Walk with God done' }).click();
-  await card.getByRole('checkbox', { name: 'Tax memo done' }).click();
+  await card.getByRole('checkbox', { name: 'Tax memo done', exact: true }).click();
   await card.getByRole('checkbox', { name: 'Lift done' }).click();
   await expect(card.getByTestId('closeout-result')).toHaveText('Win');
   // The memo is finished for good; Lift repeats, so it stays open for today.

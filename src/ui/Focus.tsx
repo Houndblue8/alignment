@@ -1,11 +1,12 @@
-import { Flame, Plus, X } from 'lucide-react';
+import { Check, Flame, Plus, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { journeyLabel } from '../data/model';
+import { JOURNEYS, journeyLabel } from '../data/model';
 import { haptic } from '../lib/haptics';
 import { journeyStyle } from '../lib/format';
-import { addDays, type Journey } from '../planner';
+import { addDays, weekStart, type Journey } from '../planner';
 import { fireFor, LEVEL_NAME, type FireState } from '../state/fire';
-import { buildingFor, buildingLine, pillarHistory, pillarSteps } from '../state/pillars';
+import { pillarHistory, pillarSteps } from '../state/pillars';
+import { buildingFor, buildingLine, seenOn, UNIT, weekTemple } from '../state/temple';
 import { dayOf } from '../state/planning';
 import { useApp } from '../state/store';
 import { SHORT } from './Building';
@@ -152,6 +153,7 @@ export function InnerCheckCard() {
   return (
     <section className="card stack" aria-label="Tonight's check">
       <p className="section-label">Tonight's check</p>
+      <ShowedUp />
       {editing ? (
         <form
           className="stack"
@@ -212,6 +214,7 @@ function PillarSheet({ pillar, onClose }: { pillar: Journey; onClose: () => void
   const [text, setText] = useState('');
   const steps = pillarSteps(s, now.date, now)[pillar];
   const history = pillarHistory(s, now)[pillar];
+  const week = weekTemple(s, weekStart(now.date), now).pillars.find((p) => p.id === pillar)!;
   const Icon = JOURNEY_ICON[pillar];
   const save = (t: string) => {
     if (!t.trim()) return;
@@ -221,13 +224,24 @@ function PillarSheet({ pillar, onClose }: { pillar: Journey; onClose: () => void
   };
   return (
     <Sheet title={journeyLabel(pillar)} onClose={onClose}>
-      <div className="row" style={journeyStyle(pillar)}>
-        <Icon size={22} aria-hidden="true" className="journey-icon" />
-        <p className="grow small muted">
-          {steps.length === 0 ? 'No step yet today. One small step raises the pillar.' : `${steps.length} ${steps.length === 1 ? 'step' : 'steps'} today.`}
-        </p>
+      <div className="stack" style={journeyStyle(pillar)}>
+        <div className="row">
+          <Icon size={22} aria-hidden="true" className="journey-icon" />
+          <p className="grow">
+            <strong>
+              {week.done} of {week.target}
+            </strong>{' '}
+            <span className="muted">{UNIT[pillar]} this week</span>
+          </p>
+        </div>
+        <div className="pillar-week" aria-label={`This week, Monday to Sunday: ${week.days.filter(Boolean).length} days`}>
+          {week.days.map((on, i) => (
+            <span key={i} className={on ? 'on' : ''} title={DAYS[i]} />
+          ))}
+        </div>
       </div>
       <ul className="stack" style={{ margin: 0, padding: 0, listStyle: 'none' }} aria-label="Steps today">
+        {steps.length === 0 && <li className="small muted">No step yet today. One small step adds a stone.</li>}
         {steps.map((st) => (
           <li key={`${st.source}:${st.text}`} className="row card journey" style={journeyStyle(pillar)}>
             <span className="grow clip">{st.text}</span>
@@ -241,6 +255,16 @@ function PillarSheet({ pillar, onClose }: { pillar: Journey; onClose: () => void
           </li>
         ))}
       </ul>
+      <div className="stack" style={{ gap: 6 }}>
+        <span className="small muted">Tap one you did</span>
+        <div className="row wrap">
+          {IDEAS[pillar].map((idea) => (
+            <button key={idea} className="chip" onClick={() => save(idea)}>
+              {idea}
+            </button>
+          ))}
+        </div>
+      </div>
       <form
         className="row"
         onSubmit={(e) => {
@@ -248,30 +272,17 @@ function PillarSheet({ pillar, onClose }: { pillar: Journey; onClose: () => void
           save(text);
         }}
       >
-        <input className="field grow" value={text} onChange={(e) => setText(e.target.value)} placeholder="A small step you took" aria-label="Log a step" maxLength={120} />
+        <input className="field grow" value={text} onChange={(e) => setText(e.target.value)} placeholder="Or type your own" aria-label="Log a step" maxLength={120} enterKeyHint="done" />
         <button type="submit" className="btn primary" disabled={!text.trim()}>
           <Plus size={16} aria-hidden="true" /> Log
         </button>
       </form>
-      <div className="row wrap">
-        {IDEAS[pillar].map((idea) => (
-          <button key={idea} className="chip" onClick={() => save(idea)}>
-            {idea}
-          </button>
-        ))}
-      </div>
-      <div className="stack" style={journeyStyle(pillar)}>
-        <span className="small muted">Last 7 days</span>
-        <div className="pillar-week" aria-label={`Rose on ${history.week.filter(Boolean).length} of the last 7 days`}>
-          {history.week.map((on, i) => (
-            <span key={i} className={on ? 'on' : ''} />
-          ))}
-        </div>
-        <span className="small muted">Rose on {history.last30} of the last 30 days.</span>
-      </div>
+      <span className="small muted">Rose on {history.last30} of the last 30 days.</span>
     </Sheet>
   );
 }
+
+const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 /** From 5 PM: one thing to do 1% better tomorrow. It shows on tomorrow's building. */
 export function KaizenCard() {
@@ -311,5 +322,47 @@ export function KaizenCard() {
         </div>
       )}
     </section>
+  );
+}
+
+/** Which pillars you showed up for today. What the app already saw is checked; tap what it could not see. */
+function ShowedUp() {
+  const s = useApp((a) => a.s)!;
+  const now = useApp((a) => a.now);
+  const toggle = useApp((a) => a.toggleShowedUp);
+  const seen = seenOn(s, now.date, now);
+  const tapped = new Set(dayOf(s, now.date).showedUp ?? []);
+  return (
+    <div className="stack" style={{ gap: 6 }}>
+      <span>
+        You showed up for <span className="small muted">Tap what the app could not see.</span>
+      </span>
+      <div className="pillar-chips" role="group" aria-label="Showed up for">
+        {JOURNEYS.map((j) => {
+          const auto = seen[j.id];
+          const on = auto || tapped.has(j.id);
+          const Icon = JOURNEY_ICON[j.id];
+          return (
+            <button
+              key={j.id}
+              type="button"
+              className={`pillar-chip ${on ? 'risen' : ''}`}
+              style={journeyStyle(j.id)}
+              aria-pressed={on}
+              aria-label={`${j.label}${auto ? ', seen today' : ''}`}
+              disabled={auto}
+              onClick={() => {
+                if (!on) haptic();
+                void toggle(j.id);
+              }}
+            >
+              <Icon size={16} aria-hidden="true" />
+              <span>{SHORT[j.id]}</span>
+              {on && <Check size={12} strokeWidth={3} className="count" aria-hidden="true" />}
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }

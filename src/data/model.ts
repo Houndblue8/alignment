@@ -23,7 +23,15 @@ export interface Settings {
   notifyPhoto: boolean;
   /** When the photo reminder goes out (minutes from midnight). The photo itself can be taken any time. */
   photoReminderMin: number;
+  /** A notification when an open window of 30 minutes or more starts. */
+  notifyOpen: boolean;
+  /** Weekly temple targets per pillar (editable). Sports: null = every practice on the calendar. */
+  weeklyTargets: WeeklyTargets;
 }
+
+export type WeeklyTargets = Record<Journey, number | null>;
+
+export const DEFAULT_TARGETS: WeeklyTargets = { faith: 7, body: 6, sport: null, school: 5, shs: 6, life: 3 };
 
 export interface Vision {
   identity: string;
@@ -89,6 +97,8 @@ export interface DayRecord {
   steps?: PillarStep[];
   /** One thing to do 1% better tomorrow, written this day and shown the next morning. */
   kaizen?: string | null;
+  /** The night tap: pillars Eli showed up for that the app could not see. */
+  showedUp?: Journey[];
   /** The night check: Mind, Heart, Spirit, 1 to 5, and an optional line. */
   inner?: { mind: number; heart: number; spirit: number; note?: string } | null;
 }
@@ -145,6 +155,7 @@ export function emptyDay(date: string): DayRecord {
     steps: [],
     kaizen: null,
     inner: null,
+    showedUp: [],
   };
 }
 

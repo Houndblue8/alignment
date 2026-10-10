@@ -18,14 +18,15 @@ export function todaysReminders(): Reminder[] {
   const rec = dayOf(s, now.date);
   return remindersFor({
     date: now.date,
-    prefs: { photo: s.settings.notifyPhoto, morning: s.settings.notifyMorning, evening: s.settings.notifyEvening, bedtime: s.settings.notifyBedtime, blocks: s.settings.notifyBlocks },
+    prefs: { open: s.settings.notifyOpen, photo: s.settings.notifyPhoto, morning: s.settings.notifyMorning, evening: s.settings.notifyEvening, bedtime: s.settings.notifyBedtime, blocks: s.settings.notifyBlocks },
     photoMin: s.settings.photoReminderMin,
     photoTaken: s.photos.some((p) => p.date === now.date),
     expectedWakeMin: s.days[addDays(now.date, -1)]?.plan.bedtime?.wakeMin ?? s.settings.wakeTargetMin,
     checkinDone: rec.checkinDone,
     anchorsDone: rec.coldShower.done && rec.walk.done,
     bedMin: rec.plan.bedtime?.bedMin ?? null,
-    blocks: s.blocks.filter((b) => b.date === now.date).map((b) => ({ id: b.id, start: b.start, end: b.end, kind: b.kind, title: b.title, status: b.status })),
+    blocks: s.blocks.filter((b) => b.date === now.date).map((b) => ({ id: b.id, start: b.start, end: b.end, kind: b.kind, title: b.title, status: b.status, source: b.source, pinned: b.pinned, taskId: b.taskId, placeId: b.placeId })),
+    big3: rec.big3.map((i) => i.taskId),
   });
 }
 
@@ -101,7 +102,7 @@ export function NotificationSettings() {
     toast(error ? 'The test did not arrive. Check that notifications are allowed for Alignment.' : 'Test sent. It should arrive in a few seconds.', error ? 'error' : 'info');
   };
 
-  const toggle = (key: 'notifyPhoto' | 'notifyMorning' | 'notifyEvening' | 'notifyBedtime' | 'notifyBlocks', label: string) => (
+  const toggle = (key: 'notifyPhoto' | 'notifyOpen' | 'notifyMorning' | 'notifyEvening' | 'notifyBedtime' | 'notifyBlocks', label: string) => (
     <label className="row between">
       <span>{label}</span>
       <input type="checkbox" className="switch" checked={settings[key]} onChange={(e) => save({ [key]: e.target.checked })} />
@@ -150,6 +151,7 @@ export function NotificationSettings() {
         )}
         {toggle('notifyEvening', 'Evening: close the day and take the photo')}
         {toggle('notifyBedtime', 'Bedtime: at your recommended bedtime')}
+        {toggle('notifyOpen', 'Open time: when a window of 30 minutes or more starts, with its best use')}
         {toggle('notifyBlocks', '5 minutes before each block')}
       </div>
     </div>

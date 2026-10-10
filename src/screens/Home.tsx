@@ -13,6 +13,7 @@ import { reportToOffer } from '../state/report';
 import { ScoutingCard } from './Report';
 import { Building } from '../ui/Building';
 import { buildingFor, buildingLine } from '../state/pillars';
+import { fireFor } from '../state/fire';
 import { SeriesBar, WeekCircles } from '../ui/Series';
 
 export function Home() {
@@ -29,6 +30,7 @@ export function Home() {
   const quote = quoteFor(s, now.date);
   const scouting = reportToOffer(s, now);
   const building = buildingFor(s, now.date, now);
+  const fire = fireFor(s, now);
   const bed = rec.plan.bedtime;
   const firstLine = s.vision.identity.split(/(?<=\.)\s/)[0] ?? s.vision.identity;
   const isWin = rec.checkinDone && resultFor(s, now.date) === 'win';
@@ -51,7 +53,7 @@ export function Home() {
 
       <section className={`card pad stack lg ${isWin ? 'win-glow' : ''}`} style={{ justifyItems: 'center' }}>
         <Link to="/today" className="building-link" aria-label={`Focus view: ${progress.done} of ${progress.total} done`}>
-          <Building b={building} compact />
+          <Building b={building} fire={fire} compact />
         </Link>
         <p className="small muted" style={{ textAlign: 'center' }}>
           {buildingLine(building)}

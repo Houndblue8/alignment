@@ -89,6 +89,8 @@ export interface DayRecord {
   steps?: PillarStep[];
   /** One thing to do 1% better tomorrow, written this day and shown the next morning. */
   kaizen?: string | null;
+  /** The night check: Mind, Heart, Spirit, 1 to 5, and an optional line. */
+  inner?: { mind: number; heart: number; spirit: number; note?: string } | null;
 }
 
 export interface PillarStep {
@@ -142,6 +144,7 @@ export function emptyDay(date: string): DayRecord {
     isaacAnswer: null,
     steps: [],
     kaizen: null,
+    inner: null,
   };
 }
 

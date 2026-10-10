@@ -1328,3 +1328,237 @@ html {
   scroll-padding-top: 16px;
   scroll-padding-bottom: calc(var(--tabbar-h) + 96px + env(safe-area-inset-bottom));
 }
+
+/* The fire (Oct 10). Warm in every theme; white and blue at the core on a refiner's day. */
+.building,
+.temple {
+  --fire-core: #fff3c4;
+  --fire-mid: #f59e2a;
+  --fire-edge: #d9481c;
+}
+.building.refiner,
+.temple.refiner {
+  --fire-core: #ffffff;
+  --fire-mid: #7cc4ff;
+  --fire-edge: #f5b335;
+}
+.building .god-roof .roof-fill {
+  fill: var(--accent);
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--accent) 55%, transparent));
+}
+.building .god-roof .cross {
+  stroke: var(--on-accent);
+  stroke-width: 3;
+  stroke-linecap: round;
+  fill: none;
+  opacity: 0.85;
+}
+.building .hearth .flame {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  transition: transform 900ms ease;
+}
+.building .flame-outer {
+  fill: var(--fire-mid);
+  stroke: var(--fire-edge);
+  stroke-width: 1;
+  animation: flicker 1.6s ease-in-out infinite alternate;
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+.building .flame-inner {
+  fill: var(--fire-core);
+  animation: flicker 1.1s ease-in-out infinite alternate-reverse;
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+.building .hearth .glow {
+  transition: r 900ms ease;
+}
+.building .torch rect {
+  fill: var(--muted);
+}
+.building .torch.lit rect {
+  fill: var(--accent-ink);
+}
+.building .torch-flame {
+  fill: var(--fire-mid);
+  animation: flicker 1.3s ease-in-out infinite alternate;
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+@keyframes flicker {
+  0% {
+    transform: scale(1, 1) skewX(0deg);
+  }
+  50% {
+    transform: scale(0.94, 1.06) skewX(2deg);
+  }
+  100% {
+    transform: scale(1.04, 0.96) skewX(-2deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .building .flame-outer,
+  .building .flame-inner,
+  .building .torch-flame {
+    animation: none;
+  }
+}
+
+.temple {
+  width: 100%;
+  max-width: 480px;
+  aspect-ratio: 1 / 0.92;
+  justify-self: center;
+  border-radius: var(--radius, 16px);
+  background: radial-gradient(ellipse at 50% 62%, color-mix(in srgb, var(--fire-mid) 16%, transparent), transparent 62%);
+  touch-action: pan-y;
+}
+.temple canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+  touch-action: pan-y;
+}
+.temple canvas:active {
+  cursor: grabbing;
+}
+
+.pillar-chips {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  width: 100%;
+}
+.pillar-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1.5px solid color-mix(in srgb, var(--jc) 45%, var(--border));
+  background: var(--card);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  min-width: 0;
+}
+.pillar-chip svg {
+  color: var(--jc);
+  flex: none;
+}
+.pillar-chip span:not(.count) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pillar-chip .count {
+  margin-left: auto;
+  font-weight: 600;
+  color: var(--muted);
+}
+.pillar-chip.risen {
+  background: color-mix(in srgb, var(--jc) 14%, var(--card));
+}
+.pillar-chip.risen .count {
+  color: var(--text);
+}
+.fire-meter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 420px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+.fire-meter .fire-icon {
+  color: #e2741f;
+  flex: none;
+}
+.fire-meter.refiner .fire-icon,
+.fire-title.refiner svg {
+  color: #4aa3f0;
+}
+.fire-meter .fire-name {
+  font-weight: 600;
+  white-space: nowrap;
+}
+.fire-bar {
+  display: block;
+  flex: 1;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  overflow: hidden;
+}
+.fire-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #f0b23c, #e2741f);
+  transition: width 800ms ease;
+}
+.fire-meter.refiner .fire-bar span {
+  background: linear-gradient(90deg, #f0b23c, #ffffff 60%, #7cc4ff);
+}
+.fire-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+.fire-title svg {
+  color: #e2741f;
+}
+.fire-trail {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 64px;
+}
+.fire-trail span {
+  flex: 1;
+  border-radius: 4px 4px 0 0;
+  background: linear-gradient(0deg, #e2741f, #f0b23c);
+}
+.fire-trail span.over {
+  background: linear-gradient(0deg, #f0b23c, #ffffff 70%, #7cc4ff);
+  box-shadow: 0 0 8px #7cc4ff;
+}
+.scale .chip[aria-checked='true'] {
+  background: var(--accent);
+  color: var(--on-accent);
+  border-color: var(--accent);
+}
+.pillar-chip {
+  flex-direction: column;
+  gap: 2px;
+  border-radius: 14px;
+  padding: 6px 4px;
+  min-height: 54px;
+  justify-content: center;
+}
+.pillar-chip .count {
+  margin-left: 0;
+  position: absolute;
+  top: 4px;
+  right: 8px;
+  font-size: 0.75rem;
+}
+.pillar-chip {
+  position: relative;
+}
+.pillar-chip span:not(.count) {
+  font-size: 0.8rem;
+  max-width: 100%;
+}

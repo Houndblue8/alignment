@@ -47,6 +47,8 @@ interface AppState {
   removeStep(index: number): Promise<void>;
   /** Tonight's one thing to do 1% better tomorrow. */
   setKaizen(text: string): Promise<void>;
+  /** The night check: Mind, Heart, Spirit (1 to 5) and an optional line. */
+  setInner(inner: NonNullable<DayRecord['inner']>): Promise<void>;
   /**
    * Plans changed: this block is not happening. An event is skipped for that day only, anything else is taken
    * off, and the rest of the day is rebuilt from now so the freed time gets used. Returns what moved in.
@@ -341,6 +343,13 @@ export const useApp = create<AppState>((set, get) => {
       run(async (s) => {
         const rec = dayOf(s, today());
         const day = { ...rec, steps: (rec.steps ?? []).filter((_, i) => i !== index) };
+        await repo.upsertDays([day]);
+        return withDay(s, day);
+      }),
+
+    setInner: (inner) =>
+      run(async (s) => {
+        const day = { ...dayOf(s, today()), inner: { ...inner, note: inner.note?.trim() || undefined } };
         await repo.upsertDays([day]);
         return withDay(s, day);
       }),

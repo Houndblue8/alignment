@@ -144,6 +144,16 @@ Each entry: what was decided, who decided, and what it replaces in the brief. Pl
 - Plans change: every block on Today has "Cancelled". An event is skipped for that day only (a one-time event is removed), anything else is taken off, and the rest of the day is rebuilt from now; a message says what moved into the freed time.
 - Talk box follow-ups: the last messages from today (on this device) go along with each new one, so "that got cancelled" or "it's at 6 now" knows what "that" is. The prompt has rules for cancellations, moves, replacements and lost time; it never fills the gap itself, the planner does. After each message the result card says how the day reshaped.
 
+### D19. The fire, God as the roof, the torches, the night check, 3D (Eli, 2026-10-10)
+- Eli's why is to be a strong, devoted man of Christ. The building now protects a fire at its center that tracks his mental, emotional and spiritual state and burns brighter the better he does.
+- God is the roof: always lit, never taken away, and in 3D it floats above the columns (held up by Him, not by them), with a cross on top and light falling onto the fire.
+- The Big 3 are three torches beside the fire; each one finished lights a torch and feeds the flame. (Eli chose this over beams under the roof.) The Win rule is unchanged.
+- Night check (from 5 PM on Today): Mind, Heart, Spirit, 1 to 5, and an optional line. An unanswered check is never counted as a low one.
+- The fire (src/state/fire.ts): faith 0 to 1 (walk with God 40%, faith steps 35%, Spirit 25%) and the rest of life 0 to 1 (cold shower 25%, torches 35%, other pillars 25%, Mind and Heart 15%). An ordinary day gives 0.6 x faith + 0.4 x life.
+- Refiner's day (2 Corinthians 12:9): faith at 0.7 or more while things broke down (Mind or Heart 2 or less, a Lost Day, or a played-out day, past or after 6 PM, with life under 0.4). It gives more heat than any ordinary day and lifts the fire to at least 110 percent: the "Refiner's fire", white and blue at the core. An early morning never counts as broken.
+- The ember never dies: the fire carries from day to day (60 percent of yesterday plus 40 percent of today), never drops under 12 percent, and settles only a little overnight (today can only raise it from 90 percent of last night). Levels: Ember, Flame, Blaze, Burning bright, Refiner's fire. The fire sheet shows the last 14 days and today's faith and life.
+- 3D (three.js 0.186.1, loaded only on Today, about 137 KB gzipped): a round temple, six columns that grow with steps, the fire as particles and sparks with a light that flickers with its strength, torches, drag to turn, tap a column or the fire. About 30 frames a second when idle, paused when off screen. Without WebGL, and in automated test browsers, the flat drawing stands in; Home uses the flat drawing.
+
 ## Claude's defaults (change any by telling me)
 
 - 5 minute buffers between blocks, except inside the morning routine (D2).

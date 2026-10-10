@@ -205,6 +205,7 @@ const dayTo = (d: DayRecord): Row => ({
   isaac_answer: d.isaacAnswer,
   pillar_steps: d.steps ?? [],
   kaizen: d.kaizen ?? null,
+  inner_check: d.inner ?? null,
   updated_at: new Date().toISOString(),
 });
 const dayFrom = (r: Row): DayRecord => ({
@@ -223,6 +224,7 @@ const dayFrom = (r: Row): DayRecord => ({
   isaacAnswer: (r.isaac_answer as DayRecord['isaacAnswer']) ?? null,
   steps: (r.pillar_steps as DayRecord['steps']) ?? [],
   kaizen: (r.kaizen as string) ?? null,
+  inner: (r.inner_check as DayRecord['inner']) ?? null,
 });
 
 const blockTo = (b: Block): Row => ({

@@ -1,5 +1,6 @@
-// The building: the anchors are the foundation, the six pillars rise with each step taken toward them,
-// and the Big 3 is the roof. Pure: what counts as a step for each pillar on a day.
+// The building: the anchors are the foundation, the six pillars rise with each step taken toward them, God is
+// the roof that never comes down, and the Big 3 are three torches that feed the fire at the center (fire.ts).
+// Pure: what counts as a step for each pillar on a day.
 import { JOURNEYS, type DayRecord, type Snapshot } from '../data/model';
 import type { Now } from '../lib/clock';
 import { addDays, tokens, type Block, type Journey, type RankKey } from '../planner';
@@ -127,7 +128,8 @@ export function pillarHistory(s: Snapshot, now: Now): Record<Journey, { week: bo
 export interface BuildingState {
   foundation: { coldShower: boolean; walk: boolean };
   pillars: { id: Journey; label: string; steps: number }[];
-  roof: { done: number; total: number };
+  /** The Big 3: each one finished lights a torch by the fire. */
+  torches: { done: number; total: number };
   complete: boolean;
 }
 
@@ -139,7 +141,7 @@ export function buildingFor(s: Snapshot, date: string, now: Now): BuildingState 
   return {
     foundation,
     pillars: JOURNEYS.map((j) => ({ id: j.id, label: j.label, steps: steps[j.id].length })),
-    roof: { done, total: rec.big3.length },
+    torches: { done, total: rec.big3.length },
     complete: foundation.coldShower && foundation.walk && rec.big3.length > 0 && done === rec.big3.length,
   };
 }
@@ -148,10 +150,10 @@ export function buildingFor(s: Snapshot, date: string, now: Now): BuildingState 
 export function buildingLine(b: BuildingState): string {
   const risen = b.pillars.filter((p) => p.steps > 0).length;
   const pillars = `${risen} of 6 pillars rose today.`;
-  if (b.complete) return `The building stands. That day is a Win. ${pillars}`;
+  if (b.complete) return `All three torches lit. The building stands. That day is a Win. ${pillars}`;
   if (!b.foundation.coldShower && !b.foundation.walk) return 'Lay the foundation first: the cold shower, then the walk.';
   if (!b.foundation.coldShower || !b.foundation.walk) return `Half the foundation is set. Finish it. ${pillars}`;
-  if (b.roof.total === 0) return `Foundation laid. Pick your Big 3 to raise the roof. ${pillars}`;
-  if (b.roof.done === 0) return `Foundation laid. Now raise the roof: your Big 3. ${pillars}`;
-  return `${b.roof.done} of ${b.roof.total} roof beams set. ${pillars}`;
+  if (b.torches.total === 0) return `Foundation laid. Pick your Big 3 to light the torches. ${pillars}`;
+  if (b.torches.done === 0) return `Foundation laid. Now light the torches: your Big 3. ${pillars}`;
+  return `${b.torches.done} of ${b.torches.total} torches lit. ${pillars}`;
 }

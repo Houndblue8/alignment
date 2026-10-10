@@ -88,11 +88,11 @@ describe('pillars', () => {
     const half = { ...base, days: { [D]: { ...day, coldShower: { done: true } } } };
     expect(buildingLine(buildingFor(half, D, now))).toMatch(/^Half the foundation is set/);
     const laid = { ...base, days: { [D]: { ...day, coldShower: { done: true }, walk: { done: true } } } };
-    expect(buildingLine(buildingFor(laid, D, now))).toBe('Foundation laid. Pick your Big 3 to raise the roof. 2 of 6 pillars rose today.');
+    expect(buildingLine(buildingFor(laid, D, now))).toBe('Foundation laid. Pick your Big 3 to light the torches. 2 of 6 pillars rose today.');
     const all = { ...base, days: { [D]: { ...day, coldShower: { done: true }, walk: { done: true }, big3: [{ taskId: 'a', locked: true, accepted: true }] } } };
     const b = buildingFor(all, D, now);
     expect(b.complete).toBe(true);
-    expect(buildingLine(b)).toBe('The building stands. That day is a Win. 3 of 6 pillars rose today.');
+    expect(buildingLine(b)).toBe('All three torches lit. The building stands. That day is a Win. 3 of 6 pillars rose today.');
   });
 
   test('history: which of the last 7 days each pillar rose', () => {

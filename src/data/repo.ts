@@ -26,6 +26,9 @@ export interface Repo {
   /** Cached coach text per day (one AI call per day for the Home line). */
   getCoach(date: string, kind: string): Promise<string | null>;
   saveCoach(date: string, kind: string, text: string): Promise<void>;
+  /** Weekly scouting reports and monthly recaps, by the period's first day. */
+  getReport(type: ReportType, periodStart: string): Promise<unknown | null>;
+  saveReport(type: ReportType, periodStart: string, body: unknown): Promise<void>;
   /** Upload the day's photo file; returns its storage path. */
   uploadPhoto(date: string, file: Blob): Promise<string>;
   savePhoto(p: PhotoRow): Promise<void>;
@@ -33,6 +36,8 @@ export interface Repo {
   /** Short-lived viewing links for stored photos, by storage path. */
   photoUrls(paths: string[]): Promise<Record<string, string>>;
 }
+
+export type ReportType = 'weekly' | 'monthly';
 
 export interface OpsLogEntry {
   inputText: string;

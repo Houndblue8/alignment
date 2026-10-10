@@ -60,6 +60,12 @@ describe('reminders', () => {
     expect(remindersFor(photo).find((x) => x.kind === 'evening')!.body).toBe("Check off what got done. Today's photo is still open.");
   });
 
+  test('Sunday close-out closes the week and points to the scouting report', () => {
+    const ev = remindersFor({ ...base, date: '2026-10-18' }).find((x) => x.kind === 'evening')!;
+    expect(ev.title).toBe('Close the week');
+    expect(ev.body).toBe('Check off what got done. Then your scouting report is ready on Home.');
+  });
+
   test('text has no dashes or emoji and clock formats times', () => {
     expect(clock(1395)).toBe('11:15 PM');
     expect(clock(0)).toBe('12:00 AM');

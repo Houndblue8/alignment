@@ -74,12 +74,15 @@ export function remindersFor(r: ReminderInput): Reminder[] {
   }
   const winddown = r.blocks.find((b) => b.kind === 'winddown');
   if (r.prefs.evening && (winddown || r.bedMin !== null)) {
+    // Sunday's close-out also closes the week: the scouting report opens on Home.
+    const sunday = new Date(`${r.date}T12:00:00Z`).getUTCDay() === 0;
+    const body = r.photoTaken === false ? "Check off what got done. Today's photo is still open." : 'Check off what got done.';
     out.push({
       key: `${r.date}:evening`,
       kind: 'evening',
       dueMin: winddown ? winddown.start : r.bedMin! - 60,
-      title: 'Close the day',
-      body: r.photoTaken === false ? "Check off what got done. Today's photo is still open." : 'Check off what got done.',
+      title: sunday ? 'Close the week' : 'Close the day',
+      body: sunday ? `${body} Then your scouting report is ready on Home.` : body,
       url: '/today',
     });
   }

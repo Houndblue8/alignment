@@ -39,3 +39,9 @@ The planner lives in `src/planner/`. It is pure TypeScript: no network, no datab
 ## Talk box
 
 Words go to the `parse-dump` function, which asks Claude for operations. The app checks every operation (shape, ids, times, hard rules), retries once with the errors, then applies them, replans, and logs the change for Undo. To test the live AI: Settings, Talk box check.
+
+## Ritual layer
+
+- **Notifications**: the `send-due` function runs every minute (pg_cron) and sends Web Push reminders; the rules live in `supabase/functions/_shared/reminders.ts`, shared with the in-app fallback.
+- **Photos and Memory**: one photo a day, any time, in the private `photos` bucket. Memory shows then and now, a calendar, and milestones.
+- **Sunday scouting report**: `src/state/report.ts` computes the week's facts and a plain draft; the `coach` function (kind `week`) rewrites the four lines. Saved in the `reports` table.

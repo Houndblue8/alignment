@@ -9,6 +9,8 @@ import { Big3Section } from '../ui/Big3';
 import { AwayMessage, CoachLine, Decisions } from '../ui/HomeExtras';
 import { InstallHint } from '../ui/InstallHint';
 import { PhotoCard } from '../ui/PhotoCard';
+import { reportToOffer } from '../state/report';
+import { ScoutingCard } from './Report';
 import { Ring } from '../ui/Ring';
 import { SeriesBar, WeekCircles } from '../ui/Series';
 
@@ -24,6 +26,7 @@ export function Home() {
   const season = seasonRecord(s, now.date);
   const streaks = anchorStreaks(s, now.date);
   const quote = quoteFor(s, now.date);
+  const scouting = reportToOffer(s, now);
   const bed = rec.plan.bedtime;
   const firstLine = s.vision.identity.split(/(?<=\.)\s/)[0] ?? s.vision.identity;
   const isWin = rec.checkinDone && resultFor(s, now.date) === 'win';
@@ -39,6 +42,7 @@ export function Home() {
       <InstallHint />
       <AwayMessage />
       <CoachLine />
+      {scouting && <ScoutingCard start={scouting} />}
       <IsaacPrompt />
       <CodeRedHint />
       <Decisions />

@@ -11,6 +11,7 @@ import { ai } from '../ops/ai';
 import { anchorLines, applyOps, restoreSnapshot, undoSnapshot, type UndoSnapshot } from '../ops/apply';
 import { runDump } from '../ops/pipeline';
 import { applyTheme } from '../theme/theme';
+import { cleanReport, draftReport, factsForCoach, weekClosed, weekFacts, type StoredReport } from './report';
 import { buildWeek, dayOf, fillBig3, finalizePast, suggestAgain as suggestAgainPure } from './planning';
 
 const repo: Repo = DATA_MODE === 'local' ? localRepo : supabaseRepo;
@@ -74,6 +75,8 @@ interface AppState {
   removePhoto(date: string): Promise<void>;
   photoUrls(paths: string[]): Promise<Record<string, string>>;
   captionQuestion(): Promise<string | null>;
+  /** The scouting report for a closed week: saved one, or written now (rewrite = write it again). */
+  scoutingReport(weekStart: string, rewrite?: boolean): Promise<StoredReport | null>;
 
   /** The talk box result card. */
   lastDump: DumpCard | null;
@@ -578,6 +581,33 @@ export const useApp = create<AppState>((set, get) => {
       } catch {
         return null;
       }
+    },
+
+    async scoutingReport(start, rewrite = false) {
+      const s = get().s;
+      if (!s || !weekClosed(s, start, nowLocal())) return null;
+      if (!rewrite) {
+        const saved = await repo.getReport('weekly', start).catch(() => null);
+        if (saved) return saved as StoredReport;
+      }
+      const facts = weekFacts(s, start);
+      const draft = draftReport(facts, s.vision.identity);
+      let out: StoredReport = { facts, report: draft, source: 'draft' };
+      try {
+        const reply = await ai.scout({
+          name: s.contract.signedName?.split(' ')[0] || 'Eli',
+          whyShort: s.vision.whyShort,
+          identity: s.vision.identity,
+          facts: factsForCoach(facts),
+          draft: { ...draft },
+        });
+        const report = cleanReport(reply);
+        if (report) out = { facts, report, source: 'coach' };
+      } catch {
+        // The plain draft stands in when the coach is unavailable; it is not saved, so the next open asks again.
+      }
+      if (out.source === 'coach') await repo.saveReport('weekly', start, out).catch(() => undefined);
+      return out;
     },
 
     lastDump: null,

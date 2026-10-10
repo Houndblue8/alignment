@@ -74,6 +74,12 @@ export const localRepo: Repo = {
     all[`${date}:${kind}`] = text;
     localStorage.setItem(COACH_KEY, JSON.stringify(all));
   },
+  getReport: async (type, periodStart) => (JSON.parse(localStorage.getItem(REPORT_KEY) ?? '{}') as Record<string, unknown>)[`${type}:${periodStart}`] ?? null,
+  saveReport: async (type, periodStart, body) => {
+    const all = JSON.parse(localStorage.getItem(REPORT_KEY) ?? '{}') as Record<string, unknown>;
+    all[`${type}:${periodStart}`] = body;
+    localStorage.setItem(REPORT_KEY, JSON.stringify(all));
+  },
   // Local test mode keeps photos as data URLs in the browser (small test images only).
   uploadPhoto: async (date, file) => {
     const path = `local/${date}.jpg`;
@@ -99,3 +105,4 @@ export const localRepo: Repo = {
 
 const LOG_KEY = 'alignment.opslog';
 const COACH_KEY = 'alignment.coach';
+const REPORT_KEY = 'alignment.reports';

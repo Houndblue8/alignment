@@ -325,6 +325,12 @@ export const supabaseRepo: Repo = {
     return (row as { text: string } | null)?.text ?? null;
   },
   saveCoach: async (date, kind, text) => void (await must(supabase.from('coach_cache').upsert({ date, kind, text }))),
+  async getReport(type, periodStart) {
+    const row = await must(supabase.from('reports').select('body').eq('type', type).eq('period_start', periodStart).maybeSingle());
+    return (row as { body: unknown } | null)?.body ?? null;
+  },
+  saveReport: async (type, periodStart, body) =>
+    void (await must(supabase.from('reports').upsert({ type, period_start: periodStart, body, created_at: new Date().toISOString() }))),
   async uploadPhoto(date, file) {
     const { data: who } = await supabase.auth.getUser();
     if (!who.user) throw new Error('Sign in first.');

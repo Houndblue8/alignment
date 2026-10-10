@@ -1,6 +1,6 @@
 # Alignment: Build Plan
 
-Status: draft, waiting for Eli's go. Nothing is installed or scaffolded yet.
+Status (2026-10-10): Phases 0 to 4 done. Phase 5: notifications, photos and Memory, and the Sunday scouting report are done; the urge button and the monthly recap are next.
 
 ## 1. Machine check (done 2026-10-09)
 

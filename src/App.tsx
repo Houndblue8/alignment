@@ -10,6 +10,7 @@ import { Home } from './screens/Home';
 import { Login, SetPassword } from './screens/Login';
 import { Memory } from './screens/Memory';
 import { Quotes } from './screens/Quotes';
+import { Report } from './screens/Report';
 import { Settings } from './screens/Settings';
 import { Today } from './screens/Today';
 import { Vision } from './screens/Vision';
@@ -110,6 +111,8 @@ function Loaded() {
           <Route path="/settings" element={<Settings />} />
           <Route path="/vision" element={<Vision />} />
           <Route path="/memory" element={<Memory />} />
+          <Route path="/report" element={<Report />} />
+          <Route path="/report/:start" element={<Report />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

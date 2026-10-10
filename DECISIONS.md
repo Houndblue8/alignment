@@ -118,6 +118,13 @@ Each entry: what was decided, who decided, and what it replaces in the brief. Pl
 - Missed photo: a past day that was checked in but has no photo shows a small grey dot on Week and in the Memory calendar. It never changes the score.
 - Memory page: "Then and now" (day 1, day 30, day 90 counted from the first photo, each allowing up to 3 days late, and the latest), a month calendar of thumbnails, and a photo view to edit the caption, mark a milestone (star) or delete. On phones Memory opens from the photo card and Week; on laptops it is also in the sidebar.
 
+### D16. Sunday scouting report (Phase 5, 2026-10-10)
+- The week (Monday to Sunday) closes on Sunday when wind-down starts (9:00 PM if there is no wind-down block). From then until Monday night, Home shows "Scouting report is in". Every closed week's report also opens from Week, and the report page steps back through earlier weeks.
+- The facts are computed in the app, never by the AI: series record and points, cold shower, walk, Big 3, workouts, Side Hustle Summit floor, photos, late wakes (more than 15 minutes after the recommended wake), best day, and tasks pushed off twice. Sunday is scored live; a day skipped after Eli started counts as a loss; a first, partial week is measured on the days it had.
+- The app writes a plain draft from the facts (what held at 85 percent or better, the weakest area, one matching adjustment, a line from the identity statement). Two or more late wakes are named as the slip first. The photo is named as the slip only when everything that counts held, because it never changes the score.
+- The coach (Haiku) rewrites the four lines from the facts and the draft, through a tool call; the app validates the reply and strips dashes. The coach version is saved in the reports table; if the coach is unavailable, the plain draft shows and the next open asks again. "Write it again" asks for a new version.
+- Sunday's evening reminder becomes "Close the week" and points to the report.
+
 ## Claude's defaults (change any by telling me)
 
 - 5 minute buffers between blocks, except inside the morning routine (D2).

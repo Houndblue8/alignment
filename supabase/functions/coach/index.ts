@@ -1,13 +1,48 @@
 // Coach line: one short message in the coach tone (Appendix A). The app caches it per day.
-import { apiErrorMessage, claude, type Anthropic } from '../_shared/anthropic.ts';
+import { apiErrorMessage, claude, createWithFallback, type Anthropic } from '../_shared/anthropic.ts';
 import { cors, env, fail, json } from '../_shared/http.ts';
-import { COACH_SYSTEM } from '../_shared/prompts.ts';
+import { COACH_SYSTEM, SCOUT_SYSTEM } from '../_shared/prompts.ts';
 
 interface Body {
-  kind?: 'daily' | 'caption';
+  kind?: 'daily' | 'caption' | 'week';
   name?: string;
   whyShort?: string;
+  identity?: string;
   facts?: Record<string, unknown>;
+  draft?: Record<string, string>;
+}
+
+const line = { type: 'string' };
+const reportSchema = {
+  type: 'object',
+  properties: { held: line, slipped: line, adjustment: line, vision: line },
+  required: ['held', 'slipped', 'adjustment', 'vision'],
+  additionalProperties: false,
+};
+
+/** Sunday scouting report (Appendix E 3). The app validates the reply and keeps its own draft on failure. */
+async function scout(body: Body): Promise<Response> {
+  const res = await createWithFallback({
+    model: env('ANTHROPIC_MODEL_COACH'),
+    max_tokens: 1500,
+    system: SCOUT_SYSTEM,
+    tools: [{ name: 'submit_report', description: 'The four lines of the scouting report.', input_schema: reportSchema, strict: true }],
+    tool_choice: { type: 'auto' },
+    messages: [
+      {
+        role: 'user',
+        content: `Name: ${body.name ?? 'Eli'}
+His why: ${body.whyShort ?? ''}
+His identity: ${body.identity ?? ''}
+Week facts (JSON): ${JSON.stringify(body.facts ?? {})}
+Draft (JSON): ${JSON.stringify(body.draft ?? {})}`,
+      },
+    ],
+  });
+  if (res.stop_reason === 'refusal') return fail('No report this week.', 422);
+  const call = res.content.find((b) => b.type === 'tool_use' && b.name === 'submit_report');
+  if (!call || call.type !== 'tool_use') return fail('The coach did not return a report.', 502);
+  return json({ report: call.input });
 }
 
 Deno.serve(async (req) => {
@@ -18,6 +53,14 @@ Deno.serve(async (req) => {
     body = await req.json();
   } catch {
     return fail('The request was not valid JSON.', 400);
+  }
+  if (body.kind === 'week') {
+    try {
+      return await scout(body);
+    } catch (e) {
+      console.error('scout', e);
+      return fail(apiErrorMessage(e), 502);
+    }
   }
   const ask =
     body.kind === 'caption'

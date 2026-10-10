@@ -1111,3 +1111,19 @@ details.collapse > summary::-webkit-details-marker {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Sunday scouting report */
+.caps {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.report-tiles {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.report-accent {
+  border-left: 3px solid var(--accent);
+}
+.scouting-card {
+  gap: 12px;
+  align-items: center;
+}

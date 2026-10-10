@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Images } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ClipboardList, Images } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { fmtDate, fmtTime, journeyStyle, kindJourney, shortDuration } from '../lib/format';
@@ -7,13 +7,15 @@ import { anchorStreaks, seasonRecord, weekResults } from '../state/planning';
 import { useApp } from '../state/store';
 import { SeriesBar } from '../ui/Series';
 import { missedRitual } from './Memory';
+import { weekClosed } from '../state/report';
 
 const DAY = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const WORD = { win: 'Win', half: 'Half win', loss: 'Loss' } as const;
 
 export function Week() {
   const s = useApp((a) => a.s)!;
-  const today = useApp((a) => a.now.date);
+  const now = useApp((a) => a.now);
+  const today = now.date;
   const [offset, setOffset] = useState(0);
   const start = addDays(weekStart(today), offset * 7);
   const results = weekResults(s, start);
@@ -53,9 +55,16 @@ export function Week() {
         </div>
       </div>
 
-      <Link to="/memory" className="btn ghost" style={{ justifySelf: 'start' }}>
-        <Images size={16} aria-hidden="true" /> Memory
-      </Link>
+      <div className="row wrap">
+        <Link to="/memory" className="btn ghost">
+          <Images size={16} aria-hidden="true" /> Memory
+        </Link>
+        {weekClosed(s, start, now) && (
+          <Link to={`/report/${start}`} className="btn ghost">
+            <ClipboardList size={16} aria-hidden="true" /> Scouting report
+          </Link>
+        )}
+      </div>
 
       <div className="stack" data-testid="week-days">
         {results.map((r, i) => {

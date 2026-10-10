@@ -19,6 +19,15 @@ export interface CoachRequest {
   facts: Record<string, unknown>;
 }
 
+export interface ScoutRequest {
+  name: string;
+  whyShort: string;
+  identity: string;
+  facts: Record<string, unknown>;
+  /** The plain draft from the facts; the coach rewrites it. */
+  draft: Record<string, string>;
+}
+
 export interface DelegateRequest {
   task: { title: string; journey: string; notes: string; steps: { text: string; guess: boolean }[] };
 }
@@ -32,6 +41,8 @@ export interface AI {
   parse(req: ParseRequest): Promise<unknown>;
   coach(req: CoachRequest): Promise<string>;
   delegate(req: DelegateRequest): Promise<DelegateReply>;
+  /** Sunday scouting report: four lines (held, slipped, adjustment, vision), validated by the caller. */
+  scout(req: ScoutRequest): Promise<unknown>;
 }
 
 declare global {
@@ -64,4 +75,6 @@ export const ai: AI = {
   parse: (req) => (DATA_MODE === 'local' ? (window.__alignmentAI?.parse ?? unavailable)(req) : invoke('parse-dump', req)),
   coach: (req) => (DATA_MODE === 'local' ? (window.__alignmentAI?.coach ?? unavailable)(req) : invoke<{ text: string }>('coach', req).then((r) => r.text)),
   delegate: (req) => (DATA_MODE === 'local' ? (window.__alignmentAI?.delegate ?? unavailable)(req) : invoke('delegate', req)),
+  scout: (req) =>
+    DATA_MODE === 'local' ? (window.__alignmentAI?.scout ?? unavailable)(req) : invoke<{ report: unknown }>('coach', { kind: 'week', ...req }).then((r) => r.report),
 };

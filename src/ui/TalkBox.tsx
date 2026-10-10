@@ -136,6 +136,11 @@ function ResultCard() {
               </ul>
             </div>
           )}
+          {card.reshaped && (
+            <p className="small muted" data-testid="reshaped">
+              {card.reshaped}
+            </p>
+          )}
           {card.question && <p className="banner">{card.question}</p>}
           {card.done.length === 0 && card.cantDo.length === 0 && !card.question && <p className="muted">Nothing needed to change.</p>}
           <button className="btn" onClick={undo} disabled={busy} style={{ justifySelf: 'start' }}>

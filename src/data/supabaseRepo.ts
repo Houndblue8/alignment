@@ -203,6 +203,8 @@ const dayTo = (d: DayRecord): Row => ({
   notes: d.notes,
   plan: d.plan,
   isaac_answer: d.isaacAnswer,
+  pillar_steps: d.steps ?? [],
+  kaizen: d.kaizen ?? null,
   updated_at: new Date().toISOString(),
 });
 const dayFrom = (r: Row): DayRecord => ({
@@ -219,6 +221,8 @@ const dayFrom = (r: Row): DayRecord => ({
   notes: r.notes as string,
   plan: { ...emptyPlan(), ...(r.plan as object) },
   isaacAnswer: (r.isaac_answer as DayRecord['isaacAnswer']) ?? null,
+  steps: (r.pillar_steps as DayRecord['steps']) ?? [],
+  kaizen: (r.kaizen as string) ?? null,
 });
 
 const blockTo = (b: Block): Row => ({

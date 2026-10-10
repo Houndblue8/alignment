@@ -12,7 +12,7 @@ test('20. first launch shows the Contract; signing shows the signature, then the
   // First launch is also the first open of the day, so the check-in comes next, then Home.
   await expect(page.getByRole('heading', { name: 'What time did you wake up?' })).toBeVisible({ timeout: 5000 });
   await checkIn(page);
-  await expect(page.getByRole('img', { name: /done today/ })).toBeVisible();
+  await expect(page.getByRole('link', { name: /Focus view: \d of \d done/ })).toBeVisible();
   // The contract never shows again.
   await page.reload();
   await expect(page.getByText('Contract to Self')).toHaveCount(0);

@@ -85,6 +85,15 @@ export interface DayRecord {
   notes: string;
   plan: PlanMeta;
   isaacAnswer: 'yes' | 'no' | null;
+  /** Small steps Eli logged by hand toward a pillar ("Texted Josh", "Read Romans 8"). */
+  steps?: PillarStep[];
+  /** One thing to do 1% better tomorrow, written this day and shown the next morning. */
+  kaizen?: string | null;
+}
+
+export interface PillarStep {
+  pillar: Journey;
+  text: string;
 }
 
 export interface Quote {
@@ -131,16 +140,19 @@ export function emptyDay(date: string): DayRecord {
     notes: '',
     plan: emptyPlan(),
     isaacAnswer: null,
+    steps: [],
+    kaizen: null,
   };
 }
 
+/** The six pillars (journeys in the code). Order is the order they stand in the building. */
 export const JOURNEYS: { id: Journey; label: string }[] = [
-  { id: 'body', label: 'Body' },
-  { id: 'sport', label: 'Sport' },
-  { id: 'shs', label: 'Side Hustle Summit' },
-  { id: 'school', label: 'School' },
   { id: 'faith', label: 'Faith and Epic' },
-  { id: 'life', label: 'Life and Social' },
+  { id: 'body', label: 'Body' },
+  { id: 'sport', label: 'Sports' },
+  { id: 'school', label: 'Academics' },
+  { id: 'shs', label: 'Side Hustle' },
+  { id: 'life', label: 'Social and Community' },
 ];
 
 export const journeyLabel = (j: Journey): string => JOURNEYS.find((x) => x.id === j)?.label ?? j;

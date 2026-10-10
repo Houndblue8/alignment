@@ -135,6 +135,15 @@ Each entry: what was decided, who decided, and what it replaces in the brief. Pl
 - Late close-out: a past day stays open for check-offs for 7 days. The morning check-in shows "Close out yesterday" when yesterday has an anchor or Big 3 item unchecked, and every past day in Week has "Close out this day". Checking off rescores the day at once. A late Big 3 check counts for that day only (so a habit like "Lift" is not checked off for today); "Finished" closes a one-time task for good.
 - Number boxes (task minutes, place drive times) can be empty while typing, open the number pad, and select on focus, so typing 30 gives 30.
 
+### D18. Focus view, the building and the pillars; plans change (Eli, 2026-10-10)
+- Today opens on a focus view: a building. The cold shower and the walk are the two foundation steps, six pillars rise with steps toward them, and the Big 3 are the roof beams. When the foundation and the roof are done, it stands: that is the Win (the score itself is unchanged: anchors plus Big 3). Home shows the same building, smaller; tapping it opens Today.
+- The six pillars (journeys in the code), in building order: Faith and Epic, Body, Sports, Academics, Side Hustle, Social and Community. Labels can change later in one place (JOURNEYS).
+- What raises a pillar: the anchors (cold shower: Body; walk: Faith), Big 3 items and tasks finished that day, by their pillar; showing up counts on its own (classes, practices, events and blocks Eli added count once they end unless skipped); effort blocks (workout, the floor, work) count when checked; and small steps Eli logs by tapping a pillar (with starter ideas per pillar). One step raises a pillar about halfway, two most of the way, three fills it. Each pillar shows its last 7 days and its count over 30 days.
+- The schedule below is a guide, not a checklist: only the foundation and the Big 3 decide the Win.
+- Kaizen (trial): from 5 PM a card asks for one thing to do 1% better tomorrow; it shows under the next day's building. Eli is not sold on it; easy to remove.
+- Plans change: every block on Today has "Cancelled". An event is skipped for that day only (a one-time event is removed), anything else is taken off, and the rest of the day is rebuilt from now; a message says what moved into the freed time.
+- Talk box follow-ups: the last messages from today (on this device) go along with each new one, so "that got cancelled" or "it's at 6 now" knows what "that" is. The prompt has rules for cancellations, moves, replacements and lost time; it never fills the gap itself, the planner does. After each message the result card says how the day reshaped.
+
 ## Claude's defaults (change any by telling me)
 
 - 5 minute buffers between blocks, except inside the morning routine (D2).

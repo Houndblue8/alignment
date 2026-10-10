@@ -1,4 +1,4 @@
-import { Car, Check, MapPin, MoreVertical, Pin, RefreshCw, SkipForward } from 'lucide-react';
+import { CalendarX, Car, Check, MapPin, MoreVertical, Pin, RefreshCw, SkipForward } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { journeyLabel } from '../data/model';
@@ -8,6 +8,7 @@ import { dayOf } from '../state/planning';
 import { useApp } from '../state/store';
 import { AnchorButton } from '../ui/AnchorButton';
 import { Big3Section } from '../ui/Big3';
+import { FocusHero, KaizenCard } from '../ui/Focus';
 import { Sheet } from '../ui/Sheet';
 import { JOURNEY_ICON, KIND_ICON } from '../ui/icons';
 
@@ -53,12 +54,18 @@ export function Today() {
 
       {mode && <p className="banner warn">{mode} is on.</p>}
 
+      <FocusHero />
+
+      <p className="section-label">Foundation</p>
       <div className="anchors">
         <AnchorButton kind="coldShower" done={rec.coldShower.done} onToggle={(d) => setAnchor('coldShower', d)} />
         <AnchorButton kind="walk" done={rec.walk.done} onToggle={(d) => setAnchor('walk', d)} />
       </div>
 
+      <p className="section-label">Roof</p>
       <Big3Section />
+
+      <KaizenCard />
 
       {rec.plan.warnings.map((w) => (
         <p key={w} className="banner warn small">
@@ -78,6 +85,10 @@ export function Today() {
         </details>
       )}
 
+      <div className="stack" style={{ gap: 4 }}>
+        <h2>Schedule</h2>
+        <p className="small muted">A guide, not a checklist. Only the foundation and the Big 3 decide the Win. Plans changed? Tap a block and choose Cancelled, or tell the talk box.</p>
+      </div>
       <section aria-label="Schedule" className="timeline" data-testid="timeline">
         {blocks.length === 0 && <p className="muted">No plan yet. Tap Replan to build it.</p>}
         {blocks.map((b) => (
@@ -125,6 +136,7 @@ function BlockRow({ b, nowMin }: { b: Block; nowMin: number }) {
   const s = useApp((a) => a.s)!;
   const setStatus = useApp((a) => a.setBlockStatus);
   const togglePin = useApp((a) => a.togglePin);
+  const cancelBlock = useApp((a) => a.cancelBlock);
   const [open, setOpen] = useState(false);
   const place = s.places.find((p) => p.id === b.placeId);
   const task = b.taskId ? s.tasks.find((t) => t.id === b.taskId) : undefined;
@@ -197,6 +209,11 @@ function BlockRow({ b, nowMin }: { b: Block; nowMin: number }) {
               <button className="btn" onClick={() => setStatus(b.id, b.status === 'skipped' ? 'planned' : 'skipped')}>
                 <SkipForward size={16} aria-hidden="true" /> {b.status === 'skipped' ? 'Unskip' : 'Skip'}
               </button>
+              {b.kind !== 'bed' && b.kind !== 'winddown' && b.status !== 'done' && (
+                <button className="btn" onClick={() => cancelBlock(b.id)}>
+                  <CalendarX size={16} aria-hidden="true" /> Cancelled
+                </button>
+              )}
               <button className="btn" aria-pressed={b.pinned} onClick={() => togglePin(b.id)}>
                 <Pin size={16} aria-hidden="true" /> {b.pinned ? 'Unpin' : 'Pin'}
               </button>

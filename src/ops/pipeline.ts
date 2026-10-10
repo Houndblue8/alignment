@@ -2,14 +2,14 @@
 import type { Snapshot } from '../data/model';
 import type { Now } from '../lib/clock';
 import type { AI } from './ai';
-import { buildContext } from './context';
+import { buildContext, type RecentMessage } from './context';
 import type { ParseReply } from './schema';
 import { checkReply } from './validate';
 
 export type DumpOutcome = { ok: true; reply: ParseReply; attempts: number } | { ok: false; message: string; errors: string[] };
 
-export async function runDump(text: string, s: Snapshot, now: Now, client: Pick<AI, 'parse'>): Promise<DumpOutcome> {
-  const context = buildContext(s, now);
+export async function runDump(text: string, s: Snapshot, now: Now, client: Pick<AI, 'parse'>, recent: RecentMessage[] = []): Promise<DumpOutcome> {
+  const context = buildContext(s, now, recent);
   let raw: unknown;
   try {
     raw = await client.parse({ text, context });

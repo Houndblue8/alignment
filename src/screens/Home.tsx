@@ -11,7 +11,8 @@ import { InstallHint } from '../ui/InstallHint';
 import { PhotoCard } from '../ui/PhotoCard';
 import { reportToOffer } from '../state/report';
 import { ScoutingCard } from './Report';
-import { Ring } from '../ui/Ring';
+import { Building } from '../ui/Building';
+import { buildingFor, buildingLine } from '../state/pillars';
 import { SeriesBar, WeekCircles } from '../ui/Series';
 
 export function Home() {
@@ -27,6 +28,7 @@ export function Home() {
   const streaks = anchorStreaks(s, now.date);
   const quote = quoteFor(s, now.date);
   const scouting = reportToOffer(s, now);
+  const building = buildingFor(s, now.date, now);
   const bed = rec.plan.bedtime;
   const firstLine = s.vision.identity.split(/(?<=\.)\s/)[0] ?? s.vision.identity;
   const isWin = rec.checkinDone && resultFor(s, now.date) === 'win';
@@ -48,10 +50,12 @@ export function Home() {
       <Decisions />
 
       <section className={`card pad stack lg ${isWin ? 'win-glow' : ''}`} style={{ justifyItems: 'center' }}>
-        <Ring value={progress.done} max={progress.total} label={isWin ? 'Today is a Win' : `${progress.done} of ${progress.total} done today`}>
-          <span className="big">{isWin ? 'Win' : `${progress.done}/${progress.total}`}</span>
-          <span className="small muted">today</span>
-        </Ring>
+        <Link to="/today" className="building-link" aria-label={`Focus view: ${progress.done} of ${progress.total} done`}>
+          <Building b={building} compact />
+        </Link>
+        <p className="small muted" style={{ textAlign: 'center' }}>
+          {buildingLine(building)}
+        </p>
         {next ? (
           <button className="btn primary block" onClick={() => navigate(`/today#${encodeURIComponent(next.id)}`)}>
             Next: {next.title} <span className="small">{fmtTime(next.start)}</span>

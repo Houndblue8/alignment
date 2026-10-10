@@ -6,9 +6,10 @@ import { seedSnapshot } from '../data/seedData';
 import { supabaseRepo } from '../data/supabaseRepo';
 import { nowLocal, type Now } from '../lib/clock';
 import { shrinkPhoto } from '../lib/image';
-import { addDays, confirmTentative, diffBlocks, diffDays, fmtDate, fmtTime, sameThing, weekday, type Block, type EventDef, type Place } from '../planner';
+import { addDays, confirmTentative, diffBlocks, diffDays, fmtDate, fmtTime, sameThing, weekday, type Block, type EventDef, type Journey, type Place } from '../planner';
 import { ai } from '../ops/ai';
-import { anchorLines, applyOps, restoreSnapshot, undoSnapshot, type UndoSnapshot } from '../ops/apply';
+import { anchorLines, applyOps, reshapedLine, restoreSnapshot, undoSnapshot, type UndoSnapshot } from '../ops/apply';
+import type { RecentMessage } from '../ops/context';
 import { runDump } from '../ops/pipeline';
 import { applyTheme } from '../theme/theme';
 import { cleanReport, draftReport, factsForCoach, weekClosed, weekFacts, type StoredReport } from './report';
@@ -41,6 +42,16 @@ interface AppState {
   setBlockStatus(id: string, status: Block['status']): Promise<void>;
   /** Close out a past day late: the anchor counts for that day and the day is scored again. */
   setPastAnchor(date: string, kind: 'coldShower' | 'walk', done: boolean): Promise<void>;
+  /** Log a small step toward a pillar today. */
+  logStep(pillar: Journey, text: string): Promise<void>;
+  removeStep(index: number): Promise<void>;
+  /** Tonight's one thing to do 1% better tomorrow. */
+  setKaizen(text: string): Promise<void>;
+  /**
+   * Plans changed: this block is not happening. An event is skipped for that day only, anything else is taken
+   * off, and the rest of the day is rebuilt from now so the freed time gets used. Returns what moved in.
+   */
+  cancelBlock(id: string): Promise<void>;
   /**
    * Close out a past day's Big 3 item. It counts for that day only, so a daily habit ("Lift") is not checked
    * off for today. Finishing a one-time task for good is a separate tap (setTaskDone with the date).
@@ -99,6 +110,8 @@ export interface DumpCard {
   done: string[];
   cantDo: { text: string; reason: string }[];
   question: string | null;
+  /** How the rest of today moved after the change ("Day reshaped: ..."). */
+  reshaped: string | null;
   undone: boolean;
   before: UndoSnapshot;
   /** Manual blocks this dump added beyond the planned week (removed on Undo). */
@@ -114,6 +127,35 @@ function message(e: unknown): string {
   const m = e instanceof Error ? e.message : String(e);
   if (/fetch|network/i.test(m)) return 'Could not reach the server. Check your connection and try again.';
   return `Something went wrong: ${m}`;
+}
+
+const RECENT_KEY = 'alignment.recentDumps';
+
+/** Today's talk box messages (this device), for follow-ups like "that got cancelled". */
+function recentToday(date: string): RecentMessage[] {
+  try {
+    const saved = JSON.parse(localStorage.getItem(RECENT_KEY) ?? 'null') as { date: string; items: RecentMessage[] } | null;
+    return saved?.date === date ? saved.items : [];
+  } catch {
+    return [];
+  }
+}
+
+function rememberDump(date: string, m: RecentMessage): void {
+  try {
+    localStorage.setItem(RECENT_KEY, JSON.stringify({ date, items: [...recentToday(date), m].slice(-5) }));
+  } catch {
+    // Follow-ups still work, just without the earlier message.
+  }
+}
+
+function forgetDump(said: string): void {
+  try {
+    const saved = JSON.parse(localStorage.getItem(RECENT_KEY) ?? 'null') as { date: string; items: RecentMessage[] } | null;
+    if (saved) localStorage.setItem(RECENT_KEY, JSON.stringify({ ...saved, items: saved.items.filter((i) => i.said !== said) }));
+  } catch {
+    // Nothing to forget.
+  }
 }
 
 /** A block that stands for a task without being work time: an event, the workout, a meal, a manual block. */
@@ -286,6 +328,63 @@ export const useApp = create<AppState>((set, get) => {
         await repo.replaceBlocks([date], blocks.filter((b) => b.date === date));
         return rescore(withDay({ ...s, blocks }, day), date);
       }),
+
+    logStep: (pillar, text) =>
+      run(async (s) => {
+        const rec = dayOf(s, today());
+        const day = { ...rec, steps: [...(rec.steps ?? []), { pillar, text: text.trim() }] };
+        await repo.upsertDays([day]);
+        return withDay(s, day);
+      }),
+
+    removeStep: (index) =>
+      run(async (s) => {
+        const rec = dayOf(s, today());
+        const day = { ...rec, steps: (rec.steps ?? []).filter((_, i) => i !== index) };
+        await repo.upsertDays([day]);
+        return withDay(s, day);
+      }),
+
+    setKaizen: (text) =>
+      run(async (s) => {
+        const day = { ...dayOf(s, today()), kaizen: text.trim() || null };
+        await repo.upsertDays([day]);
+        return withDay(s, day);
+      }),
+
+    async cancelBlock(id) {
+      const s = get().s;
+      const b = s?.blocks.find((x) => x.id === id);
+      if (!s || !b) return;
+      set({ busy: true });
+      try {
+        let next: Snapshot = s;
+        const ev = b.eventId ? s.events.find((e) => e.id === b.eventId) : undefined;
+        if (ev) {
+          const row = ev.recurringWeekly ? { ...ev, skipDates: [...(ev.skipDates ?? []), b.date] } : null;
+          if (row) await repo.upsertEvents([row]);
+          else await repo.deleteEvent(ev.id);
+          next = { ...next, events: row ? next.events.map((e) => (e.id === ev.id ? row : e)) : next.events.filter((e) => e.id !== ev.id) };
+        }
+        const rec = dayOf(next, b.date);
+        const day = { ...rec, plan: { ...rec.plan, suppressed: [...(rec.plan.suppressed ?? []), b.id] } };
+        await repo.upsertDays([day]);
+        next = withDay({ ...next, blocks: next.blocks.filter((x) => x.id !== b.id) }, day);
+        const before = next.blocks.filter((x) => x.date === b.date);
+        const { s: rebuilt } = await rebuild(next);
+        const moved = rebuilt.blocks
+          .filter((x) => x.date === b.date && x.start < b.end && x.end > b.start && x.kind !== 'travel')
+          .filter((x) => !before.some((y) => y.id === x.id && y.start === x.start))
+          .sort((x, y) => x.start - y.start)
+          .slice(0, 3)
+          .map((x) => `${x.title} at ${fmtTime(x.start)}`);
+        get().showToast(`${b.title} cancelled.${moved.length ? ` Now in that time: ${moved.join(', ')}.` : ' That time is open.'}`);
+      } catch (e) {
+        get().showToast(`Could not cancel. ${message(e)}`, 'error');
+      } finally {
+        set({ busy: false });
+      }
+    },
 
     setPastBig3: (date, taskId, done) =>
       run(async (s) => {
@@ -683,7 +782,7 @@ export const useApp = create<AppState>((set, get) => {
       set({ busy: true });
       try {
         const now = nowLocal();
-        const out = await runDump(text.trim(), s, now, ai);
+        const out = await runDump(text.trim(), s, now, ai, recentToday(now.date));
         if (!out.ok) return { ok: false, message: out.message };
         const before = undoSnapshot(s, now.date);
         const applied = applyOps(s, out.reply, now);
@@ -693,10 +792,12 @@ export const useApp = create<AppState>((set, get) => {
         const farDates = [...new Set(applied.next.blocks.filter((b) => b.source === 'manual' && !week.has(b.date)).map((b) => b.date))];
         for (const d of farDates) await repo.replaceBlocks([d], applied.next.blocks.filter((b) => b.date === d));
         const { s: rebuilt } = await rebuild(applied.next, applied.replanFromMin);
+        const reshaped = reshapedLine(s, rebuilt, now.date, now.min);
         const done = [...applied.done, ...anchorLines(rebuilt, now.date, out.reply.ops)];
+        rememberDump(now.date, { at: fmtTime(now.min), said: text.trim(), changed: applied.done });
         const logId = await repo.addOpsLog({ inputText: text.trim(), ops: out.reply.ops, unhandled: out.reply.unhandled, snapshotBefore: before });
         const farBlockIds = applied.next.blocks.filter((x) => farDates.includes(x.date) && !s.blocks.some((y) => y.id === x.id)).map((x) => x.id);
-        set({ lastDump: { logId, text: text.trim(), done, cantDo: applied.cantDo, question: applied.question, undone: false, before, farBlockIds } });
+        set({ lastDump: { logId, text: text.trim(), done, reshaped, cantDo: applied.cantDo, question: applied.question, undone: false, before, farBlockIds } });
         return { ok: true };
       } catch (e) {
         return { ok: false, message: message(e) };
@@ -719,6 +820,7 @@ export const useApp = create<AppState>((set, get) => {
           await repo.replaceBlocks([d], restored.blocks.filter((x) => x.date === d));
         }
         await repo.markUndone(card.logId);
+        forgetDump(card.text);
         applyTheme(restored.settings.theme);
         set({ s: restored, lastDump: { ...card, undone: true } });
         get().showToast('Undone. Everything is back the way it was.');

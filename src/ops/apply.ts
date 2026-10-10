@@ -305,3 +305,22 @@ export function anchorLines(s: Snapshot, today: string, ops: Op[]): string[] {
   }
   return lines;
 }
+
+/**
+ * After a change and the replan: what moved into new times today (from now on), so Eli sees how the day
+ * reshaped. At most four, in time order.
+ */
+export function reshapedLine(before: Snapshot, after: Snapshot, date: string, fromMin: number): string | null {
+  const was = new Map(before.blocks.filter((b) => b.date === date).map((b) => [b.id, b]));
+  const quiet = new Set(['travel', 'bed', 'winddown']);
+  const changed = after.blocks
+    .filter((b) => b.date === date && b.end > fromMin && !quiet.has(b.kind))
+    .filter((b) => {
+      const old = was.get(b.id);
+      return !old || old.start !== b.start || old.end !== b.end;
+    })
+    .sort((a, b) => a.start - b.start);
+  if (!changed.length) return null;
+  const list = changed.slice(0, 4).map((b) => `${b.title} ${fmtTime(b.start)}`);
+  return `Day reshaped: ${list.join(', ')}${changed.length > 4 ? `, and ${changed.length - 4} more` : ''}.`;
+}

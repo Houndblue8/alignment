@@ -21,11 +21,19 @@ export interface DumpContext {
   /** For grading importance 1 to 5 against what Eli is building toward. */
   vision: { identity: string; end_result: string };
   settings: { practice_block: 'A' | 'B'; code_red: boolean; code_red_level: string; outreach_count: number };
+  /** Earlier talk box messages today, oldest first, so a follow-up ("that got cancelled") knows what "that" is. */
+  recent_messages: RecentMessage[];
+}
+
+export interface RecentMessage {
+  at: string;
+  said: string;
+  changed: string[];
 }
 
 const hhmm = (m: number) => `${String(Math.floor(m / 60) % 24).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
 
-export function buildContext(s: Snapshot, now: Now): DumpContext {
+export function buildContext(s: Snapshot, now: Now, recent: RecentMessage[] = []): DumpContext {
   const rec = dayOf(s, now.date);
   const events: DumpContext['events_next_7_days'] = [];
   for (let i = 0; i < 7; i++) {
@@ -59,5 +67,6 @@ export function buildContext(s: Snapshot, now: Now): DumpContext {
     places: s.places.map((p) => ({ id: p.id, name: p.name })),
     vision: { identity: s.vision.identity, end_result: s.vision.endResult },
     settings: { practice_block: s.settings.practiceBlock, code_red: s.settings.codeRed, code_red_level: s.settings.codeRedLevel, outreach_count: s.settings.outreachCount },
+    recent_messages: recent.slice(-3),
   };
 }

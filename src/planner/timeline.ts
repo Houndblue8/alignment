@@ -38,6 +38,11 @@ export class Timeline {
     this.items.sort((x, y) => x.start - y.start || x.end - y.end || (x.id < y.id ? -1 : 1));
   }
 
+  /** Change a placed block without moving it (for example, linking it to a task). */
+  patch(id: string, patch: Partial<Block>): void {
+    this.items = this.items.map((b) => (b.id === id ? { ...b, ...patch, id: b.id, start: b.start, end: b.end } : b));
+  }
+
   remove(id: string): void {
     this.items = this.items.filter((b) => b.id !== id);
     this.spacing.delete(id);

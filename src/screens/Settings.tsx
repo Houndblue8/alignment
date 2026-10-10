@@ -8,6 +8,7 @@ import { nowLocal } from '../lib/clock';
 import { ai } from '../ops/ai';
 import { LIVE_CASES, runLiveCheck, type LiveResult } from '../ops/liveCheck';
 import { useApp } from '../state/store';
+import { NumberField } from '../ui/NumberField';
 import { Sheet } from '../ui/Sheet';
 import { ThemePicker } from '../ui/ThemePicker';
 import { NotificationSettings } from '../ui/Notifications';
@@ -354,11 +355,11 @@ function PlaceSheet({ initial, onClose }: { initial: Place; onClose: () => void 
       </label>
       <label className="label">
         Minutes from home
-        <input className="field" type="number" min={0} value={p.minutesFromHome} onChange={(e) => setP({ ...p, minutesFromHome: Number(e.target.value) })} />
+        <NumberField value={p.minutesFromHome} onValue={(n) => setP({ ...p, minutesFromHome: n })} />
       </label>
       <label className="label">
         Minutes from campus
-        <input className="field" type="number" min={0} value={p.minutesFromCampus} onChange={(e) => setP({ ...p, minutesFromCampus: Number(e.target.value) })} />
+        <NumberField value={p.minutesFromCampus} onValue={(n) => setP({ ...p, minutesFromCampus: n })} />
       </label>
       <label className="label">
         Notes

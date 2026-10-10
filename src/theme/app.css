@@ -1127,3 +1127,14 @@ details.collapse > summary::-webkit-details-marker {
   gap: 12px;
   align-items: center;
 }
+
+.big3-tag {
+  background: var(--accent);
+  color: var(--on-accent, #fff);
+  font-weight: 600;
+  padding: 1px 8px;
+}
+
+.closeout-finish {
+  padding-left: 40px;
+}

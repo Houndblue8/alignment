@@ -3,7 +3,7 @@
 import { z } from 'zod';
 import { addDays, scoreWeek, weekday, type SeriesLabel } from '../planner';
 import type { Snapshot } from '../data/model';
-import { dayOf, isTaskDone, resultFor } from './planning';
+import { dayOf, isItemDone, resultFor } from './planning';
 
 export interface Rate {
   done: number;
@@ -92,7 +92,7 @@ export function weekFacts(s: Snapshot, start: string): WeekFacts {
   const order = { win: 3, half: 2, loss: 1 } as const;
   const bestDay =
     dates
-      .map((d, i) => ({ d, r: results[i], big3: days[i]!.big3.filter((x) => isTaskDone(s, x.taskId)).length }))
+      .map((d, i) => ({ d, r: results[i], big3: days[i]!.big3.filter((x) => isItemDone(s, x)).length }))
       .filter((x) => x.r)
       .sort((a, b) => order[b.r!] - order[a.r!] || b.big3 - a.big3 || a.d.localeCompare(b.d))[0]?.d ?? null;
   const lived = days.filter((d) => d.checkinDone).length;
@@ -107,7 +107,7 @@ export function weekFacts(s: Snapshot, start: string): WeekFacts {
     lostDays: days.filter((d) => d.lostDay).length,
     coldShower: rate(days.filter((d) => d.coldShower.done).length, span.length),
     walk: rate(days.filter((d) => d.walk.done).length, span.length),
-    big3: rate(big3.filter((x) => isTaskDone(s, x.taskId)).length, big3.length),
+    big3: rate(big3.filter((x) => isItemDone(s, x)).length, big3.length),
     workouts: count('workout'),
     shsFloor: count('shs_floor'),
     photos: rate(s.photos.filter((p) => p.date >= start && p.date <= dates[6]!).length, lived),

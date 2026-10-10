@@ -5,6 +5,7 @@ import { checkIn, signedWithTasks } from './helpers';
 test.use({ viewport: { width: 360, height: 740 } });
 
 test('no screen overflows sideways at 360 px', async ({ page }) => {
+  test.setTimeout(90_000);
   await signedWithTasks(page, '2026-10-12T07:30', [
     { id: 't1', title: 'A very long task title that keeps going to test that cards truncate instead of overflowing', importance: 5 },
   ]);

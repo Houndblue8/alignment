@@ -6,13 +6,13 @@ import { seedSnapshot } from '../data/seedData';
 import { supabaseRepo } from '../data/supabaseRepo';
 import { nowLocal, type Now } from '../lib/clock';
 import { shrinkPhoto } from '../lib/image';
-import { addDays, confirmTentative, diffBlocks, diffDays, fmtDate, fmtTime, weekday, type Block, type EventDef, type Place } from '../planner';
+import { addDays, confirmTentative, diffBlocks, diffDays, fmtDate, fmtTime, sameThing, weekday, type Block, type EventDef, type Place } from '../planner';
 import { ai } from '../ops/ai';
 import { anchorLines, applyOps, restoreSnapshot, undoSnapshot, type UndoSnapshot } from '../ops/apply';
 import { runDump } from '../ops/pipeline';
 import { applyTheme } from '../theme/theme';
 import { cleanReport, draftReport, factsForCoach, weekClosed, weekFacts, type StoredReport } from './report';
-import { buildWeek, dayOf, fillBig3, finalizePast, suggestAgain as suggestAgainPure } from './planning';
+import { buildWeek, dayOf, fillBig3, finalizePast, resultFor, suggestAgain as suggestAgainPure } from './planning';
 
 const repo: Repo = DATA_MODE === 'local' ? localRepo : supabaseRepo;
 
@@ -39,6 +39,13 @@ interface AppState {
   editWake(wakeMin: number): Promise<void>;
   setAnchor(kind: 'coldShower' | 'walk', done: boolean): Promise<void>;
   setBlockStatus(id: string, status: Block['status']): Promise<void>;
+  /** Close out a past day late: the anchor counts for that day and the day is scored again. */
+  setPastAnchor(date: string, kind: 'coldShower' | 'walk', done: boolean): Promise<void>;
+  /**
+   * Close out a past day's Big 3 item. It counts for that day only, so a daily habit ("Lift") is not checked
+   * off for today. Finishing a one-time task for good is a separate tap (setTaskDone with the date).
+   */
+  setPastBig3(date: string, taskId: string, done: boolean): Promise<void>;
   togglePin(id: string): Promise<void>;
   replan(): Promise<void>;
 
@@ -46,7 +53,8 @@ interface AppState {
   acceptSuggestion(taskId: string): Promise<void>;
   suggestAgain(): Promise<void>;
   createTask(t: Pick<TaskRow, 'title' | 'journey' | 'importance' | 'estimatedMinutes' | 'deadline' | 'workType'>): Promise<string>;
-  setTaskDone(id: string, done: boolean): Promise<void>;
+  /** date: the day it was done (a past day when closing out yesterday). Defaults to today. */
+  setTaskDone(id: string, done: boolean, date?: string): Promise<void>;
 
   startLostDay(reason: string): Promise<void>;
   endLostDay(): Promise<void>;
@@ -108,9 +116,29 @@ function message(e: unknown): string {
   return `Something went wrong: ${m}`;
 }
 
+/** A block that stands for a task without being work time: an event, the workout, a meal, a manual block. */
+const isLinkedBlock = (b: Block): boolean => !!b.taskId && b.kind !== 'work' && b.kind !== 'library_work';
+
+/** Done on a given day: a past day's completion is stamped that evening, so it counts for that day. */
+function setDone(t: TaskRow, done: boolean, date: string): TaskRow {
+  const when = date === nowLocal().date ? new Date().toISOString() : `${date}T20:00:00-07:00`;
+  return { ...t, status: done ? 'done' : 'open', completedAt: done ? new Date(when).toISOString() : null };
+}
+
 export const useApp = create<AppState>((set, get) => {
   /** Replace a day record in the snapshot. */
   const withDay = (s: Snapshot, d: DayRecord): Snapshot => ({ ...s, days: { ...s.days, [d.date]: d } });
+
+  /** A past day that was closed out late gets its result again (forgot to check things off that night). */
+  async function rescore(s: Snapshot, date: string): Promise<Snapshot> {
+    const rec = s.days[date];
+    if (!rec || date >= nowLocal().date || !rec.result) return s;
+    const result = resultFor(s, date);
+    if (result === rec.result) return s;
+    const day = { ...rec, result };
+    await repo.upsertDays([day]);
+    return withDay(s, day);
+  }
 
   /**
    * Re-run the planner for today and the next 6 days, save, and return how many of today's blocks changed.
@@ -217,7 +245,7 @@ export const useApp = create<AppState>((set, get) => {
             coldShower: { done: coldShowerDone },
             walk: { done: walkDone },
             // Eli's picks are the Big 3. Picking none leaves it to the automatic suggestions.
-            big3: big3 && big3.length ? big3 : fillBig3(s, date, rec.big3),
+            big3: big3 && big3.length ? big3.filter((i) => s.tasks.some((t) => t.id === i.taskId && t.status === 'open')) : fillBig3(s, date, rec.big3),
           };
           await repo.upsertDays([day]);
           return withDay(s, day);
@@ -248,11 +276,38 @@ export const useApp = create<AppState>((set, get) => {
         return withDay({ ...s, blocks }, day);
       }),
 
+    setPastAnchor: (date, kind, done) =>
+      run(async (s) => {
+        const rec = dayOf(s, date);
+        const day = { ...rec, [kind]: { ...rec[kind], done } };
+        const blockKind = kind === 'coldShower' ? 'anchor_cold_shower' : 'anchor_walk';
+        const blocks = s.blocks.map((b) => (b.date === date && b.kind === blockKind ? { ...b, status: done ? ('done' as const) : ('planned' as const) } : b));
+        await repo.upsertDays([day]);
+        await repo.replaceBlocks([date], blocks.filter((b) => b.date === date));
+        return rescore(withDay({ ...s, blocks }, day), date);
+      }),
+
+    setPastBig3: (date, taskId, done) =>
+      run(async (s) => {
+        const rec = dayOf(s, date);
+        const day = { ...rec, big3: rec.big3.map((i) => (i.taskId === taskId ? { ...i, done } : i)) };
+        await repo.upsertDays([day]);
+        return rescore(withDay(s, day), date);
+      }),
+
     setBlockStatus: (id, status) =>
       run(async (s) => {
         const blocks = s.blocks.map((b) => (b.id === id ? { ...b, status } : b));
-        const date = s.blocks.find((b) => b.id === id)?.date;
+        const block = s.blocks.find((b) => b.id === id);
+        const date = block?.date;
         if (date) await repo.replaceBlocks([date], blocks.filter((b) => b.date === date));
+        // A block that is a task (the workout for "Lift", dinner for "Intentional dinner") checks the task off too.
+        const linked = block && isLinkedBlock(block) ? s.tasks.find((t) => t.id === block.taskId) : undefined;
+        if (linked && (status === 'done') !== (linked.status === 'done')) {
+          const row = setDone(linked, status === 'done', date!);
+          await repo.upsertTasks([row]);
+          return rescore({ ...s, blocks, tasks: s.tasks.map((t) => (t.id === row.id ? row : t)) }, date!);
+        }
         return { ...s, blocks };
       }),
 
@@ -309,6 +364,12 @@ export const useApp = create<AppState>((set, get) => {
       ),
 
     async createTask(t) {
+      // The same task in other words is reused, not created twice.
+      const twin = get().s?.tasks.find((x) => x.status === 'open' && sameThing(x.title, t.title));
+      if (twin) {
+        get().showToast(`Using your existing task: ${twin.title}.`);
+        return twin.id;
+      }
       const id = crypto.randomUUID();
       await run(async (s) => {
         const row: TaskRow = {
@@ -327,16 +388,20 @@ export const useApp = create<AppState>((set, get) => {
       return id;
     },
 
-    setTaskDone: (id, done) =>
+    setTaskDone: (id, done, date) =>
       run(
         async (s) => {
-          const tasks = s.tasks.map((t) =>
-            t.id === id ? { ...t, status: done ? ('done' as const) : ('open' as const), completedAt: done ? new Date().toISOString() : null } : t,
-          );
+          const on = date ?? today();
+          const tasks = s.tasks.map((t) => (t.id === id ? setDone(t, done, on) : t));
           await repo.upsertTasks(tasks.filter((t) => t.id === id));
-          return { ...s, tasks };
+          // Its linked block on that day follows.
+          const blocks = s.blocks.map((b) =>
+            b.date === on && b.taskId === id && isLinkedBlock(b) ? { ...b, status: done ? ('done' as const) : ('planned' as const) } : b,
+          );
+          if (blocks.some((b, i) => b !== s.blocks[i])) await repo.replaceBlocks([on], blocks.filter((b) => b.date === on));
+          return rescore({ ...s, tasks, blocks }, on);
         },
-        { replan: true },
+        { replan: !date || date === today() },
       ),
 
     startLostDay: (reason) =>

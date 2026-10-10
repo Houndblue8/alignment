@@ -5,6 +5,7 @@
 // When the day is too full for the Big 3, the floor or the workout, flexible items are cut in the
 // order of Part 5 step 12 and each cut becomes a warning.
 import { computeBedtime } from './bedtime';
+import { linkTarget, mealIn } from './link';
 import { isFlexibleEvent, pausedByCodeRed } from './expand';
 import { onCampus, placeName, travel, workPlace } from './places';
 import { isSchoolUrgent, rankTasks } from './priority';
@@ -318,7 +319,18 @@ function buildDay(input: DayInput, level: number): Built {
   let workoutUnmet = false;
   const trip = placedEvents.find((e) => e.rankKey === 'trip');
   if (trip && input.workout) notes.push(`No workout today: ${trip.title}.`);
-  if (input.workout && mode === 'normal' && !noWork && !trip) {
+  const keptWorkout = input.pinned.find((b) => b.kind === 'workout');
+  if (keptWorkout) {
+    // Already done (or pinned) today: keep it, never place a second one. The shower follows it if missing.
+    workoutPlaced = input.workout ?? (keptWorkout.id.endsWith(':field') ? 'field' : 'weights');
+    workoutLen = keptWorkout.end - keptWorkout.start;
+    const shMk = mk('shower', '1', 'Shower at home', HOME);
+    if (!pinnedIds.has(shMk(0, 0).id)) {
+      const arrive = keptWorkout.end + travel(places, keptWorkout.placeId ?? 'campus', HOME);
+      const sh = tl.find(shMk, RULES.homeShowerMin, Math.max(arrive, ws), Math.min(dayEnd, Math.max(arrive, ws) + 30));
+      if (sh !== null) tl.add(shMk(sh, RULES.homeShowerMin));
+    }
+  } else if (input.workout && mode === 'normal' && !noWork && !trip) {
     const type = input.workout;
     const wMk = mk('workout', type, type === 'field' ? 'Field session' : 'Weights at the rec', 'campus');
     const shMk = mk('shower', '1', 'Shower at home', HOME);
@@ -375,6 +387,12 @@ function buildDay(input: DayInput, level: number): Built {
   ) => {
     const makeAt = (loc: string) => mk('meal', ref, title, loc);
     if (pinnedIds.has(makeAt(HOME)(0, 0).id)) return 'pinned';
+    // Something already on the day is this meal ("Dinner and hangout with Epic"): no second one.
+    const covering = tl.blocks.find((b) => b.kind !== 'meal' && b.kind !== 'travel' && mealIn(b.title) === ref);
+    if (covering) {
+      notes.push(`${title} is ${covering.title} at ${fmtTime(covering.start)}.`);
+      return 'covered';
+    }
     for (const [lo, hi, s] of windows) {
       for (const [minL, maxL] of sizes) {
         const r = bestFlex(makeAt, locs, minL, maxL, Math.max(lo, ws), hi, s);
@@ -426,6 +444,18 @@ function buildDay(input: DayInput, level: number): Built {
       continue;
     }
     placeFlexible(e);
+  }
+
+  // Tasks that already are something on the day (Big 3 "Lift" = the workout, "Intentional dinner" = dinner,
+  // "D Ship Workshop" = the workshop event) are linked to that block instead of getting work time.
+  const linked = new Set<string>();
+  for (const t of queue) {
+    const target = linkTarget(t.title, tl.blocks, linked, t.id);
+    if (!target) continue;
+    linked.add(target.id);
+    tl.patch(target.id, { taskId: t.id });
+    placedToday[t.id] = remaining[t.id] ?? 0;
+    remaining[t.id] = 0;
   }
 
   // 9. Tasks. The library window takes the queue first, then the Big 3 get the earliest focus slots.

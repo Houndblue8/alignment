@@ -130,6 +130,7 @@ function BlockRow({ b, nowMin }: { b: Block; nowMin: number }) {
   const task = b.taskId ? s.tasks.find((t) => t.id === b.taskId) : undefined;
   const journey = task?.journey ?? kindJourney(b.kind);
   const isNow = b.start <= nowMin && nowMin < b.end;
+  const inBig3 = !!b.taskId && !!s.days[b.date]?.big3.some((i) => i.taskId === b.taskId);
   const Icon = task ? JOURNEY_ICON[task.journey] : KIND_ICON[b.kind];
 
   if (b.kind === 'travel') {
@@ -158,6 +159,7 @@ function BlockRow({ b, nowMin }: { b: Block; nowMin: number }) {
           <span className="row">
             <Icon size={16} strokeWidth={1.75} aria-hidden="true" className="kind-icon" />
             <span className="title grow clip">{b.title}</span>
+            {inBig3 && <span className="chip big3-tag">Big 3</span>}
             {b.pinned && <Pin size={14} aria-label="Pinned" />}
             {b.status === 'done' && <Check size={16} aria-label="Done" />}
           </span>

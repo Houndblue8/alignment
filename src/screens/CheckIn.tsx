@@ -4,10 +4,11 @@ import { useNavigate } from 'react-router-dom';
 import type { Big3Item } from '../data/model';
 import { fromHHMM, journeyStyle, shortDuration, toHHMM } from '../lib/format';
 import { haptic } from '../lib/haptics';
-import { rankTasks } from '../planner';
+import { addDays, rankTasks } from '../planner';
 import { dayOf, fillBig3 } from '../state/planning';
 import { useApp } from '../state/store';
 import { AnchorButton } from '../ui/AnchorButton';
+import { CloseOut, canCloseOut, hasOpenItems } from '../ui/CloseOut';
 import { HeroMedia } from '../ui/HeroMedia';
 import { NewTaskForm } from '../ui/Big3';
 import { Sheet } from '../ui/Sheet';
@@ -39,6 +40,9 @@ export function CheckIn() {
     s.tasks.filter((t) => t.status === 'open'),
     now.date,
   ).slice(0, 8);
+  // Yesterday stays open until it is closed out here, so a night without check-offs is not a lost day.
+  const yesterday = addDays(now.date, -1);
+  const [showYesterday] = useState(() => canCloseOut(s, yesterday, now.date) && hasOpenItems(s, yesterday));
   const toggle = (id: string) =>
     setPicked((cur) => {
       if (cur.includes(id)) return cur.filter((x) => x !== id);
@@ -50,6 +54,7 @@ export function CheckIn() {
   return (
     <main className="fullscreen">
       <HeroMedia name="checkin" />
+      {showYesterday && <CloseOut date={yesterday} title="Close out yesterday" />}
       <div className="stack">
         <p className="small muted">Morning check-in</p>
         <h1 className="big">What time did you wake up?</h1>

@@ -1,11 +1,12 @@
 import { ArrowDown, ArrowUp, Check, Pencil, Plus, RefreshCw, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { JOURNEYS, type Big3Item, type TaskRow } from '../data/model';
-import { journeyStyle, shortDuration } from '../lib/format';
+import { fmtTime, journeyStyle, shortDuration } from '../lib/format';
 import type { Journey, WorkType } from '../planner';
 import { haptic } from '../lib/haptics';
 import { dayOf, isTaskDone } from '../state/planning';
 import { useApp } from '../state/store';
+import { NumberField } from './NumberField';
 import { Sheet } from './Sheet';
 import { JOURNEY_ICON } from './icons';
 
@@ -22,6 +23,8 @@ export function Big3Section() {
   const [editing, setEditing] = useState(false);
   const items = dayOf(s, date).big3;
   const task = (id: string) => s.tasks.find((t) => t.id === id);
+  /** The block on today's plan that already is this item (the workout, dinner, an event). */
+  const linked = (id: string) => s.blocks.find((b) => b.date === date && b.taskId === id && b.kind !== 'work' && b.kind !== 'library_work');
 
   return (
     <section className="stack" aria-labelledby="big3-h">
@@ -54,8 +57,13 @@ export function Big3Section() {
               </button>
               <JIcon journey={t.journey} />
               <span className="grow clip">{t.title}</span>
-              <span className="chip">{shortDuration(t.estimatedMinutes)}</span>
+              {!linked(t.id) && <span className="chip">{shortDuration(t.estimatedMinutes)}</span>}
             </div>
+            {linked(t.id) && (
+              <p className="small muted" data-testid="big3-linked">
+                Happens at {linked(t.id)!.title}, {fmtTime(linked(t.id)!.start)}. Checking either one checks both.
+              </p>
+            )}
             {suggested && (
               <div className="row between">
                 <span className="small muted">Suggested</span>
@@ -231,7 +239,7 @@ export function NewTaskForm({
       <div className="row wrap">
         <label className="label grow">
           Minutes
-          <input className="field" type="number" min={5} step={5} value={minutes} onChange={(e) => setMinutes(Number(e.target.value))} />
+          <NumberField value={minutes} onValue={setMinutes} aria-label="Minutes" />
         </label>
         <label className="label grow">
           Deadline (optional)

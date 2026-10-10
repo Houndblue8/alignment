@@ -137,18 +137,21 @@ export function salvageCount(s: Snapshot, date: string): number {
   let n = rec.walk.done ? 1 : 0;
   if (blocks.some((b) => b.kind === 'workout')) n += 1;
   if (blocks.some((b) => b.kind === 'meal')) n += 1;
-  if (rec.big3.some((i) => isTaskDone(s, i.taskId))) n += 1;
+  if (rec.big3.some((i) => isItemDone(s, i))) n += 1;
   return n;
 }
 
 export const isTaskDone = (s: Snapshot, id: string): boolean => s.tasks.find((t) => t.id === id)?.status === 'done';
+
+/** A Big 3 item counts as done for its day when it was closed out for that day, or its task is done. */
+export const isItemDone = (s: Snapshot, item: Big3Item): boolean => item.done ?? isTaskDone(s, item.taskId);
 
 export function resultFor(s: Snapshot, date: string): DayResult {
   const rec = dayOf(s, date);
   return scoreDay({
     coldShowerDone: rec.coldShower.done,
     walkDone: rec.walk.done,
-    big3Done: rec.big3.map((i) => isTaskDone(s, i.taskId)),
+    big3Done: rec.big3.map((i) => isItemDone(s, i)),
     lostDay: rec.lostDay,
     lostDayReason: rec.lostDayReason,
     salvageCompleted: salvageCount(s, date),
@@ -218,7 +221,7 @@ export function quoteFor(s: Snapshot, today: string): Quote | null {
 /** Progress for the Home ring: anchors plus the Big 3. */
 export function todayProgress(s: Snapshot, date: string): { done: number; total: number } {
   const rec = dayOf(s, date);
-  const big3Done = rec.big3.filter((i) => isTaskDone(s, i.taskId)).length;
+  const big3Done = rec.big3.filter((i) => isItemDone(s, i)).length;
   return { done: Number(rec.coldShower.done) + Number(rec.walk.done) + big3Done, total: 2 + rec.big3.length };
 }
 

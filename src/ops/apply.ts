@@ -2,7 +2,7 @@
 // plain-language result. The store then replans the week, saves, and logs the dump for Undo.
 import { emptyDay, journeyLabel, type Big3Item, type DayRecord, type Snapshot, type TaskRow } from '../data/model';
 import type { Now } from '../lib/clock';
-import { addDays, fmtDate, fmtTime, type Block, type EventDef, type RankKey } from '../planner';
+import { addDays, fmtDate, fmtTime, sameThing, type Block, type EventDef, type RankKey } from '../planner';
 import { dayOf } from '../state/planning';
 import type { Op, ParseReply } from './schema';
 import { toMin } from './validate';
@@ -97,6 +97,12 @@ export function applyOps(s: Snapshot, reply: ParseReply, now: Now): ApplyResult 
         break;
       }
       case 'add_task': {
+        // The same task in other words ("Lift" / "Lifts") is not added twice.
+        const existing = next.tasks.find((x) => x.status === 'open' && sameThing(x.title, op.title));
+        if (existing) {
+          done.push(`${existing.title} is already on your list.`);
+          break;
+        }
         const t: TaskRow = {
           id: crypto.randomUUID(),
           title: op.title,
@@ -198,6 +204,13 @@ export function applyOps(s: Snapshot, reply: ParseReply, now: Now): ApplyResult 
       case 'add_block': {
         const start = toMin(op.start);
         const end = toMin(op.end);
+        const twin = next.blocks.find(
+          (b) => b.date === op.date && b.source === 'manual' && b.start < end && start < b.end && sameThing(b.title, op.title),
+        );
+        if (twin) {
+          done.push(`${twin.title} is already planned at ${fmtTime(twin.start)}.`);
+          break;
+        }
         const block: Block = {
           id: `${op.date}:misc:manual-${shortId()}`,
           date: op.date,

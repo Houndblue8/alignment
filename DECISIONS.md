@@ -125,6 +125,16 @@ Each entry: what was decided, who decided, and what it replaces in the brief. Pl
 - The coach (Haiku) rewrites the four lines from the facts and the draft, through a tool call; the app validates the reply and strips dashes. The coach version is saved in the reports table; if the coach is unavailable, the plain draft shows and the next open asks again. "Write it again" asks for a new version.
 - Sunday's evening reminder becomes "Close the week" and points to the report.
 
+### D17. Same thing, different words; late close-out (Eli's feedback, 2026-10-10)
+- Problem seen in Eli's data: Big 3 items "Lift", "Intentional Dinner" and "D Ship Workshop" each got their own work time although they were the workout, dinner and the workshop event; the talk box's "Dinner and intentional hangout" block sat next to a planner dinner; Oct 9 scored a Loss because the workout and dinner were never checked off as Big 3 items.
+- One matching rule (src/planner/link.ts) decides when two titles are the same thing: typos and one letter apart, plurals and -ing, the same words in another order or with extras (two or more real words, so "Tax" never matches "Tax class"), and abbreviations ("D Ship" = "Discipleship").
+- A task that already is something on the day is linked to that block instead of getting work time: events and manual blocks by title, the workout by words like lift, weights, gym, run, meals by meal words, the Side Hustle Summit floor by outreach words. The block shows a Big 3 tag; checking either the block or the Big 3 item checks both.
+- Meals: a block or event whose title names a meal is that meal; the planner adds no second one and says "Dinner is ... at ...".
+- No duplicates: creating a task whose title matches an open task reuses it; the talk box skips add_task and add_block duplicates, and its prompt now says to reuse what exists and to name meal blocks with the meal word.
+- Planner fix: a workout already done or pinned is kept on replan; the planner no longer places a second workout with the same id over it.
+- Late close-out: a past day stays open for check-offs for 7 days. The morning check-in shows "Close out yesterday" when yesterday has an anchor or Big 3 item unchecked, and every past day in Week has "Close out this day". Checking off rescores the day at once. A late Big 3 check counts for that day only (so a habit like "Lift" is not checked off for today); "Finished" closes a one-time task for good.
+- Number boxes (task minutes, place drive times) can be empty while typing, open the number pad, and select on focus, so typing 30 gives 30.
+
 ## Claude's defaults (change any by telling me)
 
 - 5 minute buffers between blocks, except inside the morning routine (D2).

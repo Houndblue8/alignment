@@ -233,3 +233,48 @@ function task(id: string, minutes: number): TaskRow {
     completedAt: null,
   };
 }
+
+describe('the talk box never adds the same thing twice (Oct 10 feedback)', () => {
+  const task = (id: string, title: string): TaskRow => ({
+    id,
+    title,
+    journey: 'body',
+    importance: 3,
+    deadline: null,
+    estimatedMinutes: 60,
+    deferralCount: 0,
+    workType: 'deep',
+    steps: [],
+    createdAt: '2026-10-01T12:00:00.000Z',
+    status: 'open',
+    notes: '',
+    completedAt: null,
+  });
+
+  test('a task already on the list in other words is reused', () => {
+    const now = { date: THU, min: 480 };
+    const s = plannedDay(now, [task('lift', 'Lift')]);
+    const { after, lines } = runReply(
+      s,
+      reply([{ op: 'add_task', source_text: 'lifts today', title: 'Lifts', journey: 'body', importance: 3, deadline: null, minutes: 60, work_type: 'deep', steps: [] }]),
+      now,
+    );
+    expect(after.tasks.map((t) => t.title)).toEqual(['Lift']);
+    expect(lines[0]).toBe('Lift is already on your list.');
+  });
+
+  test('dinner plans become the dinner: one dinner on the day', () => {
+    const now = { date: THU, min: 480 };
+    const s = plannedDay(now);
+    const { after } = runReply(
+      s,
+      reply([
+        { op: 'add_block', source_text: 'dinner with epic', title: 'Dinner and intentional hangout with Epic people', date: THU, start: '17:30', end: '19:00', location: null },
+        { op: 'add_block', source_text: 'dinner with epic', title: 'Dinner and hangout with Epic people', date: THU, start: '17:30', end: '19:00', location: null },
+      ]),
+      now,
+    );
+    const day = after.blocks.filter((b) => b.date === THU);
+    expect(day.filter((b) => /dinner/i.test(b.title))).toHaveLength(1);
+  });
+});

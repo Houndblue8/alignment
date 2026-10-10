@@ -8,6 +8,7 @@ import { useApp } from '../state/store';
 import { SeriesBar } from '../ui/Series';
 import { missedRitual } from './Memory';
 import { weekClosed } from '../state/report';
+import { CloseOut, canCloseOut } from '../ui/CloseOut';
 
 const DAY = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const WORD = { win: 'Win', half: 'Half win', loss: 'Loss' } as const;
@@ -105,6 +106,7 @@ export function DayDetail() {
   const s = useApp((a) => a.s)!;
   const blocks = s.blocks.filter((b) => b.date === date).sort((a, b) => a.start - b.start);
   const rec = s.days[date];
+  const today = useApp((a) => a.now.date);
   return (
     <>
       <div className="screen-head">
@@ -119,6 +121,7 @@ export function DayDetail() {
           {w}
         </p>
       ))}
+      {canCloseOut(s, date, today) && <CloseOut date={date} />}
       <section className="timeline">
         {blocks.length === 0 && <p className="muted">Nothing planned for this day yet.</p>}
         {blocks.map((b) => {

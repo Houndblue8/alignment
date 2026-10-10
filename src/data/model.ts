@@ -58,6 +58,8 @@ export interface Big3Item {
   locked: boolean;
   /** An automatic suggestion Eli tapped to accept. */
   accepted: boolean;
+  /** Checked off for this day only, late (closing out a past day). Unset: the task's own status counts. */
+  done?: boolean;
 }
 
 export interface PlanMeta {

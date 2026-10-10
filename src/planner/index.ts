@@ -12,3 +12,4 @@ export { expandEvents, confirmTentative, toInstance } from './expand';
 export { examWithinWindow } from './planWeek';
 export { travel, workPlace } from './places';
 export * from './time';
+export { linkTarget, mealIn, sameThing, tokens } from './link';

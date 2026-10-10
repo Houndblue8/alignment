@@ -1,5 +1,5 @@
 import type { Block, EventDef, Place } from '../planner';
-import type { Contract, DayRecord, Quote, Settings, Snapshot, TaskRow, Vision } from './model';
+import type { Contract, DayRecord, PhotoRow, Quote, Settings, Snapshot, TaskRow, Vision } from './model';
 
 /** Everything the app reads and writes. Two implementations: Supabase (real) and local (tests, offline dev). */
 export interface Repo {
@@ -26,6 +26,12 @@ export interface Repo {
   /** Cached coach text per day (one AI call per day for the Home line). */
   getCoach(date: string, kind: string): Promise<string | null>;
   saveCoach(date: string, kind: string, text: string): Promise<void>;
+  /** Upload the day's photo file; returns its storage path. */
+  uploadPhoto(date: string, file: Blob): Promise<string>;
+  savePhoto(p: PhotoRow): Promise<void>;
+  deletePhoto(p: PhotoRow): Promise<void>;
+  /** Short-lived viewing links for stored photos, by storage path. */
+  photoUrls(paths: string[]): Promise<Record<string, string>>;
 }
 
 export interface OpsLogEntry {

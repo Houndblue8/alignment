@@ -20,6 +20,9 @@ export interface Settings {
   notifyEvening: boolean;
   notifyBedtime: boolean;
   notifyBlocks: boolean;
+  notifyPhoto: boolean;
+  /** When the photo reminder goes out (minutes from midnight). The photo itself can be taken any time. */
+  photoReminderMin: number;
 }
 
 export interface Vision {
@@ -88,6 +91,14 @@ export interface Quote {
   tags: QuoteTag[];
 }
 
+/** One photo per day (Appendix E 1). */
+export interface PhotoRow {
+  date: string;
+  storagePath: string;
+  caption: string;
+  milestone: boolean;
+}
+
 export interface Snapshot {
   settings: Settings;
   vision: Vision;
@@ -98,6 +109,7 @@ export interface Snapshot {
   days: Record<string, DayRecord>;
   blocks: Block[];
   quotes: Quote[];
+  photos: PhotoRow[];
 }
 
 export const emptyPlan = (): PlanMeta => ({ warnings: [], notes: [], bedtime: null, belowTheLine: [] });

@@ -52,6 +52,14 @@ describe('reminders', () => {
     expect(dueNow(r, 389)).toEqual([]);
   });
 
+  test('photo reminder at the chosen time, only while today has no photo', () => {
+    const photo = { ...base, prefs: { ...base.prefs, photo: true }, photoMin: 720, photoTaken: false };
+    expect(remindersFor(photo).find((x) => x.kind === 'photo')).toMatchObject({ dueMin: 720, title: "Today's photo", url: '/?photo=1' });
+    expect(remindersFor({ ...photo, photoTaken: true }).some((x) => x.kind === 'photo')).toBe(false);
+    expect(remindersFor({ ...photo, prefs: { ...photo.prefs, photo: false } }).some((x) => x.kind === 'photo')).toBe(false);
+    expect(remindersFor(photo).find((x) => x.kind === 'evening')!.body).toBe("Check off what got done. Today's photo is still open.");
+  });
+
   test('text has no dashes or emoji and clock formats times', () => {
     expect(clock(1395)).toBe('11:15 PM');
     expect(clock(0)).toBe('12:00 AM');

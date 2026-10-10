@@ -32,7 +32,10 @@ const upsertById = <T extends { id: string }>(list: T[], items: T[]): T[] => {
 };
 
 export const localRepo: Repo = {
-  load: async () => read(),
+  load: async () => {
+    const s = read();
+    return s ? { ...s, photos: s.photos ?? [] } : null;
+  },
   seed: async (snapshot) => {
     if (!read()) write(snapshot);
   },
@@ -71,6 +74,27 @@ export const localRepo: Repo = {
     all[`${date}:${kind}`] = text;
     localStorage.setItem(COACH_KEY, JSON.stringify(all));
   },
+  // Local test mode keeps photos as data URLs in the browser (small test images only).
+  uploadPhoto: async (date, file) => {
+    const path = `local/${date}.jpg`;
+    const url = await new Promise<string>((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(String(r.result));
+      r.onerror = () => reject(r.error);
+      r.readAsDataURL(file);
+    });
+    localStorage.setItem(`alignment.photo.${path}`, url);
+    return path;
+  },
+  savePhoto: (p) =>
+    update((s) => {
+      s.photos = [...(s.photos ?? []).filter((x) => x.date !== p.date), p];
+    }),
+  deletePhoto: async (p) => {
+    localStorage.removeItem(`alignment.photo.${p.storagePath}`);
+    await update((s) => void (s.photos = (s.photos ?? []).filter((x) => x.date !== p.date)));
+  },
+  photoUrls: async (paths) => Object.fromEntries(paths.map((p) => [p, localStorage.getItem(`alignment.photo.${p}`) ?? ''])),
 };
 
 const LOG_KEY = 'alignment.opslog';

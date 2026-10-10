@@ -1,10 +1,11 @@
 import { create } from 'zustand';
 import { localRepo } from '../data/localRepo';
-import type { Big3Item, Contract, DayRecord, Quote, QuoteTag, Settings, Snapshot, TaskRow, Vision } from '../data/model';
+import type { Big3Item, Contract, DayRecord, PhotoRow, Quote, QuoteTag, Settings, Snapshot, TaskRow, Vision } from '../data/model';
 import { DATA_MODE, type Repo } from '../data/repo';
 import { seedSnapshot } from '../data/seedData';
 import { supabaseRepo } from '../data/supabaseRepo';
 import { nowLocal, type Now } from '../lib/clock';
+import { shrinkPhoto } from '../lib/image';
 import { addDays, confirmTentative, diffBlocks, diffDays, fmtDate, fmtTime, weekday, type Block, type EventDef, type Place } from '../planner';
 import { ai } from '../ops/ai';
 import { anchorLines, applyOps, restoreSnapshot, undoSnapshot, type UndoSnapshot } from '../ops/apply';
@@ -67,6 +68,13 @@ interface AppState {
   /** The decision after 3 deferrals (Appendix B 7). */
   decideTask(id: string, choice: 'today' | 'schedule' | 'delegate' | 'drop', date?: string): Promise<{ draft: string | null } | void>;
 
+  /** Daily photo (Appendix E 1): taken any time of day, one per day. */
+  addPhoto(file: File, caption: string): Promise<void>;
+  updatePhoto(date: string, patch: Partial<Pick<PhotoRow, 'caption' | 'milestone'>>): Promise<void>;
+  removePhoto(date: string): Promise<void>;
+  photoUrls(paths: string[]): Promise<Record<string, string>>;
+  captionQuestion(): Promise<string | null>;
+
   /** The talk box result card. */
   lastDump: DumpCard | null;
   dump(text: string): Promise<{ ok: boolean; message?: string }>;
@@ -87,6 +95,8 @@ export interface DumpCard {
 }
 
 let toastId = 0;
+/** Signed photo links last an hour; cache them for the session. */
+const photoUrlCache = new Map<string, string>();
 
 /** Plain-language error text for the screen. */
 function message(e: unknown): string {
@@ -507,6 +517,67 @@ export const useApp = create<AppState>((set, get) => {
         },
         { replan: true },
       );
+    },
+
+    addPhoto: (file, caption) =>
+      run(async (s) => {
+        const date = nowLocal().date;
+        const old = s.photos.find((p) => p.date === date);
+        const path = await repo.uploadPhoto(date, await shrinkPhoto(file));
+        const row: PhotoRow = { date, storagePath: path, caption: caption.trim(), milestone: old?.milestone ?? false };
+        await repo.savePhoto(row);
+        if (old && old.storagePath !== path) await repo.deletePhoto({ ...old, date: '__old__' }).catch(() => undefined);
+        photoUrlCache.delete(path);
+        return { ...s, photos: [...s.photos.filter((p) => p.date !== date), row] };
+      }),
+
+    updatePhoto: (date, patch) =>
+      run(async (s) => {
+        const p = s.photos.find((x) => x.date === date);
+        if (!p) return s;
+        const row = { ...p, ...patch };
+        await repo.savePhoto(row);
+        return { ...s, photos: s.photos.map((x) => (x.date === date ? row : x)) };
+      }),
+
+    removePhoto: (date) =>
+      run(async (s) => {
+        const p = s.photos.find((x) => x.date === date);
+        if (p) await repo.deletePhoto(p);
+        return { ...s, photos: s.photos.filter((x) => x.date !== date) };
+      }),
+
+    async photoUrls(paths) {
+      const missing = paths.filter((p) => !photoUrlCache.has(p));
+      if (missing.length) {
+        try {
+          const urls = await repo.photoUrls(missing);
+          for (const [k, v] of Object.entries(urls)) photoUrlCache.set(k, v);
+        } catch {
+          // Shown as empty tiles; the next open retries.
+        }
+      }
+      return Object.fromEntries(paths.map((p) => [p, photoUrlCache.get(p) ?? '']));
+    },
+
+    async captionQuestion() {
+      const s = get().s;
+      if (!s) return null;
+      const date = nowLocal().date;
+      try {
+        const cached = await repo.getCoach(date, 'caption');
+        if (cached) return cached;
+        const text = await ai.coach({
+          kind: 'caption',
+          name: s.contract.signedName?.split(' ')[0] || 'Eli',
+          whyShort: s.vision.whyShort,
+          facts: { identity: s.vision.identity.split('. ')[0], today_big3: dayOf(s, date).big3.map((i) => s.tasks.find((t) => t.id === i.taskId)?.title).filter(Boolean) },
+        });
+        if (text) await repo.saveCoach(date, 'caption', text);
+        return text || null;
+      } catch {
+        return null;
+      }
     },
 
     lastDump: null,

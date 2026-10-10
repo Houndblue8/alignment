@@ -2,6 +2,7 @@
 // in-app fallback, so both always agree. Times are minutes from local (America/Los_Angeles) midnight.
 
 export interface ReminderPrefs {
+  photo?: boolean;
   morning: boolean;
   evening: boolean;
   bedtime: boolean;
@@ -26,12 +27,15 @@ export interface ReminderInput {
   anchorsDone: boolean;
   bedMin: number | null;
   blocks: ReminderBlock[];
+  /** The photo can be taken any time; the reminder goes out at this time if today has none yet. */
+  photoMin?: number;
+  photoTaken?: boolean;
 }
 
 export interface Reminder {
   /** Unique per day: the sender logs it so it goes out once. */
   key: string;
-  kind: 'morning' | 'evening' | 'bedtime' | 'block';
+  kind: 'morning' | 'photo' | 'evening' | 'bedtime' | 'block';
   dueMin: number;
   title: string;
   body: string;
@@ -58,6 +62,16 @@ export function remindersFor(r: ReminderInput): Reminder[] {
       url: '/',
     });
   }
+  if (r.prefs.photo && !r.photoTaken && r.photoMin !== undefined) {
+    out.push({
+      key: `${r.date}:photo`,
+      kind: 'photo',
+      dueMin: r.photoMin,
+      title: "Today's photo",
+      body: 'One photo and one line. Whenever the moment is right.',
+      url: '/?photo=1',
+    });
+  }
   const winddown = r.blocks.find((b) => b.kind === 'winddown');
   if (r.prefs.evening && (winddown || r.bedMin !== null)) {
     out.push({
@@ -65,7 +79,7 @@ export function remindersFor(r: ReminderInput): Reminder[] {
       kind: 'evening',
       dueMin: winddown ? winddown.start : r.bedMin! - 60,
       title: 'Close the day',
-      body: 'Check off what got done and take tonight\'s photo.',
+      body: r.photoTaken === false ? "Check off what got done. Today's photo is still open." : 'Check off what got done.',
       url: '/today',
     });
   }

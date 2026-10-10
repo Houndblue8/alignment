@@ -24,6 +24,8 @@ export function seedSnapshot(): Snapshot {
     notifyEvening: true,
     notifyBedtime: true,
     notifyBlocks: false,
+    notifyPhoto: true,
+    photoReminderMin: 720,
   };
   const contract: Contract = { ...contractJson, locked: false, signedName: null, signedAt: null, graduationDate: null };
   return {
@@ -36,5 +38,6 @@ export function seedSnapshot(): Snapshot {
     days: {},
     blocks: [],
     quotes: quotesJson as Quote[],
+    photos: [],
   };
 }

@@ -8,6 +8,7 @@ import { CheckIn } from './screens/CheckIn';
 import { Contract } from './screens/Contract';
 import { Home } from './screens/Home';
 import { Login, SetPassword } from './screens/Login';
+import { Memory } from './screens/Memory';
 import { Quotes } from './screens/Quotes';
 import { Settings } from './screens/Settings';
 import { Today } from './screens/Today';
@@ -108,6 +109,7 @@ function Loaded() {
           <Route path="/quotes" element={<Quotes />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/vision" element={<Vision />} />
+          <Route path="/memory" element={<Memory />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

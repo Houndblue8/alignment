@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Images } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { fmtDate, fmtTime, journeyStyle, kindJourney, shortDuration } from '../lib/format';
@@ -6,6 +6,7 @@ import { addDays, weekStart } from '../planner';
 import { anchorStreaks, seasonRecord, weekResults } from '../state/planning';
 import { useApp } from '../state/store';
 import { SeriesBar } from '../ui/Series';
+import { missedRitual } from './Memory';
 
 const DAY = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const WORD = { win: 'Win', half: 'Half win', loss: 'Loss' } as const;
@@ -52,6 +53,10 @@ export function Week() {
         </div>
       </div>
 
+      <Link to="/memory" className="btn ghost" style={{ justifySelf: 'start' }}>
+        <Images size={16} aria-hidden="true" /> Memory
+      </Link>
+
       <div className="stack" data-testid="week-days">
         {results.map((r, i) => {
           const date = addDays(start, i);
@@ -67,6 +72,7 @@ export function Week() {
               <span style={{ width: 40 }} className={date === today ? '' : 'muted'}>
                 {DAY[i]}
               </span>
+              {missedRitual(s, date, today) && <span className="missed-dot" title="No photo that day" aria-hidden="true" />}
               <span className={`result ${r ?? ''} ${date === today ? 'today' : ''}`} aria-hidden="true">
                 {r === 'win' ? 'W' : r === 'half' ? 'H' : r === 'loss' ? 'L' : ''}
               </span>

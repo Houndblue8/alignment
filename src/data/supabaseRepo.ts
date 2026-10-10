@@ -24,6 +24,8 @@ const settingsTo = (s: Settings): Row => ({
   code_red_level: s.codeRedLevel,
   graduation_date: s.graduationDate,
   last_open_date: s.lastOpenDate,
+  notify_photo: s.notifyPhoto,
+  photo_reminder_min: s.photoReminderMin,
   notify_morning: s.notifyMorning,
   notify_evening: s.notifyEvening,
   notify_bedtime: s.notifyBedtime,
@@ -45,6 +47,8 @@ const settingsFrom = (r: Row): Settings => ({
   notifyEvening: r.notify_evening !== false,
   notifyBedtime: r.notify_bedtime !== false,
   notifyBlocks: r.notify_blocks === true,
+  notifyPhoto: r.notify_photo !== false,
+  photoReminderMin: (r.photo_reminder_min as number) ?? 720,
 });
 
 const visionTo = (v: Vision): Row => ({
@@ -254,7 +258,7 @@ export const supabaseRepo: Repo = {
   async load(blocksSince) {
     const settings = await must(supabase.from('settings').select('*').maybeSingle());
     if (!settings) return null;
-    const [vision, contract, places, events, tasks, days, blocks, quotes] = await Promise.all([
+    const [vision, contract, places, events, tasks, days, blocks, quotes, photos] = await Promise.all([
       must(supabase.from('vision').select('*').single()),
       must(supabase.from('contract').select('*').single()),
       must(supabase.from('places').select('*').order('id')),
@@ -263,6 +267,7 @@ export const supabaseRepo: Repo = {
       must(supabase.from('day_records').select('*').order('date')),
       must(supabase.from('blocks').select('*').gte('date', blocksSince).order('date').order('start_min').limit(5000)),
       must(supabase.from('quotes').select('*').order('created_at')),
+      must(supabase.from('photos').select('*').order('date')),
     ]);
     return {
       settings: settingsFrom(settings),
@@ -274,6 +279,7 @@ export const supabaseRepo: Repo = {
       days: Object.fromEntries((days ?? []).map((r) => [r.date as string, dayFrom(r)])),
       blocks: (blocks ?? []).map(blockFrom),
       quotes: (quotes ?? []).map(quoteFrom),
+      photos: (photos ?? []).map((r) => ({ date: r.date as string, storagePath: r.storage_path as string, caption: r.caption as string, milestone: r.milestone as boolean })),
     };
   },
 
@@ -319,4 +325,24 @@ export const supabaseRepo: Repo = {
     return (row as { text: string } | null)?.text ?? null;
   },
   saveCoach: async (date, kind, text) => void (await must(supabase.from('coach_cache').upsert({ date, kind, text }))),
+  async uploadPhoto(date, file) {
+    const { data: who } = await supabase.auth.getUser();
+    if (!who.user) throw new Error('Sign in first.');
+    const path = `${who.user.id}/${date}-${Date.now()}.jpg`;
+    const { error } = await supabase.storage.from('photos').upload(path, file, { contentType: file.type || 'image/jpeg', upsert: true });
+    if (error) throw new Error(error.message);
+    return path;
+  },
+  savePhoto: async (p) =>
+    void (await must(supabase.from('photos').upsert({ date: p.date, storage_path: p.storagePath, caption: p.caption, milestone: p.milestone }))),
+  async deletePhoto(p) {
+    await supabase.storage.from('photos').remove([p.storagePath]);
+    await must(supabase.from('photos').delete().eq('date', p.date));
+  },
+  async photoUrls(paths) {
+    if (!paths.length) return {};
+    const { data, error } = await supabase.storage.from('photos').createSignedUrls(paths, 3600);
+    if (error) throw new Error(error.message);
+    return Object.fromEntries((data ?? []).filter((d) => d.signedUrl && d.path).map((d) => [d.path!, d.signedUrl as string]));
+  },
 };

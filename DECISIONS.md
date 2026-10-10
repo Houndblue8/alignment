@@ -111,6 +111,13 @@ Each entry: what was decided, who decided, and what it replaces in the brief. Pl
 - The service worker is now our own (src/sw.ts, Workbox precache plus push and notification-click handlers).
 - Database migrations now run from Claude's side through the Supabase Management API with the saved access token (no more pasting SQL).
 
+### D15. Daily photo and Memory (Phase 5, 2026-10-10)
+- Eli's change: the photo can be taken any time of day, not only at evening close-out. A "Today's photo" card on Home stays open until there is one. The photo reminder goes out at a time Eli picks (default 12:00 PM) and only if today has no photo yet; the evening close-out mentions it if still open.
+- One photo per day with a one-line caption (required). The caption box shows one coach question tied to the vision (Haiku, cached per day). Taking another photo the same day replaces it.
+- Photos are shrunk on the phone to 1600 px JPEG before upload and stored in a private Supabase Storage bucket under Eli's user id; only his account can read them (short-lived signed links).
+- Missed photo: a past day that was checked in but has no photo shows a small grey dot on Week and in the Memory calendar. It never changes the score.
+- Memory page: "Then and now" (day 1, day 30, day 90 counted from the first photo, each allowing up to 3 days late, and the latest), a month calendar of thumbnails, and a photo view to edit the caption, mark a milestone (star) or delete. On phones Memory opens from the photo card and Week; on laptops it is also in the sidebar.
+
 ## Claude's defaults (change any by telling me)
 
 - 5 minute buffers between blocks, except inside the morning routine (D2).

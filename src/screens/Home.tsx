@@ -8,6 +8,7 @@ import { useApp } from '../state/store';
 import { Big3Section } from '../ui/Big3';
 import { AwayMessage, CoachLine, Decisions } from '../ui/HomeExtras';
 import { InstallHint } from '../ui/InstallHint';
+import { PhotoCard } from '../ui/PhotoCard';
 import { Ring } from '../ui/Ring';
 import { SeriesBar, WeekCircles } from '../ui/Series';
 
@@ -64,6 +65,8 @@ export function Home() {
       </section>
 
       <Big3Section />
+
+      <PhotoCard />
 
       <section className="card stack" aria-label="This week">
         <div className="row between">

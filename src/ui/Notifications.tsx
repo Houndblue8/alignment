@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { DATA_MODE } from '../data/repo';
 import { supabase } from '../data/supabase';
 import { nowLocal } from '../lib/clock';
+import { fromHHMM, toHHMM } from '../lib/format';
 import { deviceLabel, disablePush, enablePush, pushState, type PushState } from '../lib/push';
 import { addDays } from '../planner';
 import { dayOf } from '../state/planning';
@@ -17,7 +18,9 @@ export function todaysReminders(): Reminder[] {
   const rec = dayOf(s, now.date);
   return remindersFor({
     date: now.date,
-    prefs: { morning: s.settings.notifyMorning, evening: s.settings.notifyEvening, bedtime: s.settings.notifyBedtime, blocks: s.settings.notifyBlocks },
+    prefs: { photo: s.settings.notifyPhoto, morning: s.settings.notifyMorning, evening: s.settings.notifyEvening, bedtime: s.settings.notifyBedtime, blocks: s.settings.notifyBlocks },
+    photoMin: s.settings.photoReminderMin,
+    photoTaken: s.photos.some((p) => p.date === now.date),
     expectedWakeMin: s.days[addDays(now.date, -1)]?.plan.bedtime?.wakeMin ?? s.settings.wakeTargetMin,
     checkinDone: rec.checkinDone,
     anchorsDone: rec.coldShower.done && rec.walk.done,
@@ -98,7 +101,7 @@ export function NotificationSettings() {
     toast(error ? 'The test did not arrive. Check that notifications are allowed for Alignment.' : 'Test sent. It should arrive in a few seconds.', error ? 'error' : 'info');
   };
 
-  const toggle = (key: 'notifyMorning' | 'notifyEvening' | 'notifyBedtime' | 'notifyBlocks', label: string) => (
+  const toggle = (key: 'notifyPhoto' | 'notifyMorning' | 'notifyEvening' | 'notifyBedtime' | 'notifyBlocks', label: string) => (
     <label className="row between">
       <span>{label}</span>
       <input type="checkbox" className="switch" checked={settings[key]} onChange={(e) => save({ [key]: e.target.checked })} />
@@ -127,6 +130,24 @@ export function NotificationSettings() {
       </div>
       <div className="stack">
         {toggle('notifyMorning', 'Morning: cold shower and walk, at your wake time')}
+        {toggle('notifyPhoto', 'Photo: a nudge if today has no photo yet')}
+        {settings.notifyPhoto && (
+          <label className="row between">
+            <span className="small muted">Photo reminder time</span>
+            <input
+              className="field"
+              style={{ width: 140 }}
+              type="time"
+              step={300}
+              defaultValue={toHHMM(settings.photoReminderMin)}
+              onBlur={(e) => {
+                const m = fromHHMM(e.target.value);
+                if (m !== null && m !== settings.photoReminderMin) void save({ photoReminderMin: m });
+              }}
+              aria-label="Photo reminder time"
+            />
+          </label>
+        )}
         {toggle('notifyEvening', 'Evening: close the day and take the photo')}
         {toggle('notifyBedtime', 'Bedtime: at your recommended bedtime')}
         {toggle('notifyBlocks', '5 minutes before each block')}

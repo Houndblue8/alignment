@@ -36,17 +36,20 @@ Deno.serve(async (req) => {
   let sent = 0;
 
   for (const user of users) {
-    const [{ data: settings }, { data: days }, { data: blocks }] = await Promise.all([
+    const [{ data: settings }, { data: days }, { data: blocks }, { data: photo }] = await Promise.all([
       db.from('settings').select('*').eq('user_id', user).maybeSingle(),
       db.from('day_records').select('date, checkin_done, cold_shower, walk, plan').eq('user_id', user).in('date', [now.date, yesterday(now.date)]),
       db.from('blocks').select('id, start_min, end_min, kind, title, status').eq('user_id', user).eq('date', now.date),
+      db.from('photos').select('date').eq('user_id', user).eq('date', now.date).maybeSingle(),
     ]);
     if (!settings) continue;
     const today = (days ?? []).find((d) => d.date === now.date);
     const prev = (days ?? []).find((d) => d.date === yesterday(now.date));
     const list = remindersFor({
       date: now.date,
-      prefs: { morning: settings.notify_morning, evening: settings.notify_evening, bedtime: settings.notify_bedtime, blocks: settings.notify_blocks },
+      prefs: { photo: settings.notify_photo, morning: settings.notify_morning, evening: settings.notify_evening, bedtime: settings.notify_bedtime, blocks: settings.notify_blocks },
+      photoMin: settings.photo_reminder_min,
+      photoTaken: !!photo,
       expectedWakeMin: prev?.plan?.bedtime?.wakeMin ?? settings.wake_target_min,
       checkinDone: !!today?.checkin_done,
       anchorsDone: !!(today?.cold_shower?.done && today?.walk?.done),

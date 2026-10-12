@@ -557,7 +557,7 @@ export function createTemple(canvas: HTMLCanvasElement, opts: TempleOptions): Te
 
   let nextBlink = 2.5;
   let blinkT = -1;
-  const camTarget = new THREE.Vector3(0, 1.9, 0);
+  const camTarget = new THREE.Vector3(0, 1.65, 0);
   const center = new THREE.Vector3();
 
   function step(dt: number, t: number, elapsed: number) {
@@ -659,7 +659,7 @@ export function createTemple(canvas: HTMLCanvasElement, opts: TempleOptions): Te
       idle += dt;
       if (!opts.reducedMotion && idle > 2) yaw += dt * 0.1;
     }
-    const r = 11.2;
+    const r = 12;
     camera.position.set(Math.sin(yaw) * Math.cos(pitch) * r, 2.2 + Math.sin(pitch) * r, Math.cos(yaw) * Math.cos(pitch) * r);
     camera.lookAt(camTarget);
   }

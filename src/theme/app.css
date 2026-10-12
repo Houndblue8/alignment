@@ -1915,3 +1915,9 @@ main .pillar-chip {
   font-size: 1.05rem;
   line-height: 1.6;
 }
+
+/* The day options menu opens above the 3D temple (the canvas is its own layer). */
+.screen-head {
+  position: relative;
+  z-index: 40;
+}

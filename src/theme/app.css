@@ -1932,15 +1932,21 @@ main .pillar-chip {
   display: grid;
   grid-template-rows: auto 1fr auto;
 }
+/* The preview is the shot: the same 3:4 frame that is saved (a full-screen preview would crop the sides
+   and make the 0.5x look like 1x). */
 .film-camera video {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  top: 50%;
+  left: 50%;
+  width: min(100vw, 75vh);
+  aspect-ratio: 3 / 4;
+  height: auto;
   object-fit: cover;
+  transform: translate(-50%, -50%);
+  border-radius: 6px;
 }
 .film-camera video.mirror {
-  transform: scaleX(-1);
+  transform: translate(-50%, -50%) scaleX(-1);
 }
 .film-top,
 .film-bottom {

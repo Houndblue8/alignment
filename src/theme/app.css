@@ -2079,3 +2079,26 @@ span.film-icon {
     animation: none;
   }
 }
+.film-countdown {
+  grid-row: 2;
+  z-index: 1;
+  align-self: center;
+  justify-self: center;
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+}
+.film-number {
+  font-size: 7rem;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.6);
+}
+.film-hint.static {
+  align-self: auto;
+}
+.film-camera > .film-hint {
+  align-self: end;
+  margin-bottom: 16px;
+}

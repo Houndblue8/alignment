@@ -7,6 +7,7 @@ import { monthName } from '../state/recap';
 import { developsLabel, rollSize, shotNumber } from '../state/roll';
 import { useApp } from '../state/store';
 import { FilmCamera } from './FilmCamera';
+import { Sheet } from './Sheet';
 
 /** A little film canister: the shot is on the roll, out of sight until the month develops. */
 export function Canister({ size = 44 }: { size?: number }) {
@@ -33,7 +34,8 @@ export function PhotoCard() {
   const askQuestion = useApp((a) => a.captionQuestion);
   const busy = useApp((a) => a.busy);
   const today = s.photos.find((p) => p.date === date);
-  const [camera, setCamera] = useState(false);
+  const [camera, setCamera] = useState<false | 'shot' | 'test'>(false);
+  const [testUrl, setTestUrl] = useState<string | null>(null);
   const [shot, setShot] = useState<Blob | null>(null);
   const [caption, setCaption] = useState('');
   const [question, setQuestion] = useState<string | null>(null);
@@ -73,7 +75,13 @@ export function PhotoCard() {
         <FilmCamera
           date={date}
           label={label}
-          onShot={took}
+          test={camera === 'test'}
+          onShot={(b) => {
+            if (camera === 'test') {
+              setCamera(false);
+              setTestUrl(URL.createObjectURL(b));
+            } else took(b);
+          }}
           onClose={() => setCamera(false)}
           onFallback={() => {
             setCamera(false);
@@ -106,7 +114,7 @@ export function PhotoCard() {
             <input className="field" value={caption} maxLength={140} onChange={(e) => setCaption(e.target.value)} placeholder="What this day was" />
           </label>
           <div className="row">
-            <button type="button" className="btn ghost" onClick={() => setCamera(true)}>
+            <button type="button" className="btn ghost" onClick={() => setCamera('shot')}>
               Retake
             </button>
             <button className="btn primary grow" disabled={busy || !caption.trim()}>
@@ -123,7 +131,7 @@ export function PhotoCard() {
             </span>
             <span className="clamp2">{today.caption}</span>
           </span>
-          <button className="icon-btn" aria-label="Retake today's photo" onClick={() => setCamera(true)}>
+          <button className="icon-btn" aria-label="Retake today's photo" onClick={() => setCamera('shot')}>
             <RefreshCw size={18} />
           </button>
         </div>
@@ -132,7 +140,7 @@ export function PhotoCard() {
           <div className="row">
             <Camera size={22} aria-hidden="true" />
             <span className="grow">Today's photo is still open. Any moment works.</span>
-            <button className="btn primary" onClick={() => setCamera(true)}>
+            <button className="btn primary" onClick={() => setCamera('shot')}>
               Open camera
             </button>
           </div>
@@ -141,9 +149,36 @@ export function PhotoCard() {
           </button>
         </div>
       )}
-      <Link to="/memory" className="small muted row" style={{ textDecoration: 'none' }}>
-        <Images size={14} aria-hidden="true" /> Memory
-      </Link>
+      {testUrl && (
+        <Sheet
+          title="Test shot"
+          onClose={() => {
+            URL.revokeObjectURL(testUrl);
+            setTestUrl(null);
+          }}
+        >
+          <img src={testUrl} alt="Your test shot" className="photo-full" data-testid="test-shot" />
+          <p className="small muted">This is how your shots come out. Test shots are not saved and do not go on the roll.</p>
+          <button
+            className="btn primary"
+            onClick={() => {
+              URL.revokeObjectURL(testUrl);
+              setTestUrl(null);
+              setCamera('test');
+            }}
+          >
+            Try again
+          </button>
+        </Sheet>
+      )}
+      <div className="row between">
+        <Link to="/memory" className="small muted row" style={{ textDecoration: 'none' }}>
+          <Images size={14} aria-hidden="true" /> Memory
+        </Link>
+        <button className="btn ghost small" onClick={() => setCamera('test')}>
+          Test the camera
+        </button>
+      </div>
     </section>
   );
 }

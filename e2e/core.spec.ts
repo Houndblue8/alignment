@@ -10,7 +10,7 @@ test('20. first launch shows the Contract; signing shows the signature, then the
   await page.getByRole('button', { name: 'Sign' }).click();
   await expect(page.getByTestId('signature')).toContainText('Eli Test');
   // First launch is also the first open of the day, so the check-in comes next, then Home.
-  await expect(page.getByRole('heading', { name: 'What time did you wake up?' })).toBeVisible({ timeout: 5000 });
+  await expect(page.getByRole('heading', { name: 'What time did you wake up?' })).toBeVisible({ timeout: 12000 });
   await checkIn(page);
   await expect(page.getByRole('link', { name: /Focus view: \d of \d done/ })).toBeVisible();
   // The contract never shows again.

@@ -1,10 +1,10 @@
 // Coach line: one short message in the coach tone (Appendix A). The app caches it per day.
 import { apiErrorMessage, claude, createWithFallback, type Anthropic } from '../_shared/anthropic.ts';
 import { cors, env, fail, json } from '../_shared/http.ts';
-import { COACH_SYSTEM, SCOUT_SYSTEM } from '../_shared/prompts.ts';
+import { COACH_SYSTEM, LETTER_SYSTEM, SCOUT_SYSTEM } from '../_shared/prompts.ts';
 
 interface Body {
-  kind?: 'daily' | 'caption' | 'week';
+  kind?: 'daily' | 'caption' | 'week' | 'month';
   name?: string;
   whyShort?: string;
   identity?: string;
@@ -63,15 +63,17 @@ Deno.serve(async (req) => {
     }
   }
   const ask =
-    body.kind === 'caption'
+    body.kind === 'month'
+      ? "Write his monthly recap letter: 3 to 5 short sentences, under 110 words, from his coach. Name what the numbers show, honor what held, name one thing to build next month, and tie it to his why and to God's faithfulness. Use only the facts given; never invent events or numbers. If still_going is true, it is the month so far. No greeting line and no sign-off."
+      : body.kind === 'caption'
       ? 'Ask one short question that helps him caption tonight\'s photo, tied to his vision.'
       : "Write this morning's line for Home: one sentence, under 30 words, direct and personal, tied to his why. Use only the facts given: never invent tasks, events or results, and only name tasks that are in today_big3. If yesterday is 'none', do not mention yesterday. It should hit the heart and never shame.";
   try {
     const res = await claude().messages.create({
       model: env('ANTHROPIC_MODEL_COACH'),
-      max_tokens: 300,
+      max_tokens: body.kind === 'month' ? 2000 : 300,
       output_config: { effort: 'low' },
-      system: COACH_SYSTEM,
+      system: body.kind === 'month' ? LETTER_SYSTEM : COACH_SYSTEM,
       messages: [
         {
           role: 'user',
@@ -86,7 +88,9 @@ Deno.serve(async (req) => {
       .join(' ')
       .replace(/\s*[–—]\s*/g, ', ')
       .trim();
-    return json({ text });
+    // Cut off by the token limit: keep the complete sentences only.
+    const whole = res.stop_reason === 'max_tokens' ? text.slice(0, text.lastIndexOf('.') + 1) || text : text;
+    return json({ text: whole });
   } catch (e) {
     console.error('coach', e);
     return fail(apiErrorMessage(e), 502);

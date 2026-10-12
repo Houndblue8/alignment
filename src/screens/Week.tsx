@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, ClipboardList, Images } from 'lucide-react';
+import { CalendarDays, ChevronLeft, ChevronRight, ClipboardList, Images } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { fmtDate, fmtTime, journeyStyle, kindJourney, shortDuration } from '../lib/format';
@@ -62,6 +62,9 @@ export function Week() {
       <div className="row wrap">
         <Link to="/memory" className="btn ghost">
           <Images size={16} aria-hidden="true" /> Memory
+        </Link>
+        <Link to="/recap" className="btn ghost">
+          <CalendarDays size={16} aria-hidden="true" /> Monthly recap
         </Link>
         {weekClosed(s, start, now) && counts(s, addDays(start, 6)) && (
           <Link to={`/report/${start}`} className="btn ghost">

@@ -14,6 +14,7 @@ import { runDump } from '../ops/pipeline';
 import { applyTheme } from '../theme/theme';
 import { cleanReport, draftReport, factsForCoach, weekClosed, weekFacts, type StoredReport } from './report';
 import { saveableTemple, type SavedTemple } from './temple';
+import { factsForLetter, monthFacts, plainLetter } from './recap';
 import { buildWeek, counts, dayOf, fillBig3, finalizePast, resultFor, suggestAgain as suggestAgainPure } from './planning';
 
 const repo: Repo = DATA_MODE === 'local' ? localRepo : supabaseRepo;
@@ -101,6 +102,8 @@ interface AppState {
   captionQuestion(): Promise<string | null>;
   /** The scouting report for a closed week: saved one, or written now (rewrite = write it again). */
   scoutingReport(weekStart: string, rewrite?: boolean): Promise<StoredReport | null>;
+  /** The monthly recap letter: saved once the month is over; written fresh while it is still going. */
+  monthLetter(month: string, rewrite?: boolean): Promise<{ text: string; source: 'coach' | 'plain' }>;
   /** Finished temples, oldest first (saved as numbers when each week closes). */
   temples(): Promise<SavedTemple[]>;
 
@@ -780,6 +783,28 @@ export const useApp = create<AppState>((set, get) => {
       } catch {
         return null;
       }
+    },
+
+    async monthLetter(month, rewrite = false) {
+      const s = get().s;
+      const now = nowLocal();
+      const name = s?.contract.signedName?.split(' ')[0] || 'Eli';
+      if (!s) return { text: '', source: 'plain' as const };
+      const facts = monthFacts(s, month, now);
+      if (!rewrite && !facts.soFar) {
+        const saved = (await repo.getReport('monthly', `${month}-01`).catch(() => null)) as { text: string } | null;
+        if (saved?.text) return { text: saved.text, source: 'coach' as const };
+      }
+      try {
+        const text = await ai.coach({ kind: 'month', name, whyShort: s.vision.whyShort, facts: factsForLetter(facts) });
+        if (text) {
+          if (!facts.soFar) await repo.saveReport('monthly', `${month}-01`, { text, facts: factsForLetter(facts) }).catch(() => undefined);
+          return { text, source: 'coach' as const };
+        }
+      } catch {
+        // The plain letter stands in.
+      }
+      return { text: plainLetter(facts, name), source: 'plain' as const };
     },
 
     async temples() {

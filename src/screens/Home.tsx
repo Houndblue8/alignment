@@ -14,6 +14,8 @@ import { ScoutingCard } from './Report';
 import { Temple3D } from '../ui/Temple3D';
 import { buildingFor, buildingLine } from '../state/temple';
 import { fireFor } from '../state/fire';
+import { monthFacts, monthName, prevMonth } from '../state/recap';
+import { UrgeButton } from '../ui/Urge';
 import { SeriesBar, WeekCircles } from '../ui/Series';
 
 export function Home() {
@@ -30,6 +32,9 @@ export function Home() {
   const quote = quoteFor(s, now.date);
   const scouting = reportToOffer(s, now);
   const building = buildingFor(s, now.date, now);
+  // The first three days of a month offer last month's recap, if any of it counted.
+  const lastMonth = prevMonth(now.date.slice(0, 7));
+  const recapMonth = Number(now.date.slice(8, 10)) <= 3 && monthFacts(s, lastMonth, now).days > 0 ? lastMonth : null;
   const fire = fireFor(s, now);
   const bed = rec.plan.bedtime;
   const firstLine = s.vision.identity.split(/(?<=\.)\s/)[0] ?? s.vision.identity;
@@ -49,6 +54,17 @@ export function Home() {
       <div className="notices card" aria-label="Needs you" role="region">
         <AwayMessage />
         {scouting && <ScoutingCard start={scouting} />}
+        {recapMonth && (
+          <Link to={`/recap/${recapMonth}`} className="row" style={{ textDecoration: 'none', color: 'inherit' }}>
+            <span className="grow">
+              <strong>{monthName(recapMonth).split(' ')[0]} recap is in</strong>
+              <span className="small muted" style={{ display: 'block' }}>
+                Photos, the record, and a letter from your coach
+              </span>
+            </span>
+            <ChevronRight size={18} aria-hidden="true" />
+          </Link>
+        )}
         <IsaacPrompt />
         <CodeRedHint />
         <Decisions />
@@ -76,6 +92,8 @@ export function Home() {
           </p>
         )}
       </section>
+
+      <UrgeButton />
 
       <Big3Section />
 

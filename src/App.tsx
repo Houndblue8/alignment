@@ -10,6 +10,7 @@ import { Home } from './screens/Home';
 import { Login, SetPassword } from './screens/Login';
 import { Memory } from './screens/Memory';
 import { Quotes } from './screens/Quotes';
+import { Recap } from './screens/Recap';
 import { Report } from './screens/Report';
 import { Settings } from './screens/Settings';
 import { Today } from './screens/Today';
@@ -112,6 +113,8 @@ function Loaded() {
           <Route path="/vision" element={<Vision />} />
           <Route path="/memory" element={<Memory />} />
           <Route path="/report" element={<Report />} />
+          <Route path="/recap" element={<Recap />} />
+          <Route path="/recap/:month" element={<Recap />} />
           <Route path="/report/:start" element={<Report />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

@@ -1,6 +1,6 @@
 # Alignment: Build Plan
 
-Status (2026-10-10): Phases 0 to 4 done. Phase 5: notifications, photos and Memory, and the Sunday scouting report are done, plus Eli's Oct 10 changes (D17, D18: Big 3 linking, late close-out, the focus view with the building and pillars, plans-changed follow-ups) D19 (the fire, the night check, the 3D temple) and D20 (the weekly temple, open time, the veil, the flame character). The urge button and the monthly recap are next.
+Status (2026-10-12): Phases 0 to 5 done (Phase 5: notifications, photos and Memory, Sunday scouting report, urge button, monthly recap, plus Eli's changes in D17 to D22). Next: Phase 6 hardening.
 
 ## 1. Machine check (done 2026-10-09)
 

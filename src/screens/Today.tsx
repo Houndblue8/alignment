@@ -10,6 +10,7 @@ import { openWindows, setBlocks, type OpenWindow } from '../../supabase/function
 import { useApp } from '../state/store';
 import { AnchorButton } from '../ui/AnchorButton';
 import { FocusHero, InnerCheckCard, KaizenCard } from '../ui/Focus';
+import { UrgeButton } from '../ui/Urge';
 import { Sheet } from '../ui/Sheet';
 import { JOURNEY_ICON, KIND_ICON } from '../ui/icons';
 
@@ -61,6 +62,7 @@ export function Today() {
       {mode && <p className="banner warn">{mode} is on.</p>}
 
       <FocusHero />
+      <UrgeButton />
 
       <p className="section-label">Foundation</p>
       <div className="anchors">

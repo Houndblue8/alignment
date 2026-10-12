@@ -13,7 +13,7 @@ export interface ParseRequest {
 }
 
 export interface CoachRequest {
-  kind: 'daily' | 'caption';
+  kind: 'daily' | 'caption' | 'month';
   name: string;
   whyShort: string;
   facts: Record<string, unknown>;

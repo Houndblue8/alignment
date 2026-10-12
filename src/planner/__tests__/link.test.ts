@@ -119,3 +119,23 @@ describe('a workout checked off early is kept', () => {
     expect(again.blocks.filter((b) => b.kind === 'shower')).toHaveLength(1);
   });
 });
+
+describe('matching edge cases', () => {
+  test('empty and far apart titles never match; near spellings do', () => {
+    expect(sameThing('', 'Lift')).toBe(false);
+    expect(sameThing('the', 'Lift')).toBe(false);
+    expect(sameThing('Accounting homework', 'Acounting homework')).toBe(true);
+    expect(sameThing('Short', 'A much much longer title here')).toBe(false);
+    expect(sameThing('Reading', 'Readings')).toBe(true);
+  });
+
+  test('linking picks by score, then manual and events, then the earliest', () => {
+    const a = { ...manual('a', 'Dinner with Sam', at(19), at(20)), source: 'planner' as const, kind: 'meal' as const, id: `${SAT}:meal:dinner` };
+    const b = manual('b', 'Dinner with Josh', at(18), at(19));
+    const c = manual('c', 'Dinner with Ana', at(17), at(18));
+    expect(linkTarget('Dinner', [a, b, c])?.id).toBe(c.id);
+    expect(linkTarget('Outreach DMs', [{ ...manual('f', 'Side Hustle Summit floor', at(16), at(17)), kind: 'shs_floor', source: 'planner' }])?.kind).toBe('shs_floor');
+    expect(linkTarget('Breakfast', [{ ...manual('s', 'Grab-and-go snack', at(7), at(8)), kind: 'breakfast', source: 'planner' }])?.kind).toBe('breakfast');
+    expect(linkTarget('Lift', [a], new Set([a.id]))).toBeNull();
+  });
+});

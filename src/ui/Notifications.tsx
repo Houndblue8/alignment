@@ -20,6 +20,7 @@ export function todaysReminders(): Reminder[] {
     date: now.date,
     prefs: { open: s.settings.notifyOpen, photo: s.settings.notifyPhoto, morning: s.settings.notifyMorning, evening: s.settings.notifyEvening, bedtime: s.settings.notifyBedtime, blocks: s.settings.notifyBlocks },
     photoMin: s.settings.photoReminderMin,
+    photoRandom: s.settings.photoRandom,
     photoTaken: s.photos.some((p) => p.date === now.date),
     expectedWakeMin: s.days[addDays(now.date, -1)]?.plan.bedtime?.wakeMin ?? s.settings.wakeTargetMin,
     checkinDone: rec.checkinDone,
@@ -133,6 +134,12 @@ export function NotificationSettings() {
         {toggle('notifyMorning', 'Morning: cold shower and walk, at your wake time')}
         {toggle('notifyPhoto', 'Photo: a nudge if today has no photo yet')}
         {settings.notifyPhoto && (
+          <label className="row between">
+            <span className="small muted">Surprise time each day, 10 AM to 8 PM</span>
+            <input type="checkbox" className="switch" checked={settings.photoRandom} onChange={(e) => void save({ photoRandom: e.target.checked })} aria-label="Surprise photo time" />
+          </label>
+        )}
+        {settings.notifyPhoto && !settings.photoRandom && (
           <label className="row between">
             <span className="small muted">Photo reminder time</span>
             <input

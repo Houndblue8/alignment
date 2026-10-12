@@ -49,6 +49,7 @@ Deno.serve(async (req) => {
       date: now.date,
       prefs: { open: settings.notify_open !== false, photo: settings.notify_photo, morning: settings.notify_morning, evening: settings.notify_evening, bedtime: settings.notify_bedtime, blocks: settings.notify_blocks },
       photoMin: settings.photo_reminder_min,
+      photoRandom: settings.photo_random !== false,
       photoTaken: !!photo,
       expectedWakeMin: prev?.plan?.bedtime?.wakeMin ?? settings.wake_target_min,
       checkinDone: !!today?.checkin_done,

@@ -1,6 +1,6 @@
 // Reminder rules shared by the send-due function and the in-app fallback (Appendix E 4).
 import { describe, expect, test } from 'vitest';
-import { clock, dueNow, openWindows, remindersFor, setBlocks, type ReminderBlock, type ReminderInput } from '../supabase/functions/_shared/reminders.ts';
+import { PHOTO_FROM, PHOTO_TO, clock, dueNow, openWindows, remindersFor, setBlocks, surpriseMin, type ReminderBlock, type ReminderInput } from '../supabase/functions/_shared/reminders.ts';
 
 const base: ReminderInput = {
   date: '2026-10-12',
@@ -114,5 +114,25 @@ describe('open time', () => {
       [800, 'Open time: 5h 10m', 'Until 6:30 PM. Best use: Tax memo (Big 3), then Side Hustle Summit floor.'],
     ]);
     expect(remindersFor({ ...base, blocks: day }).some((x) => x.kind === 'open')).toBe(false);
+  });
+});
+
+describe('the surprise photo time', () => {
+  test('a different 5 minute mark between 10 AM and 8 PM each day, the same all day', () => {
+    const days = Array.from({ length: 30 }, (_, i) => `2026-10-${String(i + 1).padStart(2, '0')}`);
+    const mins = days.map(surpriseMin);
+    for (const m of mins) {
+      expect(m).toBeGreaterThanOrEqual(PHOTO_FROM);
+      expect(m).toBeLessThan(PHOTO_TO);
+      expect(m % 5).toBe(0);
+    }
+    expect(new Set(mins).size).toBeGreaterThan(20);
+    expect(surpriseMin('2026-10-12')).toBe(surpriseMin('2026-10-12'));
+  });
+
+  test('the reminder uses it when the surprise is on', () => {
+    const r = remindersFor({ ...base, prefs: { ...base.prefs, photo: true }, photoMin: 720, photoRandom: true, photoTaken: false }).find((x) => x.kind === 'photo')!;
+    expect(r.dueMin).toBe(surpriseMin(base.date));
+    expect(r.title).toBe("Time for today's photo");
   });
 });

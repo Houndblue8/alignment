@@ -3,7 +3,7 @@
 import { z } from 'zod';
 import { addDays, scoreWeek, weekday, type SeriesLabel } from '../planner';
 import type { Snapshot } from '../data/model';
-import { dayOf, isItemDone, resultFor } from './planning';
+import { counts, dayOf, firstCounted, isItemDone, resultFor } from './planning';
 
 export interface Rate {
   done: number;
@@ -62,7 +62,7 @@ export function weekClosed(s: Snapshot, start: string, now: { date: string; min:
 export function reportToOffer(s: Snapshot, now: { date: string; min: number }): string | null {
   const wd = weekday(now.date);
   const start = wd === 0 ? addDays(now.date, -6) : wd === 1 ? addDays(now.date, -7) : null;
-  if (!start || !weekClosed(s, start, now)) return null;
+  if (!start || !weekClosed(s, start, now) || !counts(s, addDays(start, 6))) return null;
   return Object.keys(s.days).some((d) => d >= start && d <= addDays(start, 6)) ? start : null;
 }
 
@@ -71,7 +71,7 @@ const rate = (done: number, of: number): Rate => ({ done, of });
 export function weekFacts(s: Snapshot, start: string): WeekFacts {
   const dates = Array.from({ length: 7 }, (_, i) => addDays(start, i));
   // Only days since Eli started count: a first, partial week is measured on the days it had.
-  const first = Object.keys(s.days).sort()[0] ?? start;
+  const first = firstCounted(s, start);
   const span = dates.filter((d) => d >= first);
   const days = dates.map((d) => dayOf(s, d));
   // Sunday is not scored until Monday, so an unscored lived day is scored here; a skipped day is a loss.

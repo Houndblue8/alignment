@@ -10,6 +10,7 @@ import { buildingFor, buildingLine, seenOn, UNIT, weekTemple } from '../state/te
 import { dayOf } from '../state/planning';
 import { useApp } from '../state/store';
 import { SHORT } from './Building';
+import { Big3Section } from './Big3';
 import { Temple3D } from './Temple3D';
 import { Sheet } from './Sheet';
 import { JOURNEY_ICON } from './icons';
@@ -37,6 +38,10 @@ export function FocusHero() {
     <section className="card pad focus" aria-label="Focus">
       <Temple3D b={b} fire={fire} theme={s.settings.theme} onPillar={setPillar} onFire={() => setFireOpen(true)} />
       <FireMeter fire={fire} onOpen={() => setFireOpen(true)} />
+      {/* The Big 3 right under the fire: check one and watch its little flame hop in. */}
+      <div className="focus-big3">
+        <Big3Section />
+      </div>
       <div className="pillar-chips" role="group" aria-label="Pillars">
         {b.pillars.map((p) => {
           const Icon = JOURNEY_ICON[p.id];

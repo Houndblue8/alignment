@@ -35,6 +35,8 @@ export interface ReminderInput {
   blocks: ReminderBlock[];
   /** The photo can be taken any time; the reminder goes out at this time if today has none yet. */
   photoMin?: number;
+  /** BeReal style: a surprise time each day between 10 AM and 8 PM instead of photoMin. */
+  photoRandom?: boolean;
   photoTaken?: boolean;
   /** Today's Big 3 task ids (open-time suggestions name them first). */
   big3?: string[];
@@ -70,13 +72,13 @@ export function remindersFor(r: ReminderInput): Reminder[] {
       url: '/',
     });
   }
-  if (r.prefs.photo && !r.photoTaken && r.photoMin !== undefined) {
+  if (r.prefs.photo && !r.photoTaken && (r.photoRandom || r.photoMin !== undefined)) {
     out.push({
       key: `${r.date}:photo`,
       kind: 'photo',
-      dueMin: r.photoMin,
-      title: "Today's photo",
-      body: 'One photo and one line. Whenever the moment is right.',
+      dueMin: r.photoRandom ? surpriseMin(r.date) : r.photoMin!,
+      title: r.photoRandom ? "Time for today's photo" : "Today's photo",
+      body: r.photoRandom ? 'Right now, wherever you are. One photo, one line.' : 'One photo and one line. Whenever the moment is right.',
       url: '/?photo=1',
     });
   }
@@ -133,6 +135,22 @@ export function remindersFor(r: ReminderInput): Reminder[] {
     }
   }
   return out.sort((a, b) => a.dueMin - b.dueMin || a.key.localeCompare(b.key));
+}
+
+export const PHOTO_FROM = 10 * 60;
+export const PHOTO_TO = 20 * 60;
+
+/**
+ * The surprise photo time for a date: a 5 minute mark between 10 AM and 8 PM, different every day but the
+ * same all day, so the server and the app always agree (FNV-1a hash of the date).
+ */
+export function surpriseMin(date: string): number {
+  let h = 2166136261;
+  for (const c of `${date}:photo`) {
+    h ^= c.charCodeAt(0);
+    h = Math.imul(h, 16777619);
+  }
+  return PHOTO_FROM + ((h >>> 0) % ((PHOTO_TO - PHOTO_FROM) / 5)) * 5;
 }
 
 /** Open windows long enough to ping about. */

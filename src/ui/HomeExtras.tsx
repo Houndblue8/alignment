@@ -4,21 +4,23 @@ import type { TaskRow } from '../data/model';
 import { DATA_MODE } from '../data/repo';
 import { addDays } from '../planner';
 import { needsDecision } from '../planner';
-import { useApp } from '../state/store';
+import { coachFacts, useApp } from '../state/store';
 import { Sheet } from './Sheet';
 
 /** One line from the coach, cached per day (Appendix A). */
 export function CoachLine() {
   const line = useApp((a) => a.coachLine);
   const load = useApp((a) => a.loadCoachLine);
+  // Written again whenever its facts change (yesterday's result after a late close-out, a new Big 3).
+  const key = useApp((a) => (a.s ? coachFacts(a.s, a.now.date).key : ''));
   useEffect(() => {
     if (DATA_MODE === 'supabase' || window.__alignmentAI?.coach) void load();
-  }, [load]);
+  }, [load, key]);
   if (!line) return null;
   return (
-    <section className="card coach" aria-label="Coach">
-      <p>{line}</p>
-    </section>
+    <p className="coach-line" aria-label="Coach">
+      {line}
+    </p>
   );
 }
 

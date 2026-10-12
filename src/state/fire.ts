@@ -7,7 +7,7 @@ import type { DayRecord, Snapshot } from '../data/model';
 import type { Now } from '../lib/clock';
 import { addDays } from '../planner';
 import { pillarSteps } from './pillars';
-import { dayOf, isItemDone } from './planning';
+import { dayOf, firstCounted, isItemDone } from './planning';
 
 export interface Inner {
   mind: number;
@@ -89,7 +89,7 @@ const settle = (prev: number, h: DayHeat) => Math.max(EMBER, CARRY * prev + (1 -
 
 /** The fire carried through every day Eli has lived in the app (the last 60 at most), and today so far. */
 export function fireFor(s: Snapshot, now: Now): FireState {
-  const first = Object.keys(s.days).sort()[0] ?? now.date;
+  const first = firstCounted(s, now.date);
   let start = addDays(now.date, -HISTORY_DAYS);
   if (first > start) start = first;
   const trail: number[] = [];

@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { fmtDate, fmtTime, journeyStyle, kindJourney, shortDuration } from '../lib/format';
 import { addDays, weekStart } from '../planner';
-import { anchorStreaks, seasonRecord, weekResults } from '../state/planning';
+import { anchorStreaks, counts, seasonRecord, weekResults } from '../state/planning';
 import { useApp } from '../state/store';
 import { SeriesBar } from '../ui/Series';
 import { missedRitual } from './Memory';
@@ -63,7 +63,7 @@ export function Week() {
         <Link to="/memory" className="btn ghost">
           <Images size={16} aria-hidden="true" /> Memory
         </Link>
-        {weekClosed(s, start, now) && (
+        {weekClosed(s, start, now) && counts(s, addDays(start, 6)) && (
           <Link to={`/report/${start}`} className="btn ghost">
             <ClipboardList size={16} aria-hidden="true" /> Scouting report
           </Link>

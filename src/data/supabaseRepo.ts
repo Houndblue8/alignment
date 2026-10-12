@@ -31,6 +31,8 @@ const settingsTo = (s: Settings): Row => ({
   notify_bedtime: s.notifyBedtime,
   notify_blocks: s.notifyBlocks,
   notify_open: s.notifyOpen,
+  photo_random: s.photoRandom,
+  stats_from: s.statsFrom,
   weekly_targets: s.weeklyTargets,
   updated_at: new Date().toISOString(),
 });
@@ -52,6 +54,8 @@ const settingsFrom = (r: Row): Settings => ({
   notifyPhoto: r.notify_photo !== false,
   photoReminderMin: (r.photo_reminder_min as number) ?? 720,
   notifyOpen: r.notify_open !== false,
+  photoRandom: r.photo_random !== false,
+  statsFrom: (r.stats_from as string) ?? null,
   weeklyTargets: { ...DEFAULT_TARGETS, ...((r.weekly_targets as Partial<WeeklyTargets>) ?? {}) },
 });
 

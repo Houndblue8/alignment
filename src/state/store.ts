@@ -14,7 +14,7 @@ import { runDump } from '../ops/pipeline';
 import { applyTheme } from '../theme/theme';
 import { cleanReport, draftReport, factsForCoach, weekClosed, weekFacts, type StoredReport } from './report';
 import { saveableTemple, type SavedTemple } from './temple';
-import { buildWeek, dayOf, fillBig3, finalizePast, resultFor, suggestAgain as suggestAgainPure } from './planning';
+import { buildWeek, counts, dayOf, fillBig3, finalizePast, resultFor, suggestAgain as suggestAgainPure } from './planning';
 
 const repo: Repo = DATA_MODE === 'local' ? localRepo : supabaseRepo;
 
@@ -163,6 +163,22 @@ function forgetDump(said: string): void {
   } catch {
     // Nothing to forget.
   }
+}
+
+/**
+ * The facts the morning coach line may use, and a short key that changes when they do. Yesterday only
+ * counts if it is on or after the stats start; the first day of the stats is said as such.
+ */
+export function coachFacts(s: Snapshot, date: string, awayDays = 0): { facts: Record<string, unknown>; key: string } {
+  const y = addDays(date, -1);
+  const rec = s.days[y];
+  const firstDay = !!s.settings.statsFrom && date === s.settings.statsFrom;
+  const yesterday = firstDay || !counts(s, y) ? 'none (today is the first day that counts)' : rec?.checkinDone ? (rec.result ?? resultFor(s, y)) : 'no check-in';
+  const big3 = dayOf(s, date).big3.map((i) => s.tasks.find((t) => t.id === i.taskId)?.title).filter(Boolean);
+  const facts = { yesterday, today_big3: big3, weekday: fmtDate(date).split(',')[0], away_days: awayDays };
+  let h = 0;
+  for (const c of JSON.stringify(facts)) h = (Math.imul(h, 31) + c.charCodeAt(0)) | 0;
+  return { facts, key: (h >>> 0).toString(36) };
 }
 
 /** A block that stands for a task without being work time: an event, the workout, a meal, a manual block. */
@@ -647,18 +663,14 @@ export const useApp = create<AppState>((set, get) => {
       if (!s) return;
       const date = nowLocal().date;
       try {
-        const cached = await repo.getCoach(date, 'daily');
+        // Cached per day and per set of facts: a late close-out or a new Big 3 gets a new line.
+        const { facts, key } = coachFacts(s, date, get().awayDays);
+        const kind = `daily:${key}`;
+        const cached = await repo.getCoach(date, kind);
         if (cached) return void set({ coachLine: cached });
-        const rec = s.days[addDays(date, -1)];
-        const big3 = dayOf(s, date).big3.map((i) => s.tasks.find((t) => t.id === i.taskId)?.title).filter(Boolean);
-        const text = await ai.coach({
-          kind: 'daily',
-          name: s.contract.signedName?.split(' ')[0] || 'Eli',
-          whyShort: s.vision.whyShort,
-          facts: { yesterday: rec?.result ?? 'not scored', today_big3: big3, weekday: fmtDate(date).split(',')[0], away_days: get().awayDays },
-        });
+        const text = await ai.coach({ kind: 'daily', name: s.contract.signedName?.split(' ')[0] || 'Eli', whyShort: s.vision.whyShort, facts });
         if (text) {
-          await repo.saveCoach(date, 'daily', text);
+          await repo.saveCoach(date, kind, text);
           set({ coachLine: text });
         }
       } catch {
@@ -780,13 +792,13 @@ export const useApp = create<AppState>((set, get) => {
         const thisWeek = weekStart(now.date);
         for (let k = 0; k <= 4; k++) {
           const start = addDays(thisWeek, -7 * k);
-          if (!weekClosed(s, start, now) || saved.some((t) => t.weekStart === start)) continue;
+          if (!weekClosed(s, start, now) || saved.some((t) => t.weekStart === start) || !counts(s, addDays(start, 6))) continue;
           if (!Object.keys(s.days).some((d) => d >= start && d <= addDays(start, 6))) continue;
           const t = saveableTemple(s, start, now);
           await repo.saveReport('temple', start, t);
           saved.push(t);
         }
-        return saved.sort((a, b) => a.weekStart.localeCompare(b.weekStart));
+        return saved.filter((t) => counts(s, addDays(t.weekStart, 6))).sort((a, b) => a.weekStart.localeCompare(b.weekStart));
       } catch {
         return [];
       }

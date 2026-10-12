@@ -213,3 +213,11 @@ Seed assumptions (correct any in Settings later)
 - Practice block B is at Grover only on Wednesday. Tuesday and Sunday B practices are on campus.
 - D1 practice, club practice and flag football are not immovable, so Code Red "all in" and Lost Day can pause them. Classes and exams are immovable.
 - Trips (rank "trip", top of the ladder) are one-time commitments Eli sets himself, such as the Oct 22 concert.
+
+### D21. First real week, surprise photo, one temple everywhere, a calmer Home (Eli, 2026-10-12)
+- Stats start Monday Oct 12 (settings.stats_from). Earlier days stay saved and visible on Week, but do not count toward the season record, streaks, the fire, pillar history, temples or scouting reports; the coach line treats Oct 12 as the first day that counts. Editable later only in the database for now.
+- Photo reminder: a surprise time each day (BeReal style), a 5 minute mark between 10 AM and 8 PM from a hash of the date, so the server and the app agree and it never moves during the day. A fixed time is still an option in Settings.
+- 3D: a touch that starts on the temple turns it (touch-action none); the page scrolls from anywhere else. Camera closer.
+- Home shows the same 3D temple (still: no dragging, slowly turning; tap opens Today). The flat drawing, used without WebGL and in tests, now matches the 3D one: veil, a ring of Roman columns in perspective on the round base, the flame with a face, the waiting little flames.
+- Today: the Big 3 sits inside the focus card right under the temple, so checking one shows its little flame hop into the fire.
+- Home top: the coach line is one quiet sentence (no card). It is cached per day and per facts (yesterday's result after any late close-out, today's Big 3), so a late close-out or a new Big 3 gets a new line; the prompt may only use the facts given. Everything that needs Eli (away message, scouting report, Isaac, Code Red, decisions) sits in one card that disappears when empty.

@@ -2,6 +2,7 @@ import { ChevronLeft, ChevronRight, ClipboardList, RefreshCw } from 'lucide-reac
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { addDays, fmtDate, weekStart } from '../planner';
+import { counts } from '../state/planning';
 import { weekClosed, type Rate, type StoredReport } from '../state/report';
 import { useApp } from '../state/store';
 
@@ -19,7 +20,8 @@ export function Report() {
   const load = useApp((a) => a.scoutingReport);
   const params = useParams();
   const start = params.start ? weekStart(params.start) : latestClosedWeek(s, now);
-  const closed = weekClosed(s, start, now);
+  const counted = counts(s, addDays(start, 6));
+  const closed = counted && weekClosed(s, start, now);
   const [data, setData] = useState<StoredReport | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -68,7 +70,11 @@ export function Report() {
         Week of {short(start)} to {short(addDays(start, 6))}
       </p>
 
-      {!closed ? (
+      {!counted ? (
+        <section className="card pad">
+          <p className="muted">Stats start {short(s.settings.statsFrom!)}. This week is before that, so it has no report.</p>
+        </section>
+      ) : !closed ? (
         <section className="card pad">
           <p className="muted">This week closes Sunday at wind-down. The report opens then.</p>
         </section>

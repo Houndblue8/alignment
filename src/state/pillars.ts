@@ -4,7 +4,7 @@
 import { JOURNEYS, type DayRecord, type Snapshot } from '../data/model';
 import type { Now } from '../lib/clock';
 import { addDays, tokens, type Block, type Journey, type RankKey } from '../planner';
-import { dayOf, isItemDone } from './planning';
+import { counts, dayOf, isItemDone } from './planning';
 
 export interface Step {
   text: string;
@@ -116,10 +116,10 @@ function localDate(iso: string): string {
 /** For each pillar: did it rise on each of the last 7 days (oldest first), and on how many of the last 30. */
 export function pillarHistory(s: Snapshot, now: Now): Record<Journey, { week: boolean[]; last30: number }> {
   const days = Array.from({ length: 30 }, (_, i) => addDays(now.date, i - 29));
-  const steps = days.map((d) => pillarSteps(s, d, now));
+  const steps = days.map((d) => (counts(s, d) ? pillarSteps(s, d, now) : null));
   return Object.fromEntries(
     JOURNEYS.map((j) => {
-      const rose = steps.map((st) => st[j.id].length > 0);
+      const rose = steps.map((st) => !!st && st[j.id].length > 0);
       return [j.id, { week: rose.slice(-7), last30: rose.filter(Boolean).length }];
     }),
   ) as Record<Journey, { week: boolean[]; last30: number }>;

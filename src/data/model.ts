@@ -23,6 +23,10 @@ export interface Settings {
   notifyPhoto: boolean;
   /** When the photo reminder goes out (minutes from midnight). The photo itself can be taken any time. */
   photoReminderMin: number;
+  /** The photo reminder at a surprise time each day (10 AM to 8 PM) instead of photoReminderMin. */
+  photoRandom: boolean;
+  /** Stats count from this day on (season, streaks, the fire, temples, reports). Earlier days stay saved. */
+  statsFrom: string | null;
   /** A notification when an open window of 30 minutes or more starts. */
   notifyOpen: boolean;
   /** Weekly temple targets per pillar (editable). Sports: null = every practice on the calendar. */

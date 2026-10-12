@@ -33,6 +33,8 @@ export interface TempleOptions {
   onPillar?: (id: Journey) => void;
   onFire?: () => void;
   reducedMotion: boolean;
+  /** Home: no dragging or tapping, just the temple turning slowly. */
+  still?: boolean;
 }
 
 const COLUMN_H = 2.5;
@@ -526,10 +528,10 @@ export function createTemple(canvas: HTMLCanvasElement, opts: TempleOptions): Te
     else if (hit?.object.userData.fire) opts.onFire?.();
   };
   const onCancel = () => (dragging = false);
-  canvas.addEventListener('pointerdown', onDown);
-  canvas.addEventListener('pointermove', onMove);
-  canvas.addEventListener('pointerup', onUp);
-  canvas.addEventListener('pointercancel', onCancel);
+  if (!opts.still) canvas.addEventListener('pointerdown', onDown);
+  if (!opts.still) canvas.addEventListener('pointermove', onMove);
+  if (!opts.still) canvas.addEventListener('pointerup', onUp);
+  if (!opts.still) canvas.addEventListener('pointercancel', onCancel);
 
   function resize() {
     const w = canvas.clientWidth || 300;
@@ -657,7 +659,7 @@ export function createTemple(canvas: HTMLCanvasElement, opts: TempleOptions): Te
       idle += dt;
       if (!opts.reducedMotion && idle > 2) yaw += dt * 0.1;
     }
-    const r = 13;
+    const r = 11.2;
     camera.position.set(Math.sin(yaw) * Math.cos(pitch) * r, 2.2 + Math.sin(pitch) * r, Math.cos(yaw) * Math.cos(pitch) * r);
     camera.lookAt(camTarget);
   }

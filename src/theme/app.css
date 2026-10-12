@@ -1418,14 +1418,18 @@ main .pillar-chip {
   justify-self: center;
   border-radius: var(--radius, 16px);
   background: radial-gradient(ellipse at 50% 62%, color-mix(in srgb, var(--fire-mid) 16%, transparent), transparent 62%);
-  touch-action: pan-y;
 }
 .temple canvas {
   display: block;
   width: 100%;
   height: 100%;
   cursor: grab;
-  touch-action: pan-y;
+  /* A touch that starts on the temple turns it; the page scrolls from anywhere else. */
+  touch-action: none;
+}
+.temple.still canvas {
+  cursor: pointer;
+  pointer-events: none;
 }
 .temple canvas:active {
   cursor: grabbing;
@@ -1678,4 +1682,147 @@ main .pillar-chip {
 }
 .open-uses {
   grid-template-columns: minmax(0, 1fr);
+}
+
+/* The flat temple (Oct 12): matches the 3D one. */
+.building .stone {
+  fill: color-mix(in srgb, var(--card) 85%, #e9e2d4);
+  stroke: var(--border);
+  stroke-width: 1;
+}
+.building .shaft {
+  stroke: color-mix(in srgb, var(--jc) 40%, var(--border));
+  stroke-width: 1;
+  transition: height 700ms ease, y 700ms ease;
+}
+.building .col.today .shaft {
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--jc) 70%, transparent));
+}
+.building .flute {
+  stroke: #fff;
+  stroke-opacity: 0.35;
+  stroke-width: 1;
+}
+.building .step {
+  fill: color-mix(in srgb, var(--card) 80%, #e9e2d4);
+  stroke: var(--border);
+  stroke-width: 1;
+}
+.building .step.side {
+  fill: color-mix(in srgb, var(--border) 80%, #c9bea8);
+}
+.building .step.on {
+  fill: color-mix(in srgb, var(--accent) 45%, var(--card));
+  stroke: color-mix(in srgb, var(--accent) 60%, var(--border));
+}
+.building .step.side.on {
+  fill: color-mix(in srgb, var(--accent) 60%, #b89a5a);
+}
+.building .pebble {
+  fill: #a39682;
+}
+.building .flame-body {
+  fill: var(--fire-mid);
+  stroke: var(--fire-edge);
+  stroke-width: 1;
+}
+.building .flame-core {
+  fill: var(--fire-core);
+}
+.building .hero-flame,
+.building .buddy {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+.building .hero-flame {
+  animation: flicker 1.8s ease-in-out infinite alternate;
+}
+.building .buddy {
+  animation: bob 1.4s ease-in-out infinite alternate;
+}
+.building .buddy .flame-body {
+  fill: color-mix(in srgb, var(--jc) 45%, #ffb04a);
+  stroke: var(--jc);
+}
+.building .face ellipse {
+  fill: #3b2316;
+}
+.building .face path {
+  fill: none;
+  stroke: #3b2316;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+}
+.building .face .cheek {
+  fill: #ff8a8a;
+  opacity: 0.55;
+}
+.building .veil {
+  stroke: color-mix(in srgb, var(--accent) 45%, transparent);
+  stroke-width: 1.5;
+}
+.building .veil-fold {
+  fill: none;
+  stroke: color-mix(in srgb, var(--accent) 18%, transparent);
+  stroke-width: 1.2;
+}
+.building .cross {
+  stroke: color-mix(in srgb, var(--accent) 70%, #fff);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  fill: none;
+}
+@keyframes bob {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-3px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .building .hero-flame,
+  .building .buddy {
+    animation: none;
+  }
+}
+
+/* Home, Oct 12: one quiet coach line and one card for anything that needs Eli. */
+.coach-line {
+  margin: 0;
+  padding: 0 4px;
+  font-style: italic;
+  color: var(--muted);
+  line-height: 1.45;
+}
+.notices {
+  display: grid;
+  gap: 0;
+  padding: 4px 16px;
+}
+.notices:empty {
+  display: none;
+}
+.notices > * {
+  border: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  padding: 12px 0 !important;
+  margin: 0 !important;
+}
+.notices > * + * {
+  border-top: 1px solid var(--border) !important;
+}
+.focus-big3 {
+  width: 100%;
+  text-align: left;
+}
+.building-link {
+  max-width: 340px;
+}
+@media (max-width: 600px) {
+  .focus .temple {
+    aspect-ratio: 1 / 0.82;
+  }
 }

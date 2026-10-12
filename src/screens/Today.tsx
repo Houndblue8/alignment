@@ -9,7 +9,6 @@ import { weekTemple } from '../state/temple';
 import { openWindows, setBlocks, type OpenWindow } from '../../supabase/functions/_shared/reminders.ts';
 import { useApp } from '../state/store';
 import { AnchorButton } from '../ui/AnchorButton';
-import { Big3Section } from '../ui/Big3';
 import { FocusHero, InnerCheckCard, KaizenCard } from '../ui/Focus';
 import { Sheet } from '../ui/Sheet';
 import { JOURNEY_ICON, KIND_ICON } from '../ui/icons';
@@ -69,8 +68,6 @@ export function Today() {
         <AnchorButton kind="walk" done={rec.walk.done} onToggle={(d) => setAnchor('walk', d)} />
       </div>
 
-      <p className="section-label">Torches</p>
-      <Big3Section />
 
       <InnerCheckCard />
       <KaizenCard />

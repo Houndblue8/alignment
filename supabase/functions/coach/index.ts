@@ -65,7 +65,7 @@ Deno.serve(async (req) => {
   const ask =
     body.kind === 'caption'
       ? 'Ask one short question that helps him caption tonight\'s photo, tied to his vision.'
-      : "Write this morning's line for Home: direct, personal, tied to his why. It should hit the heart and never shame.";
+      : "Write this morning's line for Home: one sentence, under 30 words, direct and personal, tied to his why. Use only the facts given: never invent tasks, events or results, and only name tasks that are in today_big3. If yesterday is 'none', do not mention yesterday. It should hit the heart and never shame.";
   try {
     const res = await claude().messages.create({
       model: env('ANTHROPIC_MODEL_COACH'),

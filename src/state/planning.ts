@@ -188,12 +188,21 @@ export function weekResults(s: Snapshot, date: string): (DayResult | null)[] {
 }
 
 /** Series won and lost across all finished weeks. */
+/** Stats count from settings.statsFrom on (Eli's first real week); earlier days stay saved but do not count. */
+export const counts = (s: Snapshot, date: string): boolean => !s.settings.statsFrom || date >= s.settings.statsFrom;
+
+/** The first day that counts: the first day lived in the app, or statsFrom if later. */
+export function firstCounted(s: Snapshot, fallback: string): string {
+  const first = Object.keys(s.days).filter((d) => counts(s, d)).sort()[0] ?? fallback;
+  return s.settings.statsFrom && s.settings.statsFrom > first ? s.settings.statsFrom : first;
+}
+
 export function seasonRecord(s: Snapshot, today: string): { won: number; lost: number } {
   const weeks = new Set(Object.keys(s.days).map(weekStart));
   let won = 0;
   let lost = 0;
   for (const w of weeks) {
-    if (w >= weekStart(today)) continue;
+    if (w >= weekStart(today) || (s.settings.statsFrom && w < weekStart(s.settings.statsFrom))) continue;
     if (scoreWeek(weekResults(s, w)).won) won += 1;
     else lost += 1;
   }
@@ -202,8 +211,8 @@ export function seasonRecord(s: Snapshot, today: string): { won: number; lost: n
 
 export function anchorStreaks(s: Snapshot, today: string): { coldShower: number; walk: number } {
   return {
-    coldShower: streak(today, (d) => !!s.days[d]?.coldShower.done),
-    walk: streak(today, (d) => !!s.days[d]?.walk.done),
+    coldShower: streak(today, (d) => counts(s, d) && !!s.days[d]?.coldShower.done),
+    walk: streak(today, (d) => counts(s, d) && !!s.days[d]?.walk.done),
   };
 }
 

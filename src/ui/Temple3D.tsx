@@ -38,7 +38,22 @@ function readColors(): TempleColors {
  * The building in 3D: drag to turn it, tap a column or the fire. three.js loads only here, after first paint.
  * Without WebGL (or if it fails to load) the flat drawing stands in.
  */
-export function Temple3D({ b, fire, theme, onPillar, onFire }: { b: BuildingState; fire: FireState; theme: string; onPillar: (id: Journey) => void; onFire: () => void }) {
+export function Temple3D({
+  b,
+  fire,
+  theme,
+  onPillar,
+  onFire,
+  still = false,
+}: {
+  b: BuildingState;
+  fire: FireState;
+  theme: string;
+  onPillar?: (id: Journey) => void;
+  onFire?: () => void;
+  /** Home: shown, not handled (no dragging or tapping). */
+  still?: boolean;
+}) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const handle = useRef<TempleHandle | null>(null);
   const [failed, setFailed] = useState(() => typeof window === 'undefined' || !webglAvailable());
@@ -63,8 +78,9 @@ export function Temple3D({ b, fire, theme, onPillar, onFire }: { b: BuildingStat
         if (!alive || !canvas.current) return;
         handle.current = createTemple(canvas.current, {
           reducedMotion: reduced,
-          onPillar: (id) => cb.current.onPillar(id),
-          onFire: () => cb.current.onFire(),
+          still,
+          onPillar: (id) => cb.current.onPillar?.(id),
+          onFire: () => cb.current.onFire?.(),
         });
         handle.current.update(latest.current, readColors());
       })
@@ -74,16 +90,16 @@ export function Temple3D({ b, fire, theme, onPillar, onFire }: { b: BuildingStat
       handle.current?.dispose();
       handle.current = null;
     };
-  }, [failed]);
+  }, [failed, still]);
 
   const key = JSON.stringify(state);
   useEffect(() => {
     handle.current?.update(latest.current, readColors());
   }, [key, theme]);
 
-  if (failed) return <Building b={b} fire={fire} />;
+  if (failed) return <Building b={b} fire={fire} compact={still} />;
   return (
-    <div className={`temple ${fire.level === 'refiner' ? 'refiner' : ''}`} role="img" aria-label={buildingLabel(b, fire)} data-testid="temple">
+    <div className={`temple ${fire.level === 'refiner' ? 'refiner' : ''} ${still ? 'still' : ''}`} role="img" aria-label={buildingLabel(b, fire)} data-testid="temple">
       <canvas ref={canvas} />
     </div>
   );

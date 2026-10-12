@@ -1,6 +1,7 @@
 // The urge button (Appendix E 5): bored, avoiding, or tired. Pure picks; the sheet shows them.
 import type { Snapshot, TaskRow } from '../data/model';
 import { priorityScore } from '../planner';
+import { isDeveloped } from './roll';
 
 const FIRST_STEP: Record<string, string> = {
   deep: 'Open it and write one rough sentence. Messy is fine.',
@@ -25,10 +26,13 @@ export function lightestPick(s: Snapshot, today: string): TaskRow | null {
 
 export type BoredKind = 'photo' | 'season' | 'quote';
 
+/** Only developed shots (last month and before); this month's roll stays out of sight. */
+export const developedPhotos = (s: Snapshot) => s.photos.filter((p) => isDeveloped(p.date, s.settings.lastOpenDate ?? new Date().toISOString().slice(0, 10)));
+
 /** Bored: a memory photo, the season record, or a quote; each tap shows the next one that exists. */
 export function boredKinds(s: Snapshot): BoredKind[] {
   const out: BoredKind[] = [];
-  if (s.photos.length) out.push('photo');
+  if (developedPhotos(s).length) out.push('photo');
   out.push('season');
   if (s.quotes.length) out.push('quote');
   return out;

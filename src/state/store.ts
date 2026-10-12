@@ -5,7 +5,6 @@ import { DATA_MODE, type Repo } from '../data/repo';
 import { seedSnapshot } from '../data/seedData';
 import { supabaseRepo } from '../data/supabaseRepo';
 import { nowLocal, type Now } from '../lib/clock';
-import { shrinkPhoto } from '../lib/image';
 import { addDays, confirmTentative, diffBlocks, diffDays, fmtDate, fmtTime, sameThing, weekday, weekStart, type Block, type EventDef, type Journey, type Place } from '../planner';
 import { ai } from '../ops/ai';
 import { anchorLines, applyOps, reshapedLine, restoreSnapshot, undoSnapshot, type UndoSnapshot } from '../ops/apply';
@@ -95,7 +94,8 @@ interface AppState {
   decideTask(id: string, choice: 'today' | 'schedule' | 'delegate' | 'drop', date?: string): Promise<{ draft: string | null } | void>;
 
   /** Daily photo (Appendix E 1): taken any time of day, one per day. */
-  addPhoto(file: File, caption: string): Promise<void>;
+  /** Save today's shot (already developed by the camera: sized, film look, date stamp). */
+  addPhoto(shot: Blob, caption: string): Promise<void>;
   updatePhoto(date: string, patch: Partial<Pick<PhotoRow, 'caption' | 'milestone'>>): Promise<void>;
   removePhoto(date: string): Promise<void>;
   photoUrls(paths: string[]): Promise<Record<string, string>>;
@@ -728,7 +728,7 @@ export const useApp = create<AppState>((set, get) => {
       run(async (s) => {
         const date = nowLocal().date;
         const old = s.photos.find((p) => p.date === date);
-        const path = await repo.uploadPhoto(date, await shrinkPhoto(file));
+        const path = await repo.uploadPhoto(date, file);
         const row: PhotoRow = { date, storagePath: path, caption: caption.trim(), milestone: old?.milestone ?? false };
         await repo.savePhoto(row);
         if (old && old.storagePath !== path) await repo.deletePhoto({ ...old, date: '__old__' }).catch(() => undefined);

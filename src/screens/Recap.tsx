@@ -3,6 +3,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { fmtDate } from '../planner';
 import { monthFacts, monthName, prevMonth } from '../state/recap';
+import { developsLabel, isDeveloped } from '../state/roll';
+import { Canister } from '../ui/PhotoCard';
 import { useApp } from '../state/store';
 
 const nextMonth = (month: string): string => {
@@ -43,9 +45,11 @@ export function Recap() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [month, f.days, loadLetter]);
 
+  // The roll develops once the month is over; until then the shots stay out of sight.
+  const isOut = isDeveloped(`${month}-01`, now.date);
   useEffect(() => {
-    void urlsFor(f.photos.map((p) => p.storagePath)).then(setUrls);
-  }, [f.photos, urlsFor]);
+    if (isOut) void urlsFor(f.photos.map((p) => p.storagePath)).then(setUrls);
+  }, [f.photos, urlsFor, isOut]);
 
   const again = async () => {
     setBusy(true);
@@ -81,7 +85,18 @@ export function Recap() {
         </section>
       ) : (
         <>
-          {f.photos.length > 0 && (
+          {f.photos.length > 0 && !isOut && (
+            <section className="card row roll-line" aria-label="Photo timeline">
+              <Canister />
+              <span className="grow">
+                {f.photos.length} {f.photos.length === 1 ? 'shot' : 'shots'} on the roll.
+                <span className="small muted" style={{ display: 'block' }}>
+                  It develops {developsLabel(month)}, right here.
+                </span>
+              </span>
+            </section>
+          )}
+          {f.photos.length > 0 && isOut && (
             <section className="card stack" aria-label="Photo timeline">
               <div className="row between">
                 <h2>Photos</h2>
@@ -89,9 +104,9 @@ export function Recap() {
                   <Images size={14} aria-hidden="true" /> Memory
                 </Link>
               </div>
-              <div className="photo-strip">
-                {f.photos.map((p) => (
-                  <figure key={p.date} className="strip-item">
+              <div className="photo-strip develop">
+                {f.photos.map((p, i) => (
+                  <figure key={p.date} className="strip-item" style={{ animationDelay: `${i * 140}ms` }}>
                     {urls[p.storagePath] ? <img src={urls[p.storagePath]} alt={p.caption || fmtDate(p.date)} /> : <span className="strip-empty" />}
                     <figcaption className="small muted">{fmtDate(p.date).replace(/^\w+, /, '')}</figcaption>
                   </figure>

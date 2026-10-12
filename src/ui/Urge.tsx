@@ -4,7 +4,7 @@ import { haptic } from '../lib/haptics';
 import { shortDuration } from '../lib/format';
 import { anchorStreaks, seasonRecord } from '../state/planning';
 import { useApp } from '../state/store';
-import { avoidingPick, boredKinds, firstStep, lightestPick, type BoredKind } from '../state/urge';
+import { avoidingPick, boredKinds, developedPhotos, firstStep, lightestPick, type BoredKind } from '../state/urge';
 import { Sheet } from './Sheet';
 
 /** One button for the moment the day wobbles: bored, avoiding, or tired (Appendix E 5). */
@@ -67,7 +67,8 @@ function Bored({ onDone }: { onDone: () => void }) {
   const [pick, setPick] = useState(() => Math.random());
   const [url, setUrl] = useState('');
   const kind: BoredKind = kinds[k % kinds.length]!;
-  const photo = s.photos.length ? s.photos[Math.floor(pick * s.photos.length)]! : null;
+  const shown = developedPhotos(s);
+  const photo = shown.length ? shown[Math.floor(pick * shown.length)]! : null;
   const quote = s.quotes.length ? s.quotes[Math.floor(pick * s.quotes.length)]! : null;
   useEffect(() => {
     if (kind === 'photo' && photo) void urlsFor([photo.storagePath]).then((u) => setUrl(u[photo.storagePath] ?? ''));

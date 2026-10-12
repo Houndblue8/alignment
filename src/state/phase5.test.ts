@@ -66,6 +66,7 @@ describe('the urge button', () => {
 
   test('bored: a photo, the season, or a quote, whichever exist', () => {
     expect(boredKinds(s)).toEqual(['season', 'quote']);
-    expect(boredKinds({ ...s, photos: [{ date: '2026-10-12', storagePath: 'x', caption: '', milestone: false }] })[0]).toBe('photo');
+    expect(boredKinds({ ...s, photos: [{ date: '2026-10-12', storagePath: 'x', caption: '', milestone: false }] })[0]).toBe('season');
+    expect(boredKinds({ ...s, photos: [{ date: '2026-09-20', storagePath: 'x', caption: '', milestone: false }] })[0]).toBe('photo');
   });
 });

@@ -3,6 +3,9 @@ import { useEffect, useMemo, useState } from 'react';
 import type { PhotoRow, Snapshot } from '../data/model';
 import { addDays, diffDays, fmtDate } from '../planner';
 import { useApp } from '../state/store';
+import { monthName } from '../state/recap';
+import { developed, developsLabel, isDeveloped } from '../state/roll';
+import { Canister } from '../ui/PhotoCard';
 import { Sheet } from '../ui/Sheet';
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -25,7 +28,10 @@ export function Memory() {
   const [month, setMonth] = useState(today.slice(0, 7));
   const [urls, setUrls] = useState<Record<string, string>>({});
   const [open, setOpen] = useState<PhotoRow | null>(null);
-  const photos = useMemo(() => [...s.photos].sort((a, b) => a.date.localeCompare(b.date)), [s.photos]);
+  const all = useMemo(() => [...s.photos].sort((a, b) => a.date.localeCompare(b.date)), [s.photos]);
+  // Only developed rolls are seen: this month's shots stay on the roll until the month is over.
+  const photos = useMemo(() => developed(all, today), [all, today]);
+  const onRoll = all.filter((p) => !isDeveloped(p.date, today));
 
   useEffect(() => {
     void urlsFor(photos.map((p) => p.storagePath)).then(setUrls);
@@ -57,9 +63,21 @@ export function Memory() {
         <h1>Memory</h1>
       </div>
 
+      {onRoll.length > 0 && (
+        <section className="card row roll-line" aria-label="On the roll">
+          <Canister />
+          <span className="grow">
+            {onRoll.length} {onRoll.length === 1 ? 'shot' : 'shots'} on the {monthName(today.slice(0, 7)).split(' ')[0]} roll.
+            <span className="small muted" style={{ display: 'block' }}>
+              They develop {developsLabel(today.slice(0, 7))}, in the monthly recap.
+            </span>
+          </span>
+        </section>
+      )}
+
       {photos.length === 0 ? (
         <section className="card pad">
-          <p className="muted">No photos yet. Add today's photo on Home and this page starts filling in.</p>
+          <p className="muted">{onRoll.length ? 'Your first roll develops at the end of the month. Then and now starts then.' : "No photos yet. Take today's photo on Home and the roll starts."}</p>
         </section>
       ) : (
         <section className="card stack" aria-label="Then and now">
@@ -105,7 +123,14 @@ export function Memory() {
           {Array.from({ length: daysInMonth }, (_, i) => {
             const date = addDays(firstOfMonth, i);
             const p = photos.find((x) => x.date === date);
+            const rolled = !p && onRoll.find((x) => x.date === date);
             const missed = missedRitual(s, date, today);
+            if (rolled)
+              return (
+                <span key={date} className="cal-day on-roll" aria-label={`${fmtDate(date)}, on the roll`}>
+                  <Canister size={22} />
+                </span>
+              );
             return p ? (
               <button key={date} className="cal-day has-photo" onClick={() => setOpen(p)} aria-label={`${fmtDate(date)}${p.milestone ? ', milestone' : ''}`}>
                 {urls[p.storagePath] && <img src={urls[p.storagePath]} alt="" />}

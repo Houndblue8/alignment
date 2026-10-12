@@ -8,6 +8,8 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      // Registered in src/lib/updates.ts (checks for new versions and reloads onto them).
+      injectRegister: false,
       // Our own service worker (src/sw.ts): Workbox offline cache plus Web Push handlers.
       strategies: 'injectManifest',
       srcDir: 'src',

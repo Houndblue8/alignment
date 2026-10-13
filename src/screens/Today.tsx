@@ -4,7 +4,7 @@ import { useLocation } from 'react-router-dom';
 import { journeyLabel } from '../data/model';
 import { fmtTime, fromHHMM, journeyStyle, kindJourney, shortDuration, toHHMM } from '../lib/format';
 import { sunsetMin, weekStart, type Block } from '../planner';
-import { dayOf } from '../state/planning';
+import { blockTitle, dayOf } from '../state/planning';
 import { weekTemple } from '../state/temple';
 import { openWindows, setBlocks, type OpenWindow } from '../../supabase/functions/_shared/reminders.ts';
 import { useApp } from '../state/store';
@@ -179,7 +179,7 @@ function BlockRow({ b, nowMin }: { b: Block; nowMin: number }) {
         >
           <span className="row">
             <Icon size={16} strokeWidth={1.75} aria-hidden="true" className="kind-icon" />
-            <span className="title grow clip">{b.title}</span>
+            <span className="title grow clip">{blockTitle(s, b)}</span>
             {inBig3 && <span className="chip big3-tag">Big 3</span>}
             {b.pinned && <Pin size={14} aria-label="Pinned" />}
             {b.status === 'done' && <Check size={16} aria-label="Done" />}

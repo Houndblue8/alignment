@@ -141,6 +141,15 @@ export function salvageCount(s: Snapshot, date: string): number {
   return n;
 }
 
+/**
+ * The name a block shows on the schedule: a block that is a Big 3 item or task (the workout for "Lift") shows
+ * the Big 3 name instead (Eli, Oct 12); everything else keeps its own title.
+ */
+export function blockTitle(s: Snapshot, b: Block): string {
+  if (!b.taskId || b.kind === 'work' || b.kind === 'library_work') return b.title;
+  return s.tasks.find((t) => t.id === b.taskId)?.title ?? b.title;
+}
+
 export const isTaskDone = (s: Snapshot, id: string): boolean => s.tasks.find((t) => t.id === id)?.status === 'done';
 
 /** A Big 3 item counts as done for its day when it was closed out for that day, or its task is done. */

@@ -12,7 +12,7 @@ import { NumberField } from '../ui/NumberField';
 import { Sheet } from '../ui/Sheet';
 import { ThemePicker } from '../ui/ThemePicker';
 import { NotificationSettings } from '../ui/Notifications';
-import { DEFAULT_TARGETS, JOURNEYS } from '../data/model';
+import { DEFAULT_TARGETS, JOURNEYS, journeyLabel } from '../data/model';
 import { UNIT } from '../state/temple';
 import type { Journey } from '../planner';
 import { themeName } from '../theme/themes';
@@ -399,22 +399,40 @@ function WeeklyTargetsEditor() {
           <span className="grow">
             {j.label} <span className="small muted">{UNIT[j.id]}</span>
           </span>
-          {j.id === 'sport' && (
-            <button className="chip" aria-pressed={targets.sport === null} onClick={() => set('sport', targets.sport === null ? 5 : null)}>
-              Every practice
-            </button>
-          )}
-          {!(j.id === 'sport' && targets.sport === null) && (
+          {(
             <NumberField
-              value={targets[j.id] ?? 0}
-              onValue={(n) => set(j.id, Math.max(1, Math.min(7, n)))}
+              value={targets[j.id] ?? 8}
+              onValue={(n) => set(j.id, Math.max(1, Math.min(j.id === 'sport' ? 14 : 7, n)))}
               aria-label={`${j.label} target per week`}
               style={{ width: 64, textAlign: 'center' }}
             />
           )}
         </div>
       ))}
-      <p className="small muted">1 to 7 a week. Exam weeks add one study day and ease Side Hustle by two on their own.</p>
+      <p className="small muted">Athletics counts sessions (workouts and practices, up to 14); the others count days (1 to 7). Exam weeks add one study day and ease Side Hustle by two on their own.</p>
+      <PillarRules />
+    </div>
+  );
+}
+
+/** The pillar edits Eli chose to always apply. Removing one goes back to the default. */
+function PillarRules() {
+  const rules = useApp((a) => a.s!.settings.pillarRules ?? []);
+  const remove = useApp((a) => a.removeRule);
+  if (!rules.length) return null;
+  return (
+    <div className="stack" aria-label="Always rules" role="group">
+      <span className="small muted">Always</span>
+      {rules.map((r) => (
+        <div key={r.key} className="row">
+          <span className="grow small">
+            {r.label}: {r.pillar ? `counts in ${journeyLabel(r.pillar)}` : 'never counts'}
+          </span>
+          <button className="btn ghost small" onClick={() => remove(r.key)} aria-label={`Forget the rule for ${r.label}`}>
+            Forget
+          </button>
+        </div>
+      ))}
     </div>
   );
 }

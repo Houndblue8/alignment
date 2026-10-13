@@ -30,6 +30,8 @@ function snap(over: Partial<Snapshot> = {}): Snapshot {
 }
 
 describe('pillars', () => {
+  const texts = (st: { text: string }[]) => st.map((x) => x.text);
+
   test('anchors, Big 3, finished tasks and logged steps raise their pillars', () => {
     const s = snap({
       tasks: [task('memo', 'school'), task('call', 'life', 'done', '2026-10-12T22:00:00Z')],
@@ -44,40 +46,74 @@ describe('pillars', () => {
       },
     });
     const st = pillarSteps(s, D, { date: D, min: 700 });
-    expect(st.body.map((x) => x.text)).toEqual(['Cold shower']);
-    expect(st.faith.map((x) => x.text)).toEqual(['Walk with God']);
-    expect(st.school.map((x) => x.text)).toEqual(['Task memo']);
-    expect(st.life.map((x) => x.text)).toEqual(['Task call']);
-    expect(st.shs).toEqual([{ text: 'Sent 10 DMs', source: 'logged', index: 0 }]);
+    expect(texts(st.body)).toEqual(['Cold shower']);
+    expect(texts(st.faith)).toEqual(['Walk with God']);
+    expect(texts(st.school)).toEqual(['Task memo']);
+    expect(texts(st.life)).toEqual(['Task call']);
+    expect(st.shs).toEqual([{ text: 'Sent 10 DMs', source: 'logged', index: 0, key: 'logged:0' }]);
     expect(st.sport).toEqual([]);
   });
 
-  test('showing up counts once it ends unless skipped; effort blocks count only when checked', () => {
+  test('classes never count; practices and workouts are Athletics sessions once they happen; effort counts when checked', () => {
     const s = snap({
       blocks: [
         blk(`${D}:class:acct2-mon`, { kind: 'class', title: 'Accounting', eventId: 'acct2-mon', start: 720, end: 800 }),
-        blk(`${D}:practice:d1-mon`, { kind: 'practice', title: 'D1 practice', eventId: 'd1-mon', start: 585, end: 705, status: 'skipped' }),
+        blk(`${D}:practice:d1-mon`, { kind: 'practice', title: 'D1 practice', eventId: 'd1-mon', start: 585, end: 705 }),
         blk(`${D}:event:epic-small-mon`, { title: 'Epic small group', eventId: 'epic-small-mon', start: 1110, end: 1200 }),
         blk(`${D}:workout:weights`, { kind: 'workout', title: 'Weights', start: 900, end: 960 }),
         blk(`${D}:misc:manual-1`, { kind: 'misc', source: 'manual', title: 'Dinner with friends', start: 1080, end: 1140 }),
+        blk(`${D}:misc:1`, { kind: 'misc', title: 'Misc', start: 1210, end: 1250 }),
       ],
     });
     const at = (min: number) => pillarSteps(s, D, { date: D, min });
-    expect(at(790).school).toEqual([]);
-    expect(at(800).school.map((x) => x.text)).toEqual(['Accounting']);
-    expect(at(1439).sport).toEqual([]);
-    expect(at(1439).faith.map((x) => x.text)).toEqual(['Epic small group']);
-    expect(at(1439).life.map((x) => x.text)).toEqual(['Dinner with friends']);
+    expect(at(1439).school).toEqual([]);
+    expect(at(700).sport).toEqual([]);
+    expect(at(1439).sport.map((x) => [x.text, x.session])).toEqual([
+      ['D1 practice', true],
+      ['Weights', true],
+    ]);
+    expect(texts(at(1439).faith)).toEqual(['Epic small group']);
+    expect(texts(at(1439).life)).toEqual(['Dinner with friends']);
+    // Planner misc time is Stewardship, and only once it is checked.
     expect(at(1439).body).toEqual([]);
-    s.blocks = s.blocks.map((b) => (b.kind === 'workout' ? { ...b, status: 'done' } : b));
-    expect(at(1000).body.map((x) => x.text)).toEqual(['Weights']);
+    s.blocks = s.blocks.map((b) => (b.id === `${D}:misc:1` ? { ...b, status: 'done' } : b));
+    expect(texts(at(1439).body)).toEqual(['Errands and catch-up']);
+  });
+
+  test('a Big 3 item that is a block on the schedule counts once, under its Big 3 name', () => {
+    const s = snap({
+      tasks: [task('lift', 'sport')],
+      days: { [D]: { ...emptyDay(D), checkinDone: true, big3: [{ taskId: 'lift', locked: true, accepted: true, done: true }] } },
+      blocks: [blk(`${D}:workout:weights`, { kind: 'workout', title: 'Weights at the rec', taskId: 'lift', start: 900, end: 960 })],
+    });
+    const st = pillarSteps(s, D, { date: D, min: 1000 });
+    expect(st.sport.map((x) => [x.text, x.key])).toEqual([['Task lift', 'task:lift']]);
+    // Not checked yet but the workout happened: still one step, still the Big 3 name, and a session.
+    s.days[D] = { ...s.days[D]!, big3: [{ taskId: 'lift', locked: true, accepted: true }] };
+    expect(pillarSteps(s, D, { date: D, min: 1000 }).sport.map((x) => [x.text, x.session])).toEqual([['Task lift', true]]);
+  });
+
+  test('edits: move or take out for one day, or always (a rule)', () => {
+    const s = snap({ blocks: [blk(`${D}:event:epic-small-mon`, { title: 'Epic small group', eventId: 'epic-small-mon', start: 600, end: 660 })] });
+    const night = { date: D, min: 1400 };
+    s.days[D] = { ...s.days[D]!, stepEdits: [{ key: 'event:epic-small-mon', pillar: 'life' }] };
+    expect(texts(pillarSteps(s, D, night).life)).toEqual(['Epic small group']);
+    expect(pillarSteps(s, D, night).faith).toEqual([]);
+    // Always: never count it. A today edit still wins for that day.
+    s.settings = { ...s.settings, pillarRules: [{ key: 'event:epic-small-mon', pillar: null, label: 'Epic small group' }] };
+    expect(texts(pillarSteps(s, D, night).life)).toEqual(['Epic small group']);
+    s.days[D] = { ...s.days[D]!, stepEdits: [] };
+    expect(Object.values(pillarSteps(s, D, night)).flat()).toEqual([]);
   });
 
   test('titles map to pillars by their words', () => {
     expect(pillarFromTitle('Bible study with Epic')).toBe('faith');
     expect(pillarFromTitle('Study at Whole Foods')).toBe('school');
     expect(pillarFromTitle('Dinner and hangout')).toBe('life');
-    expect(pillarFromTitle('Haircut')).toBeNull();
+    expect(pillarFromTitle('Do laundry')).toBe('body');
+    expect(pillarFromTitle('Lift at the rec')).toBe('sport');
+    expect(pillarFromTitle('Haircut')).toBe('body');
+    expect(pillarFromTitle('Something else')).toBeNull();
   });
 
   test('history: which of the last 7 days each pillar rose', () => {

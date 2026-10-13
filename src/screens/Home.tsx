@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { fmtTime, fromHHMM } from '../lib/format';
 import { addDays, expandEvents, weekStart, weekday } from '../planner';
-import { anchorStreaks, dayOf, nextBlock, quoteFor, resultFor, seasonRecord, todayProgress, weekResults } from '../state/planning';
+import { blockTitle, anchorStreaks, dayOf, nextBlock, quoteFor, resultFor, seasonRecord, todayProgress, weekResults } from '../state/planning';
 import { useApp } from '../state/store';
 import { Big3Section } from '../ui/Big3';
 import { AwayMessage, CoachLine, Decisions } from '../ui/HomeExtras';
@@ -79,7 +79,7 @@ export function Home() {
         </p>
         {next ? (
           <button className="btn primary block" onClick={() => navigate(`/today#${encodeURIComponent(next.id)}`)}>
-            Next: {next.title} <span className="small">{fmtTime(next.start)}</span>
+            Next: {blockTitle(s, next)} <span className="small">{fmtTime(next.start)}</span>
           </button>
         ) : (
           <Link className="btn primary block" to="/today">

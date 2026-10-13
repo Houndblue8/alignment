@@ -1,11 +1,11 @@
-import { Check, Flame, Plus, X } from 'lucide-react';
+import { Check, Flame, Pencil, Plus, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { JOURNEYS, journeyLabel } from '../data/model';
 import { haptic } from '../lib/haptics';
 import { journeyStyle } from '../lib/format';
 import { addDays, weekStart, type Journey } from '../planner';
 import { fireFor, LEVEL_NAME, type FireState } from '../state/fire';
-import { pillarHistory, pillarSteps } from '../state/pillars';
+import { pillarHistory, pillarSteps, type Step } from '../state/pillars';
 import { buildingFor, buildingLine, seenOn, UNIT, weekTemple } from '../state/temple';
 import { dayOf } from '../state/planning';
 import { useApp } from '../state/store';
@@ -18,8 +18,8 @@ import { JOURNEY_ICON } from './icons';
 /** Starter ideas for a small step, per pillar. Eli can type anything. */
 const IDEAS: Record<Journey, string[]> = {
   faith: ['Read a chapter', 'Prayed for someone', 'Texted someone from Epic'],
-  body: ['Stretched 10 minutes', 'Drank enough water', 'Extra walk'],
-  sport: ['Film or skill work', 'Mobility for the game', 'Reps on my own'],
+  body: ['Did laundry', 'Cleaned my room', 'Meal prep', 'Ran an errand', 'In bed on time'],
+  sport: ['Extra workout', 'Skill work or film', 'Mobility and stretching', 'Shots on my own'],
   school: ['Reviewed notes', 'Went to office hours', 'Finished a problem set'],
   shs: ['Sent outreach', 'Followed up with a client', 'Worked on the offer'],
   life: ['Called family', 'Checked in on a friend', 'Invited someone to eat'],
@@ -215,7 +215,6 @@ function PillarSheet({ pillar, onClose }: { pillar: Journey; onClose: () => void
   const s = useApp((a) => a.s)!;
   const now = useApp((a) => a.now);
   const logStep = useApp((a) => a.logStep);
-  const removeStep = useApp((a) => a.removeStep);
   const [text, setText] = useState('');
   const steps = pillarSteps(s, now.date, now)[pillar];
   const history = pillarHistory(s, now)[pillar];
@@ -248,16 +247,7 @@ function PillarSheet({ pillar, onClose }: { pillar: Journey; onClose: () => void
       <ul className="stack" style={{ margin: 0, padding: 0, listStyle: 'none' }} aria-label="Steps today">
         {steps.length === 0 && <li className="small muted">No step yet today. One small step adds a stone.</li>}
         {steps.map((st) => (
-          <li key={`${st.source}:${st.text}`} className="row card journey" style={journeyStyle(pillar)}>
-            <span className="grow clip">{st.text}</span>
-            {st.source === 'logged' ? (
-              <button className="icon-btn" aria-label={`Remove ${st.text}`} onClick={() => removeStep(st.index!)}>
-                <X size={16} />
-              </button>
-            ) : (
-              <span className="small muted">from your day</span>
-            )}
-          </li>
+          <StepRow key={st.key} step={st} pillar={pillar} />
         ))}
       </ul>
       <div className="stack" style={{ gap: 6 }}>
@@ -288,6 +278,65 @@ function PillarSheet({ pillar, onClose }: { pillar: Journey; onClose: () => void
 }
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+/**
+ * One item in a pillar. Edit: move it to another pillar or take it out. For something the app saw, choose
+ * Just today, or Always (remembered as a rule, listed in Settings). A step you logged just moves or goes.
+ */
+function StepRow({ step, pillar }: { step: Step; pillar: Journey }) {
+  const editStep = useApp((a) => a.editStep);
+  const [open, setOpen] = useState(false);
+  const [target, setTarget] = useState<Journey | null | undefined>(undefined);
+  const logged = step.source === 'logged';
+  const apply = (to: Journey | null, scope: 'today' | 'always') => {
+    haptic();
+    void editStep(step.key, step.text, to, scope);
+    setOpen(false);
+    setTarget(undefined);
+  };
+  const choose = (to: Journey | null) => (logged ? apply(to, 'today') : setTarget(to));
+  return (
+    <li className="card journey stack step-row" style={journeyStyle(pillar)}>
+      <div className="row">
+        <span className="grow clip">{step.text}</span>
+        <span className="small muted">{logged ? 'logged' : 'from your day'}</span>
+        <button className="icon-btn" aria-label={`Edit ${step.text}`} aria-expanded={open} onClick={() => (setOpen(!open), setTarget(undefined))}>
+          <Pencil size={16} />
+        </button>
+      </div>
+      {open && target === undefined && (
+        <div className="stack" style={{ gap: 6 }}>
+          <span className="small muted">Move to</span>
+          <div className="row wrap">
+            {JOURNEYS.filter((j) => j.id !== pillar).map((j) => (
+              <button key={j.id} className="chip" style={journeyStyle(j.id)} onClick={() => choose(j.id)}>
+                {SHORT[j.id]}
+              </button>
+            ))}
+          </div>
+          <button className="btn ghost small danger-text" style={{ justifySelf: 'start', paddingLeft: 0 }} onClick={() => choose(null)}>
+            <X size={14} aria-hidden="true" /> Take it out of {journeyLabel(pillar)}
+          </button>
+        </div>
+      )}
+      {open && target !== undefined && (
+        <div className="stack" style={{ gap: 6 }}>
+          <span className="small">
+            {target ? `Count "${step.text}" in ${journeyLabel(target)}` : `Stop counting "${step.text}"`}
+          </span>
+          <div className="row">
+            <button className="btn grow" onClick={() => apply(target, 'today')}>
+              Just today
+            </button>
+            <button className="btn primary grow" onClick={() => apply(target, 'always')}>
+              Always
+            </button>
+          </div>
+        </div>
+      )}
+    </li>
+  );
+}
 
 /** From 5 PM: one thing to do 1% better tomorrow. It shows on tomorrow's building. */
 export function KaizenCard() {

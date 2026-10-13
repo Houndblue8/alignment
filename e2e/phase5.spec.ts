@@ -2,7 +2,7 @@
 import { expect, test } from '@playwright/test';
 import { checkIn, signedWithTasks } from './helpers';
 
-test('urge button: avoiding shrinks the most pushed-off task to a 5 minute start; tired offers a walk that counts for Body', async ({ page }) => {
+test('urge button: avoiding shrinks the most pushed-off task to a 5 minute start; tired offers a walk that counts for Stewardship', async ({ page }) => {
   await signedWithTasks(page, '2026-10-12T14:00', [
     { id: 'memo', title: 'Tax memo', importance: 5, deferralCount: 3 } as never,
     { id: 'dms', title: 'Send DMs', importance: 3, estimatedMinutes: 20 },
@@ -24,7 +24,7 @@ test('urge button: avoiding shrinks the most pushed-off task to a 5 minute start
   await page.getByRole('button', { name: /A 10 minute walk/ }).click();
   await page.getByRole('button', { name: 'Stop here' }).click();
   await page.getByRole('link', { name: 'Today', exact: true }).click();
-  await expect(page.getByRole('region', { name: 'Focus' }).getByRole('button', { name: /^Body: 1 step today/ })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Focus' }).getByRole('button', { name: /^Stewardship: 1 step today/ })).toBeVisible();
 
   await page.getByRole('button', { name: 'Bored, avoiding, or tired?' }).click();
   await page.getByRole('button', { name: /^Bored Something/ }).click();

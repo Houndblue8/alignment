@@ -33,6 +33,7 @@ const settingsTo = (s: Settings): Row => ({
   notify_open: s.notifyOpen,
   photo_random: s.photoRandom,
   stats_from: s.statsFrom,
+  pillar_rules: s.pillarRules ?? [],
   weekly_targets: s.weeklyTargets,
   updated_at: new Date().toISOString(),
 });
@@ -56,6 +57,7 @@ const settingsFrom = (r: Row): Settings => ({
   notifyOpen: r.notify_open !== false,
   photoRandom: r.photo_random !== false,
   statsFrom: (r.stats_from as string) ?? null,
+  pillarRules: (r.pillar_rules as Settings['pillarRules']) ?? [],
   weeklyTargets: { ...DEFAULT_TARGETS, ...((r.weekly_targets as Partial<WeeklyTargets>) ?? {}) },
 });
 
@@ -215,6 +217,7 @@ const dayTo = (d: DayRecord): Row => ({
   kaizen: d.kaizen ?? null,
   inner_check: d.inner ?? null,
   showed_up: d.showedUp ?? [],
+  step_edits: d.stepEdits ?? [],
   updated_at: new Date().toISOString(),
 });
 const dayFrom = (r: Row): DayRecord => ({
@@ -235,6 +238,7 @@ const dayFrom = (r: Row): DayRecord => ({
   kaizen: (r.kaizen as string) ?? null,
   inner: (r.inner_check as DayRecord['inner']) ?? null,
   showedUp: (r.showed_up as DayRecord['showedUp']) ?? [],
+  stepEdits: (r.step_edits as DayRecord['stepEdits']) ?? [],
 });
 
 const blockTo = (b: Block): Row => ({

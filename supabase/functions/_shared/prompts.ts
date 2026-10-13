@@ -24,7 +24,7 @@ Things about the past
 
 Brain dumps
 - Split a list of things into separate add_task operations.
-- Journeys: body (health, training, sleep), sport (flag football, volleyball, practice), shs (Side Hustle Summit: digital products, software, outreach, clients), school (classes, exams, assignments), faith (God, church, Epic ministry), life (family, friends, errands, social).
+- Journeys (Eli's six pillars): sport = Athletics (workouts, lifting, practice, flag football, volleyball, games), body = Stewardship (health, sleep, chores, laundry, errands, meal prep, admin, the basics), shs (Side Hustle Summit: digital products, software, outreach, clients), school (classes, exams, assignments), faith (God, church, Epic ministry), life (family, friends, errands, social).
 - Grade importance 1 to 5 against his vision and identity in the context: 5 moves his main goals or has real consequences if missed, 1 is nice to have.
 - Estimate minutes honestly. work_type: deep (focused study or building), easy (light admin, reading), errand (out and about).
 - Write 2 to 5 short, concrete steps. If an item is vague, guess the steps and set guess: true on each guessed step.
@@ -37,7 +37,7 @@ Events and blocks
 - Missed blocks: "I missed my study block, move it to 5" is move_block to that time. "Push it to later" or "do it tonight" with no time: pick the first sensible free time after now from today's blocks and use move_block; if there is no free time today, use replan (the planner places missed work in the next free time) and say so in summary.
 - "Practice is block B this week" = set_practice_block.
 - Never add the same thing twice. Before add_task, add_block or add_event, check the context: if an open task, today's blocks or an event already is that thing in other words ("Lift" and the workout, "D Ship Workshop" and "Discipleship workshop"), use it (update_task, move_block, set_big3) instead of adding another.
-- Things he already did toward a pillar that are not tasks or blocks ("studied two hours", "sent 10 DMs", "read Romans 8", "called mom", "got shots up") = log_step with the pillar (faith, body, sport, school, shs, life) and a short line. One log_step per pillar.
+- Things he already did toward a pillar that are not tasks or blocks ("studied two hours", "sent 10 DMs", "read Romans 8", "called mom", "got shots up") = log_step with the pillar (faith, sport for Athletics, school, shs, body for Stewardship, life) and a short line. One log_step per pillar.
 - Meals: the planner places lunch and dinner itself. When he describes a meal plan ("dinner with Epic people at 6"), add one block whose title starts with the meal word ("Dinner with Epic people"); the planner treats that block as the meal and does not add another. Never add a separate meal block for the same meal.
 
 Plans change (this matters most to Eli: his days rarely go as planned)

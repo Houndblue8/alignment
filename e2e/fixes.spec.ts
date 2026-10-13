@@ -9,11 +9,12 @@ test('a Big 3 item that is the workout links to it; checking either checks both'
   await expect(item.getByTestId('big3-linked')).toContainText('Happens at Weights at the rec');
   await item.getByRole('checkbox', { name: 'Lift done' }).click();
   await page.goto('/today');
-  const block = page.getByTestId('block').filter({ hasText: 'Weights at the rec' });
+  // The workout shows under its Big 3 name, once: no separate work block for Lift.
+  const block = page.getByTestId('block').filter({ hasText: 'Lift' });
+  await expect(block).toHaveCount(1);
   await expect(block).toContainText('Big 3');
   await expect(block.getByLabel('Done')).toBeVisible();
-  // No separate work block called Lift.
-  await expect(page.getByTestId('block').filter({ hasText: /^Lift/ })).toHaveCount(0);
+  await expect(page.getByTestId('block').filter({ hasText: 'Weights at the rec' })).toHaveCount(0);
 });
 
 test('forgot to check off last night: close out yesterday at check-in and the day is scored again', async ({ page }) => {

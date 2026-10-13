@@ -29,13 +29,23 @@ export interface Settings {
   statsFrom: string | null;
   /** A notification when an open window of 30 minutes or more starts. */
   notifyOpen: boolean;
-  /** Weekly temple targets per pillar (editable). Sports: null = every practice on the calendar. */
+  /** Weekly temple targets per pillar (editable). Athletics counts sessions; the others count days. */
   weeklyTargets: WeeklyTargets;
+  /** Pillar edits Eli chose to always apply: move an item to another pillar, or never count it (null). */
+  pillarRules: PillarRule[];
+}
+
+export interface PillarRule {
+  /** What the item is, the same across days (event:..., task:..., kind:..., title:...). */
+  key: string;
+  pillar: Journey | null;
+  /** The name it had when the rule was made, to show in Settings. */
+  label: string;
 }
 
 export type WeeklyTargets = Record<Journey, number | null>;
 
-export const DEFAULT_TARGETS: WeeklyTargets = { faith: 7, body: 6, sport: null, school: 5, shs: 6, life: 3 };
+export const DEFAULT_TARGETS: WeeklyTargets = { faith: 7, body: 5, sport: 8, school: 5, shs: 6, life: 3 };
 
 export interface Vision {
   identity: string;
@@ -101,6 +111,8 @@ export interface DayRecord {
   steps?: PillarStep[];
   /** One thing to do 1% better tomorrow, written this day and shown the next morning. */
   kaizen?: string | null;
+  /** Pillar edits for this day only (same shape as the rules). */
+  stepEdits?: { key: string; pillar: Journey | null }[];
   /** The night tap: pillars Eli showed up for that the app could not see. */
   showedUp?: Journey[];
   /** The night check: Mind, Heart, Spirit, 1 to 5, and an optional line. */
@@ -166,8 +178,8 @@ export function emptyDay(date: string): DayRecord {
 /** The six pillars (journeys in the code). Order is the order they stand in the building. */
 export const JOURNEYS: { id: Journey; label: string }[] = [
   { id: 'faith', label: 'Faith and Epic' },
-  { id: 'body', label: 'Body' },
-  { id: 'sport', label: 'Sports' },
+  { id: 'sport', label: 'Athletics' },
+  { id: 'body', label: 'Stewardship' },
   { id: 'school', label: 'Academics' },
   { id: 'shs', label: 'Side Hustle' },
   { id: 'life', label: 'Social and Community' },

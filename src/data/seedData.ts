@@ -29,6 +29,7 @@ export function seedSnapshot(): Snapshot {
     notifyOpen: true,
     photoRandom: true,
     statsFrom: null,
+    pillarRules: [],
     weeklyTargets: { ...DEFAULT_TARGETS },
   };
   const contract: Contract = { ...contractJson, locked: false, signedName: null, signedAt: null, graduationDate: null };

@@ -33,7 +33,7 @@ export function kindJourney(kind: BlockKind): Journey | null {
       return 'faith';
     case 'workout':
     case 'shower':
-      return 'body';
+      return 'sport';
     case 'practice':
       return 'sport';
     case 'class':

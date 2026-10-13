@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { fmtDate, fmtTime, journeyStyle, kindJourney, shortDuration } from '../lib/format';
 import { addDays, weekStart } from '../planner';
-import { anchorStreaks, counts, seasonRecord, weekResults } from '../state/planning';
+import { blockTitle, anchorStreaks, counts, seasonRecord, weekResults } from '../state/planning';
 import { useApp } from '../state/store';
 import { SeriesBar } from '../ui/Series';
 import { missedRitual } from './Memory';
@@ -138,7 +138,7 @@ export function DayDetail() {
             <div key={b.id} className="tl-row">
               <span className="tl-time">{fmtTime(b.start)}</span>
               <div className={`tl-card ${b.kind === 'travel' ? 'travel small muted' : ''} ${b.status === 'done' ? 'done' : ''}`} style={journeyStyle(t?.journey ?? kindJourney(b.kind))}>
-                <span className="title clip">{b.title}</span>
+                <span className="title clip">{blockTitle(s, b)}</span>
                 {b.kind !== 'travel' && b.kind !== 'bed' && <span className="small muted">{shortDuration(b.end - b.start)}</span>}
               </div>
             </div>

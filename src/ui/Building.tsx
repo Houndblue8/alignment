@@ -5,8 +5,8 @@ import type { BuildingState } from '../state/temple';
 
 export const SHORT: Record<Journey, string> = {
   faith: 'Faith',
-  body: 'Body',
-  sport: 'Sports',
+  body: 'Stewardship',
+  sport: 'Athletics',
   school: 'Academics',
   shs: 'Hustle',
   life: 'Social',

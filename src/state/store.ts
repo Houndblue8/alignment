@@ -43,6 +43,13 @@ interface AppState {
   setBlockStatus(id: string, status: Block['status']): Promise<void>;
   /** Close out a past day late: the anchor counts for that day and the day is scored again. */
   setPastAnchor(date: string, kind: 'coldShower' | 'walk', done: boolean): Promise<void>;
+  /**
+   * Move an item to another pillar, or take it out (pillar null). today: only this day; always: a rule that
+   * applies to every day from now on (Settings lists them). A logged step is simply moved or deleted.
+   */
+  editStep(key: string, label: string, pillar: Journey | null, scope: 'today' | 'always'): Promise<void>;
+  /** Forget an always rule. */
+  removeRule(key: string): Promise<void>;
   /** Log a small step toward a pillar today. */
   logStep(pillar: Journey, text: string): Promise<void>;
   removeStep(index: number): Promise<void>;
@@ -353,6 +360,37 @@ export const useApp = create<AppState>((set, get) => {
         await repo.upsertDays([day]);
         await repo.replaceBlocks([date], blocks.filter((b) => b.date === date));
         return rescore(withDay({ ...s, blocks }, day), date);
+      }),
+
+    editStep: (key, label, pillar, scope) =>
+      run(async (s) => {
+        const rec = dayOf(s, today());
+        if (key.startsWith('logged:')) {
+          const index = Number(key.slice(7));
+          const steps = (rec.steps ?? []).flatMap((st, i) => (i !== index ? [st] : pillar ? [{ ...st, pillar }] : []));
+          const day = { ...rec, steps };
+          await repo.upsertDays([day]);
+          return withDay(s, day);
+        }
+        if (scope === 'always') {
+          const pillarRules = [...(s.settings.pillarRules ?? []).filter((r) => r.key !== key), { key, label, pillar }];
+          const settings = { ...s.settings, pillarRules };
+          await repo.saveSettings(settings);
+          // A today edit for the same item would hide the rule today; drop it.
+          const day = { ...rec, stepEdits: (rec.stepEdits ?? []).filter((e) => e.key !== key) };
+          await repo.upsertDays([day]);
+          return withDay({ ...s, settings }, day);
+        }
+        const day = { ...rec, stepEdits: [...(rec.stepEdits ?? []).filter((e) => e.key !== key), { key, pillar }] };
+        await repo.upsertDays([day]);
+        return withDay(s, day);
+      }),
+
+    removeRule: (key) =>
+      run(async (s) => {
+        const settings = { ...s.settings, pillarRules: (s.settings.pillarRules ?? []).filter((r) => r.key !== key) };
+        await repo.saveSettings(settings);
+        return { ...s, settings };
       }),
 
     logStep: (pillar, text) =>

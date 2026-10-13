@@ -123,7 +123,7 @@ test('the night tap: pillars the app saw are checked, tap the rest; it builds th
   await checkIn(page, '7:30');
   await page.getByRole('link', { name: 'Today', exact: true }).click();
   const tap = page.getByRole('group', { name: 'Showed up for' });
-  await expect(tap.getByRole('button', { name: 'Sports, seen today' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(tap.getByRole('button', { name: 'Athletics, seen today' })).toHaveAttribute('aria-pressed', 'true');
   await tap.getByRole('button', { name: 'Academics' }).click();
   await expect(tap.getByRole('button', { name: 'Academics' })).toHaveAttribute('aria-pressed', 'true');
   await page.getByRole('link', { name: 'Week' }).click();

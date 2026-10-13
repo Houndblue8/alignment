@@ -2,51 +2,32 @@
 // stone. The temple rises Monday to Sunday and is saved when the week closes. Pure.
 import { DEFAULT_TARGETS, JOURNEYS, type Snapshot, type WeeklyTargets } from '../data/model';
 import type { Now } from '../lib/clock';
-import { addDays, expandEvents, scoreWeek, weekStart as weekStartOf, type Block, type Journey, type SeriesLabel } from '../planner';
-import { pillarFromTitle, pillarSteps } from './pillars';
+import { addDays, expandEvents, scoreWeek, weekStart as weekStartOf, type Journey, type SeriesLabel } from '../planner';
+import { pillarSteps } from './pillars';
 import { dayOf, isItemDone } from './planning';
 
 export const UNIT: Record<Journey, string> = {
   faith: 'days with God',
-  body: 'workouts',
-  sport: 'practices',
+  body: 'days',
+  sport: 'sessions',
   school: 'study days',
   shs: 'committed days',
   life: 'connections',
 };
 
-const ended = (b: Block, now: Now) => b.date < now.date || (b.date === now.date && b.end <= now.min);
-const showedUp = (b: Block, now: Now) => b.status === 'done' || (b.status !== 'skipped' && ended(b, now));
 
 /**
  * What the app saw on a day, per pillar. Set-time things count when they happen (practice, the workout, Epic,
  * church, social plans); the rest needs a check (Big 3 items, tasks, the floor) or a logged step.
  */
 export function seenOn(s: Snapshot, date: string, now: Now): Record<Journey, boolean> {
-  const rec = dayOf(s, date);
-  const blocks = s.blocks.filter((b) => b.date === date);
-  const eventPillar = (b: Block): Journey | null => {
-    const def = b.eventId ? s.events.find((e) => e.id === b.eventId) : undefined;
-    if (!def) return null;
-    if (['church', 'epic_large', 'epic_small', 'discipleship', 'retreat'].includes(def.rankKey)) return 'faith';
-    if (def.rankKey === 'social') return 'life';
-    return null;
-  };
-  const doneTask = (j: Journey) =>
-    rec.big3.some((i) => isItemDone(s, i) && s.tasks.find((t) => t.id === i.taskId)?.journey === j) ||
-    blocks.some((b) => b.taskId && b.status === 'done' && s.tasks.find((t) => t.id === b.taskId)?.journey === j);
-  const logged = (j: Journey) => (rec.steps ?? []).some((x) => x.pillar === j);
-  return {
-    faith: rec.walk.done || logged('faith') || doneTask('faith') || blocks.some((b) => eventPillar(b) === 'faith' && showedUp(b, now)),
-    body: blocks.some((b) => b.kind === 'workout' && showedUp(b, now)) || logged('body') || doneTask('body'),
-    sport: blocks.some((b) => b.kind === 'practice' && showedUp(b, now)) || logged('sport'),
-    school: doneTask('school') || logged('school') || blocks.some((b) => b.kind === 'library_work' && b.status === 'done'),
-    shs: blocks.some((b) => b.kind === 'shs_floor' && b.status === 'done') || doneTask('shs') || logged('shs'),
-    life:
-      logged('life') ||
-      doneTask('life') ||
-      blocks.some((b) => showedUp(b, now) && (eventPillar(b) === 'life' || (b.source === 'manual' && pillarFromTitle(b.title) === 'life'))),
-  };
+  const steps = pillarSteps(s, date, now);
+  return Object.fromEntries(JOURNEYS.map((j) => [j.id, steps[j.id].length > 0])) as Record<Journey, boolean>;
+}
+
+/** Athletics sessions on a day: workouts and practices that happened (at least 1 if the pillar counted). */
+export function sessionsOn(s: Snapshot, date: string, now: Now): number {
+  return pillarSteps(s, date, now).sport.filter((x) => x.session).length;
 }
 
 /** A pillar counts on a day when the app saw it or Eli tapped it at night. */
@@ -90,8 +71,8 @@ export function targetsFor(s: Snapshot, start: string): { targets: Record<Journe
   const n = (v: number | null | undefined, fallback: number) => (v == null ? fallback : v);
   const targets: Record<Journey, number> = {
     faith: n(t.faith, 7),
-    body: n(t.body, 6),
-    sport: n(t.sport, Math.max(1, practices)),
+    body: n(t.body, 5),
+    sport: n(t.sport, Math.max(1, practices + 6)),
     school: n(t.school, 5),
     shs: n(t.shs, 6),
     life: n(t.life, 3),
@@ -101,7 +82,7 @@ export function targetsFor(s: Snapshot, start: string): { targets: Record<Journe
     targets.school = Math.min(7, targets.school + 1);
     targets.shs = Math.max(2, targets.shs - 2);
   }
-  for (const j of JOURNEYS) targets[j.id] = Math.max(1, Math.min(7, targets[j.id]));
+  for (const j of JOURNEYS) targets[j.id] = Math.max(1, Math.min(j.id === 'sport' ? 14 : 7, targets[j.id]));
   return { targets, examWeek };
 }
 
@@ -111,13 +92,12 @@ export function weekTemple(s: Snapshot, start: string, now: Now): WeekTemple {
   const counted = dates.map((d) => (d > now.date ? null : countedOn(s, d, now)));
   const pillars = JOURNEYS.map((j) => {
     const days = counted.map((c) => !!c?.[j.id]);
-    // Sports counts practices (two in a day count twice); every other pillar counts days.
+    // Athletics counts sessions (a workout and a practice in a day count twice); every other pillar counts days.
     const done =
       j.id === 'sport'
         ? dates.reduce((n, d, i) => {
             if (!counted[i]) return n;
-            const practices = s.blocks.filter((b) => b.date === d && b.kind === 'practice' && showedUp(b, now)).length;
-            return n + (practices || (days[i] ? 1 : 0));
+            return n + (sessionsOn(s, d, now) || (days[i] ? 1 : 0));
           }, 0)
         : days.filter(Boolean).length;
     const target = targets[j.id];

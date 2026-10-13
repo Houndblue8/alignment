@@ -11,10 +11,13 @@ export interface Step {
   /** auto: the app saw it happen; logged: Eli added it by hand (index into the day's steps). */
   source: 'auto' | 'logged';
   index?: number;
+  /** What this step is, the same across days (an event, a task, the workout), so an edit can be remembered. */
+  key: string;
+  /** A training session (a workout or a practice): Athletics counts sessions. */
+  session?: boolean;
 }
 
 const RANK_PILLAR: Partial<Record<RankKey, Journey>> = {
-  school: 'school',
   church: 'faith',
   epic_large: 'faith',
   epic_small: 'faith',
@@ -23,18 +26,19 @@ const RANK_PILLAR: Partial<Record<RankKey, Journey>> = {
   tournament: 'sport',
   club_practice: 'sport',
   flag_football: 'sport',
+  workout: 'sport',
   client: 'shs',
   shs: 'shs',
-  workout: 'body',
   social: 'life',
 };
 
+// 'sport' is Athletics; 'body' is Stewardship (health, chores, errands, productivity, the basics).
 const WORDS: [Journey, string[]][] = [
   ['faith', ['epic', 'church', 'bible', 'pray', 'prayer', 'worship', 'discipleship', 'god', 'devotional']],
-  ['school', ['study', 'class', 'homework', 'exam', 'midterm', 'final', 'library', 'tax', 'accounting', 'essay', 'reading']],
-  ['body', ['lift', 'gym', 'run', 'workout', 'weights', 'stretch', 'swim', 'hike']],
-  ['sport', ['practice', 'volleyball', 'football', 'game', 'tournament', 'scrimmage']],
+  ['sport', ['lift', 'lifting', 'gym', 'run', 'workout', 'weights', 'practice', 'volleyball', 'football', 'game', 'tournament', 'scrimmage', 'swim', 'hike', 'shots']],
+  ['school', ['study', 'homework', 'exam', 'midterm', 'final', 'library', 'tax', 'accounting', 'essay', 'reading']],
   ['shs', ['outreach', 'client', 'shs', 'hustle', 'summit', 'pitch', 'sales']],
+  ['body', ['laundry', 'clean', 'cleaning', 'chores', 'groceries', 'grocery', 'errand', 'errands', 'dentist', 'doctor', 'bills', 'budget', 'prep', 'cook', 'cooking', 'haircut', 'sleep', 'nap', 'stretch']],
   ['life', ['dinner', 'lunch', 'hangout', 'friends', 'family', 'call', 'coffee', 'social', 'party', 'community']],
 ];
 
@@ -45,66 +49,71 @@ export function pillarFromTitle(title: string): Journey | null {
   return null;
 }
 
-const SHOW_UP: Block['kind'][] = ['class', 'practice', 'event'];
-const NEVER: Block['kind'][] = ['travel', 'bed', 'winddown', 'anchor_cold_shower', 'anchor_walk', 'buffer', 'shower', 'breakfast'];
-
-function blockPillar(s: Snapshot, b: Block): Journey | null {
-  if (b.taskId) {
-    const t = s.tasks.find((x) => x.id === b.taskId);
-    if (t) return t.journey;
-  }
-  if (b.eventId) {
-    const def = s.events.find((e) => e.id === b.eventId);
-    const p = def ? RANK_PILLAR[def.rankKey] : undefined;
-    if (p) return p;
-  }
-  switch (b.kind) {
-    case 'workout':
-      return 'body';
-    case 'practice':
-      return 'sport';
-    case 'class':
-    case 'library_work':
-      return 'school';
-    case 'shs_floor':
-      return 'shs';
-    default:
-      return pillarFromTitle(b.title);
-  }
-}
+/** A block that stands for a task without being work time (the workout for "Lift"). */
+const isLinked = (b: Block) => !!b.taskId && b.kind !== 'work' && b.kind !== 'library_work';
 
 /**
- * Steps toward each pillar on a day. Showing up counts: classes, practices, events and blocks Eli added
- * count once they end unless he skipped them. Effort counts when checked: the workout, the Side Hustle
- * Summit floor, work blocks, Big 3 items, finished tasks, the anchors. Plus what he logged by hand.
+ * Steps toward each pillar on a day.
+ * - Showing up counts once it ends, unless skipped: practices and workouts (Athletics sessions), events like Epic
+ *   and church, and blocks Eli added. Classes never count: studying does, not sitting in class.
+ * - Effort counts when checked: Big 3 items, tasks finished that day, the Side Hustle Summit floor, work and
+ *   library time, misc and catch-up time (Stewardship), and the anchors (cold shower: Stewardship; walk: Faith).
+ * - A Big 3 item that is a block on the schedule counts once, under the Big 3 name.
+ * - Then Eli's edits: one for today, or a rule he chose to always apply (move to another pillar, or never count).
+ * - Plus what he logged by hand.
  */
 export function pillarSteps(s: Snapshot, date: string, now: Now): Record<Journey, Step[]> {
   const out = Object.fromEntries(JOURNEYS.map((j) => [j.id, [] as Step[]])) as Record<Journey, Step[]>;
-  const seen = new Set<string>();
-  const add = (p: Journey | null, step: Step) => {
-    if (!p) return;
-    const key = `${p}:${step.text.toLowerCase()}`;
-    if (seen.has(key)) return;
-    seen.add(key);
-    out[p].push(step);
-  };
   const rec: DayRecord = dayOf(s, date);
-  if (rec.coldShower.done) add('body', { text: 'Cold shower', source: 'auto' });
-  if (rec.walk.done) add('faith', { text: 'Walk with God', source: 'auto' });
+  const edits = new Map((s.settings.pillarRules ?? []).map((r) => [r.key, r.pillar] as const));
+  for (const e of rec.stepEdits ?? []) edits.set(e.key, e.pillar);
+  const seen = new Set<string>();
+  const add = (pillar: Journey | null, step: Omit<Step, 'source'>) => {
+    if (!pillar || seen.has(step.key)) return;
+    seen.add(step.key);
+    const to = edits.has(step.key) ? edits.get(step.key)! : pillar;
+    if (to) out[to].push({ ...step, source: 'auto' });
+  };
+  const task = (id: string | null) => (id ? s.tasks.find((x) => x.id === id) : undefined);
+
+  if (rec.coldShower.done) add('body', { key: 'anchor:cold_shower', text: 'Cold shower' });
+  if (rec.walk.done) add('faith', { key: 'anchor:walk', text: 'Walk with God' });
   for (const i of rec.big3) {
-    const t = s.tasks.find((x) => x.id === i.taskId);
-    if (t && isItemDone(s, i)) add(t.journey, { text: t.title, source: 'auto' });
+    const t = task(i.taskId);
+    if (t && isItemDone(s, i)) add(t.journey, { key: `task:${t.id}`, text: t.title });
   }
   for (const t of s.tasks) {
-    if (t.status === 'done' && t.completedAt && localDate(t.completedAt) === date) add(t.journey, { text: t.title, source: 'auto' });
+    if (t.status === 'done' && t.completedAt && localDate(t.completedAt) === date) add(t.journey, { key: `task:${t.id}`, text: t.title });
   }
   const ended = (b: Block) => date < now.date || (date === now.date && b.end <= now.min);
+  const happened = (b: Block) => b.status === 'done' || (b.status !== 'skipped' && ended(b));
   for (const b of s.blocks) {
-    if (b.date !== date || NEVER.includes(b.kind) || b.status === 'skipped') continue;
-    const counts = b.status === 'done' || ((SHOW_UP.includes(b.kind) || b.source === 'manual') && ended(b));
-    if (counts) add(blockPillar(s, b), { text: b.title, source: 'auto' });
+    if (b.date !== date || b.status === 'skipped') continue;
+    const t = isLinked(b) || b.kind === 'work' || b.kind === 'library_work' ? task(b.taskId) : undefined;
+    const session = b.kind === 'workout' || b.kind === 'practice';
+    if (t && isLinked(b)) {
+      // The Big 3 item (or task) this block is: one step, under the task's name.
+      if (happened(b)) add(t.journey, { key: `task:${t.id}`, text: t.title, session });
+      continue;
+    }
+    if (session) {
+      if (happened(b)) add('sport', { key: b.eventId ? `event:${b.eventId}` : `kind:${b.kind}`, text: b.title, session: true });
+      continue;
+    }
+    if (b.kind === 'event') {
+      if (!happened(b)) continue;
+      const def = b.eventId ? s.events.find((e) => e.id === b.eventId) : undefined;
+      add((def && RANK_PILLAR[def.rankKey]) ?? pillarFromTitle(b.title), { key: b.eventId ? `event:${b.eventId}` : `title:${tokens(b.title).join(' ')}`, text: b.title });
+      continue;
+    }
+    if (b.status !== 'done' && !(b.source === 'manual' && happened(b))) continue;
+    if (t) add(t.journey, { key: `task:${t.id}`, text: t.title });
+    else if (b.kind === 'shs_floor') add('shs', { key: 'kind:shs_floor', text: b.title });
+    else if (b.kind === 'library_work') add('school', { key: 'kind:library_work', text: b.title });
+    else if (b.kind === 'misc' && b.source !== 'manual') add('body', { key: 'kind:misc', text: 'Errands and catch-up' });
+    else if (b.source === 'manual' || b.kind === 'work') add(pillarFromTitle(b.title), { key: `title:${tokens(b.title).join(' ')}`, text: b.title });
   }
-  (rec.steps ?? []).forEach((st, index) => add(st.pillar, { text: st.text, source: 'logged', index }));
+  (rec.steps ?? []).forEach((st, index) => out[st.pillar].push({ text: st.text, source: 'logged', index, key: `logged:${index}` }));
   return out;
 }
 

@@ -334,7 +334,7 @@ export function createTemple(canvas: HTMLCanvasElement, opts: TempleOptions): Te
     abacus: new THREE.BoxGeometry(0.62, 0.07, 0.46),
     scroll: new THREE.TorusGeometry(0.075, 0.03, 10, 24, Math.PI * 1.7),
   };
-  const ids: Journey[] = ['faith', 'body', 'sport', 'school', 'shs', 'life'];
+  const ids: Journey[] = ['faith', 'sport', 'school', 'shs', 'body', 'life'];
   const columns = ids.map((id, i) => {
     const a = (i / 6) * Math.PI * 2 + Math.PI / 6;
     const x = Math.sin(a) * RING_R;

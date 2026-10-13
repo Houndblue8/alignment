@@ -31,21 +31,22 @@ function snap(over: Partial<Snapshot>): Snapshot {
 }
 
 describe('the weekly temple', () => {
-  test('what the app sees: set-time things count when they happen, effort counts when checked', () => {
+  test('what the app sees: set-time things count when they happen, effort counts when checked, classes never', () => {
     const s = snap({
       tasks: [task('memo', 'school'), task('dms', 'shs')],
       days: { [MON]: day(MON, { walk: { done: true }, big3: [{ taskId: 'memo', locked: true, accepted: true, done: true }] }) },
       blocks: [
         blk('w', MON, { kind: 'workout', start: 900, end: 960 }),
         blk('p', MON, { kind: 'practice', start: 585, end: 705 }),
+        blk('c', MON, { kind: 'class', eventId: 'acct2-mon', start: 720, end: 800 }),
         blk('f', MON, { kind: 'shs_floor', start: 1000, end: 1030 }),
         blk('epic', MON, { eventId: 'epic-small-mon', start: 1110, end: 1200 }),
       ],
     });
-    expect(seenOn(s, MON, { date: MON, min: 800 })).toEqual({ faith: true, body: false, sport: true, school: true, shs: false, life: false });
+    s.tasks = s.tasks.filter((t) => t.id !== 'memo');
+    expect(seenOn(s, MON, { date: MON, min: 800 })).toEqual({ faith: true, body: false, sport: true, school: false, shs: false, life: false });
     const night = seenOn(s, MON, { date: MON, min: 1300 });
-    expect(night.body).toBe(true);
-    // The floor is effort: it counts only when checked.
+    expect(night.sport).toBe(true);
     expect(night.shs).toBe(false);
     s.blocks = s.blocks.map((b) => (b.id === 'f' ? { ...b, status: 'done' } : b));
     expect(seenOn(s, MON, { date: MON, min: 1300 }).shs).toBe(true);
@@ -57,31 +58,34 @@ describe('the weekly temple', () => {
     expect([c.school, c.life, c.shs]).toEqual([true, true, false]);
   });
 
-  test('targets: the defaults, every practice on the calendar, and exam weeks', () => {
+  test('targets: the defaults, edits, and exam weeks', () => {
     const s = snap({ days: {} });
     const { targets, examWeek } = targetsFor(s, MON);
     expect(examWeek).toBe(false);
-    expect(targets).toMatchObject({ faith: 7, body: 6, school: 5, shs: 6, life: 3 });
-    expect(targets.sport).toBeGreaterThanOrEqual(4);
+    expect(targets).toEqual({ faith: 7, body: 5, sport: 8, school: 5, shs: 6, life: 3 });
     // Tax Midterm II is Nov 4 (a Wednesday): that week adds a study day and eases Side Hustle by two.
     const exam = targetsFor(s, '2026-11-02');
     expect(exam.examWeek).toBe(true);
     expect([exam.targets.school, exam.targets.shs]).toEqual([6, 4]);
-    // Edited in Settings.
-    const custom = targetsFor({ ...s, settings: { ...s.settings, weeklyTargets: { faith: 7, body: 4, sport: 3, school: 4, shs: 4, life: 2 } } }, MON);
-    expect(custom.targets).toMatchObject({ body: 4, sport: 3, school: 4, shs: 4, life: 2 });
+    const custom = targetsFor({ ...s, settings: { ...s.settings, weeklyTargets: { faith: 7, body: 4, sport: 10, school: 4, shs: 4, life: 2 } } }, MON);
+    expect(custom.targets).toMatchObject({ body: 4, sport: 10, school: 4, shs: 4, life: 2 });
   });
 
-  test('the week adds up day by day; sports counts practices', () => {
+  test('the week adds up day by day; Athletics counts sessions (workouts and practices)', () => {
     const s = snap({
-      days: { [MON]: day(MON, { walk: { done: true } }), [TUE]: day(TUE, { walk: { done: true }, showedUp: ['body'] }) },
-      blocks: [blk('p1', MON, { kind: 'practice', start: 585, end: 705 }), blk('p2', MON, { kind: 'practice', start: 1290, end: 1350 }), blk('p3', TUE, { kind: 'practice', start: 1200, end: 1290, status: 'skipped' })],
+      days: { [MON]: day(MON, { walk: { done: true } }), [TUE]: day(TUE, { walk: { done: true }, showedUp: ['sport'] }) },
+      blocks: [
+        blk('p1', MON, { kind: 'practice', start: 585, end: 705 }),
+        blk('w1', MON, { kind: 'workout', start: 900, end: 960 }),
+        blk('p2', MON, { kind: 'practice', start: 1290, end: 1350, eventId: 'flag-mon' }),
+        blk('p3', TUE, { kind: 'practice', start: 1200, end: 1290, status: 'skipped' }),
+      ],
     });
     const t = weekTemple(s, MON, { date: TUE, min: 1300 });
     const p = Object.fromEntries(t.pillars.map((x) => [x.id, x]));
     expect([p.faith!.done, p.faith!.days.slice(0, 3)]).toEqual([2, [true, true, false]]);
-    expect(p.body!.done).toBe(1);
-    expect(p.sport!.done).toBe(2);
+    // Monday: a practice, a workout and flag football; Tuesday: a tap with no session.
+    expect(p.sport!.done).toBe(4);
     expect(p.faith!.today).toBe(true);
     expect(t.complete).toBe(false);
     const saved = saveableTemple(s, MON, { date: TUE, min: 1300 });

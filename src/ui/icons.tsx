@@ -7,25 +7,25 @@ import {
   Coffee,
   Dumbbell,
   GraduationCap,
-  HeartPulse,
   Moon,
   Rocket,
   ShowerHead,
   Snowflake,
   Sparkles,
+  Sprout,
   Sunrise,
   Sunset,
-  Trophy,
   Users,
   UtensilsCrossed,
   Volleyball,
   type LucideIcon,
-} from 'lucide-react';
-import type { BlockKind, Journey } from '../planner';
+} from "lucide-react";
+import type { BlockKind, Journey } from "../planner";
 
 export const JOURNEY_ICON: Record<Journey, LucideIcon> = {
-  body: HeartPulse,
-  sport: Trophy,
+  // 'body' is Stewardship; 'sport' is Athletics (Oct 12).
+  body: Sprout,
+  sport: Dumbbell,
   shs: Rocket,
   school: GraduationCap,
   faith: Church,

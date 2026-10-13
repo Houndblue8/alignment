@@ -5,7 +5,7 @@ import { UNIT, weekTemple, type SavedTemple } from '../state/temple';
 import { useApp } from '../state/store';
 import { JOURNEY_ICON } from './icons';
 
-const ORDER: Journey[] = ['faith', 'body', 'sport', 'school', 'shs', 'life'];
+const ORDER: Journey[] = ['faith', 'sport', 'school', 'shs', 'body', 'life'];
 
 /** This week's temple: each pillar's progress toward its weekly target. */
 export function WeekTempleCard({ start }: { start: string }) {

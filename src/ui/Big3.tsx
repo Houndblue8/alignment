@@ -1,7 +1,8 @@
 import { ArrowDown, ArrowUp, Check, Pencil, Plus, RefreshCw, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { JOURNEYS, type Big3Item, type TaskRow } from '../data/model';
-import { fmtTime, journeyStyle, shortDuration } from '../lib/format';
+import { journeyStyle, shortDuration } from '../lib/format';
+import { intentionPrompt } from '../state/intention';
 import type { Journey, WorkType } from '../planner';
 import { haptic } from '../lib/haptics';
 import { dayOf, isTaskDone } from '../state/planning';
@@ -13,6 +14,44 @@ import { JOURNEY_ICON } from './icons';
 function JIcon({ journey }: { journey: Journey }) {
   const I = JOURNEY_ICON[journey];
   return <I size={16} strokeWidth={1.75} aria-hidden="true" className="journey-icon" style={journeyStyle(journey)} />;
+}
+
+/** The intention under a Big 3 item: shown when written, one tap to add or change it. */
+function Intention({ item, task }: { item: Big3Item; task: TaskRow }) {
+  const setNote = useApp((a) => a.setBig3Note);
+  const [editing, setEditing] = useState(false);
+  const [text, setText] = useState(item.note ?? '');
+  if (editing)
+    return (
+      <form
+        className="intention-edit"
+        onSubmit={(e) => {
+          e.preventDefault();
+          void setNote(task.id, text);
+          setEditing(false);
+        }}
+      >
+        <input
+          className="field intention-field"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          maxLength={100}
+          placeholder={intentionPrompt(task)}
+          aria-label={`Intention for ${task.title}`}
+          enterKeyHint="done"
+          onBlur={() => {
+            if (text.trim() !== (item.note ?? '')) void setNote(task.id, text);
+            setEditing(false);
+          }}
+          autoFocus
+        />
+      </form>
+    );
+  return (
+    <button className={`intention ${item.note ? '' : 'empty'}`} onClick={() => setEditing(true)} data-testid="big3-intention">
+      {item.note ?? 'Add your intention'}
+    </button>
+  );
 }
 
 export function Big3Section() {
@@ -59,11 +98,7 @@ export function Big3Section() {
               <span className="grow clip">{t.title}</span>
               {!linked(t.id) && <span className="chip">{shortDuration(t.estimatedMinutes)}</span>}
             </div>
-            {linked(t.id) && (
-              <p className="small muted" data-testid="big3-linked">
-                Happens at {linked(t.id)!.title}, {fmtTime(linked(t.id)!.start)}. Checking either one checks both.
-              </p>
-            )}
+            <Intention item={i} task={t} />
             {suggested && (
               <div className="row between">
                 <span className="small muted">Suggested</span>
@@ -92,7 +127,8 @@ function Big3Editor({ initial, onClose }: { initial: Big3Item[]; onClose: () => 
   const [query, setQuery] = useState('');
   const [creating, setCreating] = useState(false);
   const open = useMemo(() => s.tasks.filter((t) => t.status === 'open'), [s.tasks]);
-  const title = (id: string) => s.tasks.find((t) => t.id === id)?.title ?? 'Removed task';
+  const taskOf = (id: string) => s.tasks.find((t) => t.id === id);
+  const title = (id: string) => taskOf(id)?.title ?? 'Removed task';
   const matches = open.filter((t) => !items.some((i) => i.taskId === t.id) && t.title.toLowerCase().includes(query.trim().toLowerCase()));
 
   const move = (idx: number, by: number) => {
@@ -120,6 +156,14 @@ function Big3Editor({ initial, onClose }: { initial: Big3Item[]; onClose: () => 
                 <X size={18} />
               </button>
             </div>
+            <input
+              className="field intention-field"
+              value={i.note ?? ''}
+              onChange={(e) => setItems(items.map((x) => (x.taskId === i.taskId ? { ...x, note: e.target.value || undefined } : x)))}
+              maxLength={100}
+              placeholder={taskOf(i.taskId) ? intentionPrompt(taskOf(i.taskId)!) : 'Your intention'}
+              aria-label={`Intention for ${title(i.taskId)}`}
+            />
           </li>
         ))}
         {items.length === 0 && <li className="muted small">Empty. Add from your tasks below.</li>}

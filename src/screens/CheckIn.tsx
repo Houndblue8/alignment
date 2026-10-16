@@ -12,6 +12,7 @@ import { CloseOut, canCloseOut, hasOpenItems } from '../ui/CloseOut';
 import { HeroMedia } from '../ui/HeroMedia';
 import { NewTaskForm } from '../ui/Big3';
 import { Sheet } from '../ui/Sheet';
+import { intentionPrompt } from '../state/intention';
 
 const CHIPS: [string, number][] = [
   ['6:30', 390],
@@ -37,6 +38,7 @@ export function CheckIn() {
   // Start from yesterday's carried picks plus suggestions; Eli taps to keep or swap.
   const initial = useMemo(() => fillBig3(s, now.date, dayOf(s, now.date).big3), [s, now.date]);
   const [picked, setPicked] = useState<string[]>(() => initial.map((i) => i.taskId));
+  const [notes, setNotes] = useState<Record<string, string>>(() => Object.fromEntries(initial.filter((i) => i.note).map((i) => [i.taskId, i.note!])));
   const open = rankTasks(
     s.tasks.filter((t) => t.status === 'open'),
     now.date,
@@ -92,8 +94,8 @@ export function CheckIn() {
         {open.map((t) => {
           const on = picked.includes(t.id);
           return (
+            <div key={t.id} className="stack" style={{ gap: 6 }}>
             <button
-              key={t.id}
               type="button"
               className="card journey row"
               style={{ ...journeyStyle(t.journey), textAlign: 'left', cursor: 'pointer' }}
@@ -106,6 +108,17 @@ export function CheckIn() {
               <span className="grow clip">{t.title}</span>
               <span className="chip">{shortDuration(t.estimatedMinutes)}</span>
             </button>
+            {on && (
+              <input
+                className="field intention-field nested"
+                value={notes[t.id] ?? ''}
+                onChange={(e) => setNotes({ ...notes, [t.id]: e.target.value })}
+                maxLength={100}
+                placeholder={intentionPrompt(t)}
+                aria-label={`Intention for ${t.title}`}
+              />
+            )}
+            </div>
           );
         })}
         {open.length === 0 && <p className="small muted">No open tasks yet. Add your first one.</p>}
@@ -119,7 +132,7 @@ export function CheckIn() {
         disabled={wake === null || busy}
         onClick={async () => {
           if (wake === null) return;
-          const big3: Big3Item[] = picked.map((taskId) => ({ taskId, locked: true, accepted: true }));
+          const big3: Big3Item[] = picked.map((taskId) => ({ taskId, locked: true, accepted: true, note: notes[taskId]?.trim() || undefined }));
           await checkIn({ wakeMin: wake, coldShowerDone: cold, walkDone: walk, waterDone: water, big3 });
           navigate('/', { replace: true });
         }}

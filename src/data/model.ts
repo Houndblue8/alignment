@@ -82,6 +82,8 @@ export interface Big3Item {
   accepted: boolean;
   /** Checked off for this day only, late (closing out a past day). Unset: the task's own status counts. */
   done?: boolean;
+  /** The intention: what it is really for ("Tax midterm II", "Bench 185 for 5", "40 DMs"). */
+  note?: string;
 }
 
 export interface PlanMeta {

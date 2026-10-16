@@ -93,5 +93,6 @@ describe('the fire', () => {
     const log = fireLog(snap(days), night('2026-10-20'));
     expect(log.map((w) => w.weekStart)).toEqual(['2026-10-19', '2026-10-12']);
     expect(log[1]!.avg).toBe(69);
+    expect([log[1]!.bright, log[1]!.lived]).toEqual([6, 7]);
   });
 });

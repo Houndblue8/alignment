@@ -2193,7 +2193,8 @@ main .pillar-chip {
   color: #e04e1c;
 }
 .fire-day.bright svg {
-  color: #e9b100;
+  color: #f0a500;
+  filter: drop-shadow(0 0 3px rgba(240, 165, 0, 0.55));
 }
 .fire-day.blue svg {
   color: #4aa3f0;
@@ -2399,4 +2400,37 @@ main .pillar-chip {
 }
 .fire-key .fire-day .muted {
   color: var(--muted);
+}
+
+/* The intention under a Big 3 item. */
+.intention {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  padding: 0 0 0 38px;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.88rem;
+  font-style: italic;
+  text-align: left;
+  cursor: pointer;
+}
+.intention.empty {
+  color: var(--muted);
+  font-style: normal;
+}
+.intention-edit {
+  margin-top: 6px;
+  padding-left: 38px;
+}
+.intention-field {
+  font-size: 0.92rem;
+  padding: 8px 12px;
+}
+.intention-field.nested {
+  margin-left: 36px;
+  width: calc(100% - 36px);
+  margin-top: -2px;
 }

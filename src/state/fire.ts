@@ -128,13 +128,15 @@ export function fireWeek(s: Snapshot, start: string, now: Now): (DayFire | null)
 }
 
 /** The fire log: the last few weeks, newest first, back to the first day that counts. */
-export function fireLog(s: Snapshot, now: Now, weeks = 8): { weekStart: string; days: (DayFire | null)[]; avg: number }[] {
+export function fireLog(s: Snapshot, now: Now, weeks = 8): { weekStart: string; days: (DayFire | null)[]; avg: number; bright: number; lived: number }[] {
   const first = weekStart(firstCounted(s, now.date));
   const out = [];
   for (let w = weekStart(now.date), k = 0; w >= first && k < weeks; w = addDays(w, -7), k++) {
     const days = fireWeek(s, w, now);
     const lived = days.filter((d): d is DayFire => !!d);
-    out.push({ weekStart: w, days, avg: lived.length ? Math.round(lived.reduce((a, d) => a + d.pct, 0) / lived.length) : 0 });
+    // Days burning bright or higher: the foundation and the whole Big 3 (or blue, or purple).
+    const bright = lived.filter((d) => d.pct >= 65).length;
+    out.push({ weekStart: w, days, avg: lived.length ? Math.round(lived.reduce((a, d) => a + d.pct, 0) / lived.length) : 0, bright, lived: lived.length });
   }
   return out;
 }

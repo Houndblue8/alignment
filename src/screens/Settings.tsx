@@ -15,6 +15,7 @@ import { NotificationSettings } from '../ui/Notifications';
 import { DEFAULT_TARGETS, JOURNEYS, journeyLabel } from '../data/model';
 import { UNIT } from '../state/temple';
 import { FIRE_STAGES, LEVEL_NAME } from '../state/fire';
+import { FILLED } from '../ui/Focus';
 import type { Journey } from '../planner';
 import { themeName } from '../theme/themes';
 
@@ -149,7 +150,7 @@ export function Settings() {
         <WeeklyTargetsEditor />
       </Group>
 
-"      <Group title="How the fire works" summary="Foundation 20, Big 3 60, faith 20">
+      <Group title="How the fire works" summary="Foundation 20, Big 3 60, faith 20">
         <FireHow />
       </Group>
       <Group title="Theme" summary={themeName(s.settings.theme)}>
@@ -460,7 +461,7 @@ function FireHow() {
         {FIRE_STAGES.map((st) => (
           <li key={st.level} className={`fire-day ${st.level}`}>
             <span className="row" style={{ gap: 8 }}>
-              <Flame size={16} aria-hidden="true" />
+              <Flame size={16} aria-hidden="true" fill={FILLED.has(st.level) ? 'currentColor' : 'none'} />
               <strong className="small">{LEVEL_NAME[st.level]}</strong>
               <span className="small muted">{st.range}</span>
             </span>

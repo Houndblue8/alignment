@@ -4,7 +4,7 @@ import { JOURNEYS, journeyLabel } from '../data/model';
 import { haptic } from '../lib/haptics';
 import { journeyStyle } from '../lib/format';
 import { addDays, fmtDate, weekStart, type Journey } from '../planner';
-import { FIRE_STAGES, fireFor, fireLog, LEVEL_NAME, type DayFire, type FirePart, type FireState } from '../state/fire';
+import { FIRE_STAGES, fireFor, fireLog, LEVEL_NAME, type DayFire, type FireLevel, type FirePart, type FireState } from '../state/fire';
 import { pillarHistory, pillarSteps, type Step } from '../state/pillars';
 import { buildingFor, buildingLine, needOn, seenOn, UNIT, weekTemple } from '../state/temple';
 import { dayOf } from '../state/planning';
@@ -94,6 +94,9 @@ export function FireMeter({ fire, onOpen }: { fire: FireState; onOpen: () => voi
   );
 }
 
+/** Burning bright and above are drawn filled in: the top of the ladder stands out. */
+export const FILLED = new Set<FireLevel>(['bright', 'blue', 'purple']);
+
 const DAY_LETTER = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
 /** Seven little flames, Monday to Sunday, each the color its day reached. */
@@ -107,7 +110,7 @@ export function FireWeek({ days, label }: { days: (DayFire | null)[]; label: str
           className={`fire-day ${d ? d.level : 'none'}`}
           aria-label={d ? `${DAYS[i]}: ${LEVEL_NAME[d.level]}, ${d.pct} percent` : `${DAYS[i]}: not yet`}
         >
-          <Flame size={Math.round(12 + (d ? d.pct / 100 : 0) * 12)} aria-hidden="true" />
+          <Flame size={Math.round(12 + (d ? d.pct / 100 : 0) * 12)} aria-hidden="true" fill={d && FILLED.has(d.level) ? 'currentColor' : 'none'} />
           <span className="small muted" aria-hidden="true">
             {DAY_LETTER[i]}
           </span>
@@ -123,7 +126,7 @@ export function FireKey() {
     <ul className="fire-key" aria-label="Key">
       {FIRE_STAGES.map((st) => (
         <li key={st.level} className={`fire-day ${st.level}`}>
-          <Flame size={16} aria-hidden="true" />
+          <Flame size={16} aria-hidden="true" fill={FILLED.has(st.level) ? 'currentColor' : 'none'} />
           <span className="small">
             {LEVEL_NAME[st.level]} <span className="muted">{st.range}</span>
           </span>
@@ -157,12 +160,14 @@ export function FireSheet({ fire, onClose }: { fire: FireState; onClose: () => v
               {i === 0 ? 'This week' : `Week of ${fmtDate(w.weekStart).replace(/^\w+, /, '')}`}
             </span>
             <FireWeek days={w.days} label={i === 0 ? 'This week' : `Week of ${w.weekStart}`} />
-            <span className="small muted">{w.avg}%</span>
+            <span className="small muted nowrap" aria-label={`${w.bright} of ${w.lived} days burning bright or higher`}>
+              {w.bright}/{w.lived} bright
+            </span>
           </div>
         ))}
       </div>
       <FireKey />
-      <p className="small muted">How the fire works is in Settings.</p>
+      <p className="small muted">The number is days that reached Burning bright or higher. How the fire works is in Settings.</p>
     </Sheet>
   );
 }

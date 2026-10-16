@@ -2,11 +2,15 @@
 import { expect, test } from '@playwright/test';
 import { checkIn, setNow, signedWithTasks } from './helpers';
 
-test('a Big 3 item that is the workout links to it; checking either checks both', async ({ page }) => {
+test('a Big 3 item that is the workout links to it; its intention sits under it', async ({ page }) => {
   await signedWithTasks(page, '2026-10-12T07:45', [{ id: 'lift', title: 'Lift', importance: 5 }]);
   await checkIn(page, '7:30');
   const item = page.getByTestId('big3-item').filter({ hasText: 'Lift' });
-  await expect(item.getByTestId('big3-linked')).toContainText('Happens at Weights at the rec');
+  // No linked-block note; the intention goes under the item instead.
+  await item.getByTestId('big3-intention').click();
+  await item.getByLabel('Intention for Lift').fill('Bench 185 for 5');
+  await item.getByLabel('Intention for Lift').press('Enter');
+  await expect(item.getByTestId('big3-intention')).toHaveText('Bench 185 for 5');
   await item.getByRole('checkbox', { name: 'Lift done' }).click();
   await page.goto('/today');
   // The workout shows under its Big 3 name, once: no separate work block for Lift.

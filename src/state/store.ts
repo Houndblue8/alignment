@@ -73,6 +73,8 @@ interface AppState {
   replan(): Promise<void>;
 
   setBig3(items: Big3Item[]): Promise<void>;
+  /** The intention under a Big 3 item today. */
+  setBig3Note(taskId: string, note: string): Promise<void>;
   acceptSuggestion(taskId: string): Promise<void>;
   suggestAgain(): Promise<void>;
   createTask(t: Pick<TaskRow, 'title' | 'journey' | 'importance' | 'estimatedMinutes' | 'deadline' | 'workType'>): Promise<string>;
@@ -528,6 +530,14 @@ export const useApp = create<AppState>((set, get) => {
         },
         { replan: true },
       ),
+
+    setBig3Note: (taskId, note) =>
+      run(async (s) => {
+        const rec = dayOf(s, today());
+        const day = { ...rec, big3: rec.big3.map((i) => (i.taskId === taskId ? { ...i, note: note.trim() || undefined } : i)) };
+        await repo.upsertDays([day]);
+        return withDay(s, day);
+      }),
 
     acceptSuggestion: (taskId) =>
       run(async (s) => {

@@ -1,4 +1,4 @@
-import { ChevronRight, Plus } from 'lucide-react';
+import { ChevronRight, Flame, Plus } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { DATA_MODE } from '../data/repo';
 import { supabase } from '../data/supabase';
@@ -14,6 +14,7 @@ import { ThemePicker } from '../ui/ThemePicker';
 import { NotificationSettings } from '../ui/Notifications';
 import { DEFAULT_TARGETS, JOURNEYS, journeyLabel } from '../data/model';
 import { UNIT } from '../state/temple';
+import { FIRE_STAGES, LEVEL_NAME } from '../state/fire';
 import type { Journey } from '../planner';
 import { themeName } from '../theme/themes';
 
@@ -148,6 +149,9 @@ export function Settings() {
         <WeeklyTargetsEditor />
       </Group>
 
+"      <Group title="How the fire works" summary="Foundation 20, Big 3 60, faith 20">
+        <FireHow />
+      </Group>
       <Group title="Theme" summary={themeName(s.settings.theme)}>
         <ThemePicker />
       </Group>
@@ -433,6 +437,38 @@ function PillarRules() {
           </button>
         </div>
       ))}
+    </div>
+  );
+}
+
+/** The fire, explained once: what feeds it and what each stage means. */
+function FireHow() {
+  return (
+    <div className="stack">
+      <p>The fire shows today, out of 100. Each step lifts it one stage.</p>
+      <ul className="stack small" style={{ margin: 0, paddingLeft: 18 }}>
+        <li>Foundation, 20: the glass of water, the cold shower, the walk with God.</li>
+        <li>The Big 3, 60: 20 for each little flame that hops in.</li>
+        <li>Faith, 20: 10 for each step toward God beyond the walk (prayer, serving, His Word, Epic, church, sharing His love), or the night tap "I drew closer to God today".</li>
+      </ul>
+      <p className="small">Everything done without faith tops out at 80. Everything with God is a blue fire.</p>
+      <p className="small">
+        A Lost Day sets the Big 3 aside for one faith focus: the foundation 20, the focus 60, and surrendering the day to Him before bed 20. All of it is a
+        purple fire: you are loved by God.
+      </p>
+      <ul className="fire-key full" aria-label="Stages">
+        {FIRE_STAGES.map((st) => (
+          <li key={st.level} className={`fire-day ${st.level}`}>
+            <span className="row" style={{ gap: 8 }}>
+              <Flame size={16} aria-hidden="true" />
+              <strong className="small">{LEVEL_NAME[st.level]}</strong>
+              <span className="small muted">{st.range}</span>
+            </span>
+            <span className="small muted">{st.when}</span>
+          </li>
+        ))}
+      </ul>
+      <p className="small muted">The log in the fire keeps every day, so you can see how your fire has been week to week.</p>
     </div>
   );
 }

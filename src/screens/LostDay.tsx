@@ -2,12 +2,13 @@ import { Check, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { haptic } from '../lib/haptics';
-import { fireFor, LEVEL_NAME } from '../state/fire';
+import { fireFor } from '../state/fire';
 import { focusIdeas } from '../state/lostDay';
 import { dayOf } from '../state/planning';
 import { useApp } from '../state/store';
 import { AnchorButton } from '../ui/AnchorButton';
-import { FireBuddy } from '../ui/FireBuddy';
+import { buildingFor } from '../state/temple';
+import { Temple3D } from '../ui/Temple3D';
 import { FireMeter, FireSheet, InnerCheckCard } from '../ui/Focus';
 import { PhotoCard } from '../ui/PhotoCard';
 
@@ -94,6 +95,7 @@ export function LostDayPage() {
   const rec = dayOf(s, now.date);
   const f = rec.lostFocus ?? { text: '', done: false, big3: [] };
   const fire = fireFor(s, now);
+  const building = buildingFor(s, now.date, now);
   const [fireOpen, setFireOpen] = useState(false);
   const [pick, setPick] = useState('');
   const [surrender, setSurrender] = useState(f.surrender ?? '');
@@ -104,9 +106,7 @@ export function LostDayPage() {
       <p className="section-label" style={{ textAlign: 'center' }}>
         Lost Day
       </p>
-      <button className="fire-hero" onClick={() => setFireOpen(true)} aria-label={`The fire: ${LEVEL_NAME[fire.level]}, ${fire.pct} percent. Open`}>
-        <FireBuddy level={fire.level} value={fire.value} label={`${LEVEL_NAME[fire.level]}, ${fire.pct} percent`} />
-      </button>
+      <Temple3D b={building} fire={fire} theme={s.settings.theme} fireOnly onFire={() => setFireOpen(true)} />
       <FireMeter fire={fire} onOpen={() => setFireOpen(true)} />
       <p className="lost-line" data-testid="lost-line">
         {fire.line}

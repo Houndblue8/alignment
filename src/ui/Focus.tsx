@@ -4,7 +4,7 @@ import { JOURNEYS, journeyLabel } from '../data/model';
 import { haptic } from '../lib/haptics';
 import { journeyStyle } from '../lib/format';
 import { addDays, fmtDate, weekStart, type Journey } from '../planner';
-import { fireFor, fireLog, LEVEL_NAME, type DayFire, type FirePart, type FireState } from '../state/fire';
+import { FIRE_STAGES, fireFor, fireLog, LEVEL_NAME, type DayFire, type FirePart, type FireState } from '../state/fire';
 import { pillarHistory, pillarSteps, type Step } from '../state/pillars';
 import { buildingFor, buildingLine, needOn, seenOn, UNIT, weekTemple } from '../state/temple';
 import { dayOf } from '../state/planning';
@@ -117,6 +117,22 @@ export function FireWeek({ days, label }: { days: (DayFire | null)[]; label: str
   );
 }
 
+/** What each little flame in the log means. */
+export function FireKey() {
+  return (
+    <ul className="fire-key" aria-label="Key">
+      {FIRE_STAGES.map((st) => (
+        <li key={st.level} className={`fire-day ${st.level}`}>
+          <Flame size={16} aria-hidden="true" />
+          <span className="small">
+            {LEVEL_NAME[st.level]} <span className="muted">{st.range}</span>
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export function FireSheet({ fire, onClose }: { fire: FireState; onClose: () => void }) {
   const s = useApp((a) => a.s)!;
   const now = useApp((a) => a.now);
@@ -133,17 +149,6 @@ export function FireSheet({ fire, onClose }: { fire: FireState; onClose: () => v
         <Meter label={t.work.label} part={t.work} />
         <Meter label={t.faith.label} part={t.faith} />
       </div>
-      <ul className="fire-pieces" aria-label="What feeds it today">
-        {t.pieces.map((p, i) => (
-          <li key={i} className={p.done ? 'done' : ''}>
-            <span className="check-dot" aria-hidden="true">
-              {p.done && <Check size={12} strokeWidth={3} />}
-            </span>
-            <span className="grow">{p.label}</span>
-            <span className="small muted">+{Math.round(p.pts)}</span>
-          </li>
-        ))}
-      </ul>
       <div className="stack" style={{ gap: 6 }}>
         <span className="small muted">The log</span>
         {log.map((w, i) => (
@@ -156,12 +161,8 @@ export function FireSheet({ fire, onClose }: { fire: FireState; onClose: () => v
           </div>
         ))}
       </div>
-      <p className="small muted">
-        Foundation 20 (water, cold shower, the walk), the Big 3 60 (20 each), faith 20. Each step lifts the fire one stage: the foundation wakes the
-        ember into a little fire, then Flame (one Big 3 item), Blaze (two), Burning bright (all three, 80). The last 20 is steps toward God: prayer,
-        serving, His Word, Epic, church, sharing His love, or the night tap. All of it is a blue fire. A Lost Day given to Him (the foundation, the one
-        focus 60, and a surrender before bed) is a purple fire.
-      </p>
+      <FireKey />
+      <p className="small muted">How the fire works is in Settings.</p>
     </Sheet>
   );
 }
@@ -175,7 +176,7 @@ function Meter({ label, part }: { label: string; part: FirePart }) {
       <span className="fire-bar grow" aria-hidden="true">
         <span style={{ width: `${Math.round((part.pts / part.max) * 100)}%` }} />
       </span>
-      <span className="small muted" style={{ width: 52, textAlign: 'right' }}>
+      <span className="small muted nowrap" style={{ textAlign: 'right' }}>
         {Math.round(part.pts)} of {part.max}
       </span>
     </div>

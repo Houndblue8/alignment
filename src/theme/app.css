@@ -2174,20 +2174,26 @@ main .pillar-chip {
   max-width: 320px;
 }
 .fire-day svg {
-  color: #e2741f;
+  color: #f08a2c;
 }
 .fire-day.none svg {
   color: var(--border);
 }
+/* Each stage its own color, so the log reads at a glance. */
 .fire-day.ember svg {
-  color: #c98a5a;
-  opacity: 0.6;
+  color: #b9a28a;
 }
 .fire-day.little svg {
-  color: #ef9a3a;
+  color: #f5b971;
+}
+.fire-day.flame svg {
+  color: #f08a2c;
+}
+.fire-day.blaze svg {
+  color: #e04e1c;
 }
 .fire-day.bright svg {
-  color: #f0b23c;
+  color: #e9b100;
 }
 .fire-day.blue svg {
   color: #4aa3f0;
@@ -2357,4 +2363,40 @@ main .pillar-chip {
   .fire-solo .hopper {
     animation: none;
   }
+}
+.temple.fire-only {
+  max-width: 300px;
+  aspect-ratio: 1 / 0.95;
+}
+.nowrap {
+  white-space: nowrap;
+}
+/* The key under the fire log, and the stages in Settings. */
+.fire-key {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+}
+.fire-key .fire-day {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.fire-key.full {
+  display: grid;
+  gap: 10px;
+}
+.fire-key.full .fire-day {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+.fire-key .fire-day span {
+  color: var(--text);
+}
+.fire-key .fire-day .muted {
+  color: var(--muted);
 }

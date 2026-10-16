@@ -4,6 +4,7 @@ import type { FireState } from '../state/fire';
 import type { BuildingState } from '../state/temple';
 import { Building, buildingLabel } from './Building';
 import type { TempleColors, TempleHandle, TempleState } from './temple/scene';
+import { FireBuddy } from './FireBuddy';
 
 function webglAvailable(): boolean {
   // Automated test browsers draw WebGL in software; they get the flat drawing so tests stay fast.
@@ -45,6 +46,7 @@ export function Temple3D({
   onPillar,
   onFire,
   still = false,
+  fireOnly = false,
 }: {
   b: BuildingState;
   fire: FireState;
@@ -53,6 +55,8 @@ export function Temple3D({
   onFire?: () => void;
   /** Home: shown, not handled (no dragging or tapping). */
   still?: boolean;
+  /** Just the 3D fire, no temple (the Lost Day page). */
+  fireOnly?: boolean;
 }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const handle = useRef<TempleHandle | null>(null);
@@ -79,6 +83,7 @@ export function Temple3D({
         handle.current = createTemple(canvas.current, {
           reducedMotion: reduced,
           still,
+          fireOnly,
           onPillar: (id) => cb.current.onPillar?.(id),
           onFire: () => cb.current.onFire?.(),
         });
@@ -90,16 +95,16 @@ export function Temple3D({
       handle.current?.dispose();
       handle.current = null;
     };
-  }, [failed, still]);
+  }, [failed, still, fireOnly]);
 
   const key = JSON.stringify(state);
   useEffect(() => {
     handle.current?.update(latest.current, readColors());
   }, [key, theme]);
 
-  if (failed) return <Building b={b} fire={fire} compact={still} />;
+  if (failed) return fireOnly ? <FireBuddy level={fire.level} value={fire.value} label={buildingLabel(b, fire)} /> : <Building b={b} fire={fire} compact={still} />;
   return (
-    <div className={`temple fire-${fire.level} ${still ? 'still' : ''}`} role="img" aria-label={buildingLabel(b, fire)} data-testid="temple">
+    <div className={`temple fire-${fire.level} ${still ? 'still' : ''} ${fireOnly ? 'fire-only' : ''}`} role="img" aria-label={buildingLabel(b, fire)} data-testid="temple">
       <canvas ref={canvas} />
     </div>
   );

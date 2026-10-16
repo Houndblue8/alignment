@@ -64,7 +64,7 @@ export function Today() {
       <FocusHero />
 
       <p className="section-label">Foundation</p>
-"      <div className="anchors">
+      <div className="anchors">
         <AnchorButton kind="water" done={rec.water.done} onToggle={(d) => setAnchor('water', d)} />
         <AnchorButton kind="coldShower" done={rec.coldShower.done} onToggle={(d) => setAnchor('coldShower', d)} />
         <AnchorButton kind="walk" done={rec.walk.done} onToggle={(d) => setAnchor('walk', d)} />

@@ -35,6 +35,8 @@ export interface TempleOptions {
   reducedMotion: boolean;
   /** Home: no dragging or tapping, just the temple turning slowly. */
   still?: boolean;
+  /** Just the fire on its hearth, no temple (the Lost Day page). */
+  fireOnly?: boolean;
 }
 
 const COLUMN_H = 2.5;
@@ -380,6 +382,10 @@ export function createTemple(canvas: HTMLCanvasElement, opts: TempleOptions): Te
   cross.position.y = 0.35 + 3.75 * 1.12 + 0.3;
   world.add(cross);
 
+  // The Lost Day shows the fire alone: the temple steps back.
+  if (opts.fireOnly) for (const o of [base, lower, upper, veil, cross, ...columns.flatMap((c) => [c.shaft, c.cap])]) o.visible = false;
+  if (opts.fireOnly) world.children.filter((o) => o.userData.pillar).forEach((o) => (o.visible = false));
+
   // Hearth: a ring of round stones, the cozy kind.
   const pebbleMat = new THREE.MeshStandardMaterial({ color: 0x9c8f7c, roughness: 0.9 });
   const pebbleGeo = new THREE.SphereGeometry(0.11, 14, 10);
@@ -568,7 +574,7 @@ export function createTemple(canvas: HTMLCanvasElement, opts: TempleOptions): Te
 
   let nextBlink = 2.5;
   let blinkT = -1;
-  const camTarget = new THREE.Vector3(0, 1.65, 0);
+  const camTarget = opts.fireOnly ? new THREE.Vector3(0, 1.05, 0) : new THREE.Vector3(0, 1.65, 0);
   const center = new THREE.Vector3();
 
   function step(dt: number, t: number, elapsed: number) {
@@ -670,8 +676,8 @@ export function createTemple(canvas: HTMLCanvasElement, opts: TempleOptions): Te
       idle += dt;
       if (!opts.reducedMotion && idle > 2) yaw += dt * 0.1;
     }
-    const r = 12;
-    camera.position.set(Math.sin(yaw) * Math.cos(pitch) * r, 2.2 + Math.sin(pitch) * r, Math.cos(yaw) * Math.cos(pitch) * r);
+    const r = opts.fireOnly ? 4.2 : 12;
+    camera.position.set(Math.sin(yaw) * Math.cos(pitch) * r, (opts.fireOnly ? 1.1 : 2.2) + Math.sin(pitch) * r, Math.cos(yaw) * Math.cos(pitch) * r);
     camera.lookAt(camTarget);
   }
 

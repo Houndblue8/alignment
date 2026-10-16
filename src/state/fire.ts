@@ -149,6 +149,17 @@ export const LEVEL_NAME: Record<FireLevel, string> = {
   purple: 'Purple fire',
 };
 
+/** The stages, for the key under the log and the explanation in Settings. */
+export const FIRE_STAGES: { level: FireLevel; range: string; when: string }[] = [
+  { level: 'ember', range: '0 to 19', when: 'Not lit yet. It never goes out.' },
+  { level: 'little', range: '20 to 24', when: 'The foundation is laid.' },
+  { level: 'flame', range: '25 to 44', when: 'One Big 3 item.' },
+  { level: 'blaze', range: '45 to 64', when: 'Two Big 3 items.' },
+  { level: 'bright', range: '65 to 99', when: 'All three (80), and steps toward God.' },
+  { level: 'blue', range: '100', when: 'Everything, done with God.' },
+  { level: 'purple', range: '100', when: 'A Lost Day given to God.' },
+];
+
 function fireLine(s: Snapshot, t: DayFire): string {
   if (t.level === 'purple') return 'Purple fire. You are loved by God. Look at today with eternal eyes.';
   if (t.level === 'blue') return 'Blue fire. Everything done, and done with God.';

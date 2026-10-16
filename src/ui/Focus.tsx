@@ -157,9 +157,10 @@ export function FireSheet({ fire, onClose }: { fire: FireState; onClose: () => v
         ))}
       </div>
       <p className="small muted">
-        Foundation 30 (water, cold shower, the walk), the Big 3 50, faith 20. Everything without faith tops out at 80. The last 20 is steps toward God:
-        prayer, serving, His Word, Epic, church, sharing His love, or the night tap. All of it is a blue fire. A Lost Day given to Him (the one focus,
-        the foundation, and a surrender before bed) is a purple fire. Ember under 25, Flame to 49, Blaze to 79, Burning bright to 99.
+        Foundation 20 (water, cold shower, the walk), the Big 3 60 (20 each), faith 20. Each step lifts the fire one stage: the foundation wakes the
+        ember into a little fire, then Flame (one Big 3 item), Blaze (two), Burning bright (all three, 80). The last 20 is steps toward God: prayer,
+        serving, His Word, Epic, church, sharing His love, or the night tap. All of it is a blue fire. A Lost Day given to Him (the foundation, the one
+        focus 60, and a surrender before bed) is a purple fire.
       </p>
     </Sheet>
   );

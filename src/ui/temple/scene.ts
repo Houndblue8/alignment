@@ -14,7 +14,7 @@ export interface TempleState {
   buddies: { pillar: Journey; done: boolean }[];
   /** EMBER (0.12) to 1. */
   fire: number;
-  level: 'ember' | 'flame' | 'blaze' | 'bright' | 'blue' | 'purple';
+  level: 'ember' | 'little' | 'flame' | 'blaze' | 'bright' | 'blue' | 'purple';
 }
 
 export interface TempleColors {
@@ -492,7 +492,7 @@ export function createTemple(canvas: HTMLCanvasElement, opts: TempleOptions): Te
       edge.set(0xe8572a);
     }
     fire.setColors(core, mid, edge);
-    fire.setMood(s.level === 'ember' ? 'sleepy' : s.level === 'flame' ? 'happy' : 'beaming');
+    fire.setMood(s.level === 'ember' ? 'sleepy' : s.level === 'flame' || s.level === 'little' ? 'happy' : 'beaming');
     (glow.material as THREE.SpriteMaterial).color.copy(mid);
     fireLight.color.copy(mid);
     syncBuddies(s.buddies, c, animate);

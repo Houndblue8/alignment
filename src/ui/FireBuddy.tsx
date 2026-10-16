@@ -7,7 +7,7 @@ import { FlameFace } from './Building';
  */
 export function FireBuddy({ level, value, hoppers = false, label }: { level: FireLevel; value: number; hoppers?: boolean; label: string }) {
   const f = Math.max(0.12, Math.min(1, value));
-  const mood = level === 'ember' ? 'sleepy' : level === 'flame' ? 'happy' : 'beaming';
+  const mood = level === 'ember' ? 'sleepy' : level === 'flame' || level === 'little' ? 'happy' : 'beaming';
   return (
     <figure className={`building fire-solo fire-${level}`} role="img" aria-label={label}>
       <svg viewBox="0 30 200 140" aria-hidden="true">

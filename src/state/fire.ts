@@ -1,11 +1,13 @@
 // The fire at the center of the temple (Eli, Oct 16). Pure. Simple and honest: today's fire is a percent made of
 // pieces Eli can see.
-// - Foundation, 30: the glass of water, the cold shower, the walk with God (10 each).
-// - The Big 3, 50: each little flame that hops in.
+// - Foundation, 20: the glass of water, the cold shower, the walk with God.
+// - The Big 3, 60: 20 for each little flame that hops in, so every item lifts the fire one stage.
 // - Faith, 20: steps toward God beyond the walk (prayer, serving, Epic, church, sharing His love), 10 each, or
 //   the night tap "I drew closer to God today", which fills it.
 // Everything done without faith tops out at 80. Everything plus faith is 100: a blue fire.
-// A Lost Day trades the Big 3 for one faith focus: foundation 30, the focus 50, surrendering the day to Him 20.
+// Stages line up with the steps: Ember (under 20, the foundation not laid yet), Little fire (foundation, 20),
+// Flame (one Big 3 item, 40), Blaze (two, 60), Burning bright (all three, 80), Blue fire (100).
+// A Lost Day trades the Big 3 for one faith focus: foundation 20, the focus 60, surrendering the day to Him 20.
 // All of it is a purple fire: you are loved by God; look at today with eternal eyes.
 // The fire never goes out: an ember is always there. Each day is its own fire; the week and the log keep them.
 import { WATER_FROM, type Snapshot } from '../data/model';
@@ -14,7 +16,7 @@ import { addDays, weekStart } from '../planner';
 import { pillarSteps } from './pillars';
 import { counts, dayOf, firstCounted, isItemDone } from './planning';
 
-export type FireLevel = 'ember' | 'flame' | 'blaze' | 'bright' | 'blue' | 'purple';
+export type FireLevel = 'ember' | 'little' | 'flame' | 'blaze' | 'bright' | 'blue' | 'purple';
 
 export interface FirePart {
   label: string;
@@ -42,21 +44,21 @@ export const EMBER = 0.12;
 
 export function levelFor(pct: number, lost: boolean): FireLevel {
   if (pct >= 100) return lost ? 'purple' : 'blue';
-  return pct >= 80 ? 'bright' : pct >= 50 ? 'blaze' : pct >= 25 ? 'flame' : 'ember';
+  return pct >= 65 ? 'bright' : pct >= 45 ? 'blaze' : pct >= 25 ? 'flame' : pct >= 20 ? 'little' : 'ember';
 }
 
 export function dayFire(s: Snapshot, date: string, now: Now): DayFire {
   const rec = dayOf(s, date);
   const pieces: DayFire['pieces'] = [];
-  // Foundation: before the water anchor existed, the cold shower and the walk carry 15 each.
+  // Foundation: before the water anchor existed, the cold shower and the walk carry 10 each.
   const anchors: [string, boolean][] = [
     ...(date >= WATER_FROM ? ([['Glass of water', rec.water.done]] as [string, boolean][]) : []),
     ['Cold shower', rec.coldShower.done],
     ['Walk with God', rec.walk.done],
   ];
-  const each = 30 / anchors.length;
+  const each = 20 / anchors.length;
   for (const [label, done] of anchors) pieces.push({ label, done, pts: each });
-  const foundation = { label: 'Foundation', pts: anchors.filter(([, d]) => d).length * each, max: 30 };
+  const foundation = { label: 'Foundation', pts: anchors.filter(([, d]) => d).length * each, max: 20 };
 
   const lost = rec.lostDay && !!rec.lostFocus;
   let work: FirePart;
@@ -64,17 +66,17 @@ export function dayFire(s: Snapshot, date: string, now: Now): DayFire {
   if (lost) {
     const f = rec.lostFocus!;
     const surrendered = !!f.surrender?.trim();
-    pieces.push({ label: f.text, done: f.done, pts: 50 }, { label: 'Surrendered the day to God', done: surrendered, pts: 20 });
-    work = { label: 'The one focus', pts: f.done ? 50 : 0, max: 50 };
+    pieces.push({ label: f.text, done: f.done, pts: 60 }, { label: 'Surrendered the day to God', done: surrendered, pts: 20 });
+    work = { label: 'The one focus', pts: f.done ? 60 : 0, max: 60 };
     faith = { label: 'Surrender', pts: surrendered ? 20 : 0, max: 20 };
   } else {
     const n = rec.big3.length;
     for (const i of rec.big3) {
       const t = s.tasks.find((x) => x.id === i.taskId);
-      pieces.push({ label: t?.title ?? 'Big 3 item', done: isItemDone(s, i), pts: n ? 50 / n : 0 });
+      pieces.push({ label: t?.title ?? 'Big 3 item', done: isItemDone(s, i), pts: n ? 60 / n : 0 });
     }
     const done = rec.big3.filter((i) => isItemDone(s, i)).length;
-    work = { label: 'The Big 3', pts: n ? (50 * done) / n : 0, max: 50 };
+    work = { label: 'The Big 3', pts: n ? (60 * done) / n : 0, max: 60 };
     const steps = pillarSteps(s, date, now).faith.filter((x) => x.key !== 'anchor:walk');
     const tapped = (rec.showedUp ?? []).includes('faith') ? 1 : 0;
     const closer = !!rec.inner?.closer;
@@ -139,6 +141,7 @@ export function fireLog(s: Snapshot, now: Now, weeks = 8): { weekStart: string; 
 
 export const LEVEL_NAME: Record<FireLevel, string> = {
   ember: 'Ember',
+  little: 'Little fire',
   flame: 'Flame',
   blaze: 'Blaze',
   bright: 'Burning bright',
@@ -155,7 +158,7 @@ function fireLine(s: Snapshot, t: DayFire): string {
     if (!t.faith.pts) return 'Before bed, tell Him what you are surrendering.';
     return 'Lay the foundation too, and the fire turns purple.';
   }
-  if (t.foundation.pts < t.foundation.max) return 'Feed the fire from the bottom up: the foundation first.';
-  if (t.work.pts < t.work.max) return 'Foundation laid. Now the Big 3: each little flame that hops in feeds it.';
+  if (t.foundation.pts < t.foundation.max) return 'An ember, never out. Lay the foundation and it wakes into a little fire.';
+  if (t.work.pts < t.work.max) return 'Foundation laid. Now the Big 3: each little flame that hops in lifts the fire a stage.';
   return 'Everything is done. The last 20 is His: a prayer, serving someone, sharing His love.';
 }

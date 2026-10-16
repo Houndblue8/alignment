@@ -75,7 +75,7 @@ test('talk box follow-up: "that got cancelled" knows what "that" was and reshape
   expect(calls[1]!.context.recent_messages.map((m) => m.said)).toEqual(['hangout with Josh 1 to 3']);
 });
 
-test('the fire: foundation 30, the Big 3 50, faith 20; all of it is a blue fire', async ({ page }) => {
+test('the fire: foundation 20, the Big 3 60, faith 20; all of it is a blue fire', async ({ page }) => {
   await signedWithTasks(page, '2026-10-19T21:00', [{ id: 'memo', title: 'Tax memo', importance: 5 }]);
   await checkIn(page, '7:30');
   await page.getByRole('link', { name: 'Today', exact: true }).click();
@@ -87,7 +87,8 @@ test('the fire: foundation 30, the Big 3 50, faith 20; all of it is a blue fire'
   await page.getByRole('button', { name: 'Cold shower Not yet' }).click();
   await page.getByRole('button', { name: 'Walk with God Not yet' }).click();
   // Epic small group (6:30 PM) already counted: a step toward God beyond the walk is 10.
-  await expect(meter).toContainText('40%');
+  await expect(meter).toContainText('Flame');
+  await expect(meter).toContainText('30%');
   await page.getByRole('checkbox', { name: 'Tax memo done', exact: true }).click();
   await expect(meter).toContainText('Burning bright');
   await expect(meter).toContainText('90%');

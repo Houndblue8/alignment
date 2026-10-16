@@ -29,13 +29,16 @@ function snap(days: DayRecord[]): Snapshot {
 const night = (date: string) => ({ date, min: 22 * 60 });
 
 describe('the fire', () => {
-  test('foundation 30, the Big 3 50, faith 20: everything without faith tops out at 80', () => {
+  test('foundation 20, the Big 3 60, faith 20: each step is a stage, and everything without faith tops out at 80', () => {
     const f = dayFire(snap([worldly(D)]), D, night(D));
-    expect([f.foundation.pts, f.work.pts, f.faith.pts, f.pct]).toEqual([30, 50, 0, 80]);
+    expect([f.foundation.pts, f.work.pts, f.faith.pts, f.pct]).toEqual([20, 60, 0, 80]);
     expect(f.level).toBe('bright');
     const half = dayFire(snap([worldly(D, { big3: big3(2, 1), water: { done: false } })]), D, night(D));
-    expect(half.pct).toBe(45);
+    expect(half.pct).toBe(43);
     expect(half.level).toBe('flame');
+    // The stages follow the steps: foundation, then each Big 3 item.
+    const steps = [0, 1, 2, 3].map((n) => dayFire(snap([worldly(D, { big3: big3(3, n) })]), D, night(D)).level);
+    expect(steps).toEqual(['little', 'flame', 'blaze', 'bright']);
   });
 
   test('faith steps beyond the walk give 10 each; the night tap fills it; all of it is a blue fire', () => {
@@ -52,7 +55,7 @@ describe('the fire', () => {
     const lost = (focus: Partial<NonNullable<DayRecord['lostFocus']>>) =>
       worldly(D, { big3: [], lostDay: true, lostDayReason: 'Rough day', lostFocus: { text: 'Be intentional at Epic large group', done: false, big3: big3(3, 0), ...focus } });
     const start = fireFor(snap([lost({})]), night(D));
-    expect([start.pct, start.line]).toEqual([30, 'One thing before the day ends: Be intentional at Epic large group. Give the rest to Him.']);
+    expect([start.pct, start.line]).toEqual([20, 'One thing before the day ends: Be intentional at Epic large group. Give the rest to Him.']);
     expect(fireFor(snap([lost({ done: true })]), night(D)).line).toBe('Before bed, tell Him what you are surrendering.');
     const all = fireFor(snap([lost({ done: true, surrender: 'The worry about school' })]), night(D));
     expect([all.pct, all.level]).toEqual([100, 'purple']);
@@ -65,19 +68,21 @@ describe('the fire', () => {
   test('the ember never goes out, and the lines point to what is next', () => {
     const cold = fireFor(snap([]), { date: D, min: 600 });
     expect([cold.pct, cold.value, cold.level]).toEqual([0, EMBER, 'ember']);
-    expect(cold.line).toBe('Feed the fire from the bottom up: the foundation first.');
+    expect(cold.line).toBe('An ember, never out. Lay the foundation and it wakes into a little fire.');
     expect(fireFor(snap([worldly(D, { big3: big3(3, 1) })]), night(D)).line).toMatch(/^Foundation laid\. Now the Big 3/);
     expect(fireFor(snap([worldly(D)]), night(D)).line).toMatch(/The last 20 is His/);
-    expect(levelFor(24, false)).toBe('ember');
+    expect(levelFor(19, false)).toBe('ember');
+    expect(levelFor(20, false)).toBe('little');
     expect(levelFor(25, false)).toBe('flame');
-    expect(levelFor(50, false)).toBe('blaze');
+    expect(levelFor(45, false)).toBe('blaze');
+    expect(levelFor(65, false)).toBe('bright');
     expect(levelFor(99, false)).toBe('bright');
   });
 
   test('before the water anchor, the cold shower and the walk carry the foundation', () => {
     const F = '2026-10-16';
     const f = dayFire(snap([worldly(F, { water: { done: false } })]), F, night(F));
-    expect(f.foundation.pts).toBe(30);
+    expect(f.foundation.pts).toBe(20);
   });
 
   test('the week and the log keep every day', () => {

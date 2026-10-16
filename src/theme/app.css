@@ -2183,6 +2183,9 @@ main .pillar-chip {
   color: #c98a5a;
   opacity: 0.6;
 }
+.fire-day.little svg {
+  color: #ef9a3a;
+}
 .fire-day.bright svg {
   color: #f0b23c;
 }

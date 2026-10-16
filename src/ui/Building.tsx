@@ -83,7 +83,7 @@ export function FlameFace({ x, y, size, mood, pillar }: { x: number; y: number; 
  */
 export function Building({ b, fire, compact }: { b: BuildingState; fire?: FireState; onPillar?: (id: Journey) => void; compact?: boolean }) {
   const f = fire ? Math.min(1, fire.value) : 0.5;
-  const mood = fire?.level === 'ember' ? 'sleepy' : fire?.level === 'flame' || !fire ? 'happy' : 'beaming';
+  const mood = fire?.level === 'ember' ? 'sleepy' : fire?.level === 'flame' || fire?.level === 'little' || !fire ? 'happy' : 'beaming';
   const cols = b.pillars.map((p, i) => {
     const a = (i / 6) * Math.PI * 2 + Math.PI / 6;
     const depth = Math.cos(a);

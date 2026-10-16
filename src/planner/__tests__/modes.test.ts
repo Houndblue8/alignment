@@ -66,20 +66,18 @@ describe('8. Lost Day', () => {
     }),
   );
 
-  test('keeps immovable events and drops the rest', () => {
+  test('keeps immovable events and faith events, and drops the rest', () => {
     expectValidPlan(plan);
     expect(byEvent(plan, 'tax-mon')).toMatchObject({ start: at(13, 30), end: at(14, 50) });
     expect(byEvent(plan, 'itp-mon')).toBeDefined();
-    expect(byEvent(plan, 'epic-small-mon')).toBeUndefined();
+    expect(byEvent(plan, 'epic-small-mon')).toBeDefined();
     expect(byEvent(plan, 'flag-mon')).toBeUndefined();
   });
 
-  test('lists the easiest salvage wins first', () => {
-    expect(plan.notes[0]).toBe('Lost Day. Salvage wins, easiest first: Cold shower, Walk with God, Lunch, Send invoice, 30 minute workout.');
-    expect(plan.blocks.some((b) => b.taskId === 'small')).toBe(true);
-    expect(plan.blocks.some((b) => b.taskId === 'big')).toBe(false);
-    const w = one(plan, 'workout');
-    expect(w.end - w.start).toBe(30);
+  test('only the basics: the rest of the day is for the faith focus', () => {
+    expect(plan.notes[0]).toBe('Lost Day. One faith focus for the rest of today, and the basics: Cold shower, Walk with God, Lunch.');
+    expect(plan.blocks.some((b) => b.taskId === 'small' || b.taskId === 'big')).toBe(false);
+    expect(ofKind(plan, 'workout')).toHaveLength(0);
     expect(ofKind(plan, 'misc')).toHaveLength(0);
     expect(ofKind(plan, 'shs_floor')).toHaveLength(0);
   });

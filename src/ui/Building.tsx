@@ -13,8 +13,8 @@ export const SHORT: Record<Journey, string> = {
 };
 
 export function buildingLabel(b: BuildingState, fire?: FireState): string {
-  const f = fire ? ` The fire: ${Math.round(fire.value * 100)} percent.` : '';
-  return `Today's temple under God's veil. Foundation ${Number(b.foundation.coldShower) + Number(b.foundation.walk)} of 2, ${b.pillars.filter((p) => p.done >= p.target).length} of 6 pillars at this week's target, ${b.torches.done} of ${b.torches.total} little flames in the fire.${f}`;
+  const f = fire ? ` The fire: ${fire.pct} percent.` : '';
+  return `Today's temple under God's veil. Foundation ${Number(b.foundation.water) + Number(b.foundation.coldShower) + Number(b.foundation.walk)} of 3, ${b.pillars.filter((p) => p.done >= p.target).length} of 6 pillars at this week's target, ${b.torches.done} of ${b.torches.total} little flames in the fire.${f}`;
 }
 
 const W = 340;
@@ -41,13 +41,25 @@ function Column({ x, y, h, s, id, ratio, today }: { x: number; y: number; h: num
 }
 
 /** A little flame with a face. The main fire, and the Big 3 flames waiting to hop in. */
-function FlameFace({ x, y, size, mood, pillar }: { x: number; y: number; size: number; mood: 'sleepy' | 'happy' | 'beaming'; pillar?: Journey }) {
+export function FlameFace({ x, y, size, mood, pillar }: { x: number; y: number; size: number; mood: 'sleepy' | 'happy' | 'beaming'; pillar?: Journey }) {
   const h = 54 * size;
   const r = 20 * size;
   const style = pillar ? ({ ['--jc' as string]: `var(--j-${pillar})` } as CSSProperties) : undefined;
   return (
     <g className={pillar ? 'buddy' : 'hero-flame'} style={style}>
-      <path className="flame-body" d={`M${x} ${y - h} C ${x + r * 1.1} ${y - h * 0.55}, ${x + r * 1.15} ${y}, ${x} ${y} C ${x - r * 1.15} ${y}, ${x - r * 1.1} ${y - h * 0.55}, ${x} ${y - h} Z`} />
+      {/* Two tongues behind the body, and a tip that leans: a fire, not a drop. Same shape as the app icon. */}
+      <path
+        className="flame-tongue"
+        d={`M${x - r * 0.55} ${y - h * 0.12} C ${x - r * 1.45} ${y - h * 0.3}, ${x - r * 1.35} ${y - h * 0.55}, ${x - r * 1.05} ${y - h * 0.78} C ${x - r * 0.95} ${y - h * 0.55}, ${x - r * 0.55} ${y - h * 0.5}, ${x - r * 0.3} ${y - h * 0.42} Z`}
+      />
+      <path
+        className="flame-tongue"
+        d={`M${x + r * 0.55} ${y - h * 0.12} C ${x + r * 1.45} ${y - h * 0.28}, ${x + r * 1.4} ${y - h * 0.5}, ${x + r * 1.15} ${y - h * 0.7} C ${x + r * 1.0} ${y - h * 0.5}, ${x + r * 0.6} ${y - h * 0.46}, ${x + r * 0.3} ${y - h * 0.4} Z`}
+      />
+      <path
+        className="flame-body"
+        d={`M${x + r * 0.18} ${y - h} C ${x + r * 0.5} ${y - h * 0.82}, ${x + r * 1.2} ${y - h * 0.5}, ${x + r * 1.12} ${y - h * 0.28} C ${x + r * 1.05} ${y - h * 0.06}, ${x + r * 0.6} ${y}, ${x} ${y} C ${x - r * 0.6} ${y}, ${x - r * 1.05} ${y - h * 0.06}, ${x - r * 1.12} ${y - h * 0.28} C ${x - r * 1.2} ${y - h * 0.5}, ${x - r * 0.3} ${y - h * 0.62}, ${x + r * 0.18} ${y - h} Z`}
+      />
       <path className="flame-core" d={`M${x} ${y - h * 0.55} C ${x + r * 0.6} ${y - h * 0.3}, ${x + r * 0.6} ${y - 2}, ${x} ${y - 2} C ${x - r * 0.6} ${y - 2}, ${x - r * 0.6} ${y - h * 0.3}, ${x} ${y - h * 0.55} Z`} />
       <g className="face">
         <ellipse cx={x - r * 0.36} cy={y - h * 0.36} rx={r * 0.12} ry={mood === 'sleepy' ? r * 0.04 : r * 0.17} />
@@ -70,7 +82,7 @@ function FlameFace({ x, y, size, mood, pillar }: { x: number; y: number; size: n
  * waiting beside it. Used on Home without WebGL and in automated tests.
  */
 export function Building({ b, fire, compact }: { b: BuildingState; fire?: FireState; onPillar?: (id: Journey) => void; compact?: boolean }) {
-  const f = fire ? Math.min(1.25, fire.value) : 0.5;
+  const f = fire ? Math.min(1, fire.value) : 0.5;
   const mood = fire?.level === 'ember' ? 'sleepy' : fire?.level === 'flame' || !fire ? 'happy' : 'beaming';
   const cols = b.pillars.map((p, i) => {
     const a = (i / 6) * Math.PI * 2 + Math.PI / 6;
@@ -88,7 +100,7 @@ export function Building({ b, fire, compact }: { b: BuildingState; fire?: FireSt
     [0, 16],
   ];
   return (
-    <figure className={`building ${compact ? 'compact' : ''} ${fire?.level === 'refiner' ? 'refiner' : ''} ${b.complete ? 'is-complete' : ''}`} aria-label={buildingLabel(b, fire)} role="group">
+    <figure className={`building ${compact ? 'compact' : ''} ${fire ? `fire-${fire.level}` : ''} ${b.complete ? 'is-complete' : ''}`} aria-label={buildingLabel(b, fire)} role="group">
       <svg viewBox={`0 0 ${W} 270`} aria-hidden="true">
         <defs>
           <radialGradient id="veil-fill" cx="50%" cy="85%" r="75%">
@@ -103,7 +115,8 @@ export function Building({ b, fire, compact }: { b: BuildingState; fire?: FireSt
           </radialGradient>
         </defs>
 
-        {/* Foundation: the cold shower (lower step) and the walk with God (upper step). */}
+        {/* Foundation: the water (the base), the cold shower (lower step) and the walk with God (upper step). */}
+        <ellipse className={`step side ${b.foundation.water ? 'on' : ''}`} cx={CX} cy={FLOOR + 38} rx={164} ry={28} />
         <ellipse className={`step side ${b.foundation.coldShower ? 'on' : ''}`} cx={CX} cy={FLOOR + 30} rx={150} ry={26} />
         <ellipse className={`step ${b.foundation.coldShower ? 'on' : ''}`} cx={CX} cy={FLOOR + 22} rx={150} ry={26} />
         <ellipse className={`step side ${b.foundation.walk ? 'on' : ''}`} cx={CX} cy={FLOOR + 12} rx={132} ry={22} />

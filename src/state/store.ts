@@ -37,12 +37,12 @@ interface AppState {
   showToast(text: string, kind?: Toast['kind']): void;
 
   signContract(name: string): Promise<void>;
-  checkIn(input: { wakeMin: number; coldShowerDone: boolean; walkDone: boolean; big3?: Big3Item[] }): Promise<void>;
+  checkIn(input: { wakeMin: number; coldShowerDone: boolean; walkDone: boolean; waterDone?: boolean; big3?: Big3Item[] }): Promise<void>;
   editWake(wakeMin: number): Promise<void>;
-  setAnchor(kind: 'coldShower' | 'walk', done: boolean): Promise<void>;
+  setAnchor(kind: 'coldShower' | 'walk' | 'water', done: boolean): Promise<void>;
   setBlockStatus(id: string, status: Block['status']): Promise<void>;
   /** Close out a past day late: the anchor counts for that day and the day is scored again. */
-  setPastAnchor(date: string, kind: 'coldShower' | 'walk', done: boolean): Promise<void>;
+  setPastAnchor(date: string, kind: 'coldShower' | 'walk' | 'water', done: boolean): Promise<void>;
   /**
    * Move an item to another pillar, or take it out (pillar null). today: only this day; always: a rule that
    * applies to every day from now on (Settings lists them). A logged step is simply moved or deleted.
@@ -58,7 +58,7 @@ interface AppState {
   /** The night tap: a pillar Eli showed up for today that the app could not see. */
   toggleShowedUp(pillar: Journey): Promise<void>;
   /** The night check: Mind, Heart, Spirit (1 to 5) and an optional line. */
-  setInner(inner: NonNullable<DayRecord['inner']>): Promise<void>;
+  setInner(inner: NonNullable<DayRecord['inner']>, kaizen?: string): Promise<void>;
   /**
    * Plans changed: this block is not happening. An event is skipped for that day only, anything else is taken
    * off, and the rest of the day is rebuilt from now so the freed time gets used. Returns what moved in.
@@ -79,8 +79,12 @@ interface AppState {
   /** date: the day it was done (a past day when closing out yesterday). Defaults to today. */
   setTaskDone(id: string, done: boolean, date?: string): Promise<void>;
 
-  startLostDay(reason: string): Promise<void>;
+  /** A Lost Day: the Big 3 is set aside for one faith focus (Oct 16). */
+  startLostDay(reason: string, focus: string): Promise<void>;
+  /** Back to the full plan: the Big 3 comes back. */
   endLostDay(): Promise<void>;
+  /** The Lost Day's focus: its words, done, and the surrender before bed. */
+  setLostFocus(patch: { text?: string; done?: boolean; surrender?: string }): Promise<void>;
   setCodeRed(on: boolean, level?: Settings['codeRedLevel']): Promise<void>;
   answerIsaac(yes: boolean, startMin?: number): Promise<void>;
 
@@ -308,7 +312,7 @@ export const useApp = create<AppState>((set, get) => {
         return { ...s, contract };
       }),
 
-    checkIn: ({ wakeMin, coldShowerDone, walkDone, big3 }) =>
+    checkIn: ({ wakeMin, coldShowerDone, walkDone, waterDone, big3 }) =>
       run(
         async (s) => {
           const date = today();
@@ -319,6 +323,7 @@ export const useApp = create<AppState>((set, get) => {
             checkinDone: true,
             coldShower: { done: coldShowerDone },
             walk: { done: walkDone },
+            water: { done: !!waterDone },
             // Eli's picks are the Big 3. Picking none leaves it to the automatic suggestions.
             big3: big3 && big3.length ? big3.filter((i) => s.tasks.some((t) => t.id === i.taskId && t.status === 'open')) : fillBig3(s, date, rec.big3),
           };
@@ -342,7 +347,7 @@ export const useApp = create<AppState>((set, get) => {
     setAnchor: (kind, done) =>
       run(async (s) => {
         const rec = dayOf(s, today());
-        const blockKind = kind === 'coldShower' ? 'anchor_cold_shower' : 'anchor_walk';
+        const blockKind = kind === 'coldShower' ? 'anchor_cold_shower' : kind === 'walk' ? 'anchor_walk' : null;
         const block = s.blocks.find((b) => b.date === rec.date && b.kind === blockKind);
         const day = { ...rec, [kind]: { done, startMin: block?.start ?? null } };
         const blocks = s.blocks.map((b) => (b.id === block?.id ? { ...b, status: done ? ('done' as const) : ('planned' as const) } : b));
@@ -355,7 +360,7 @@ export const useApp = create<AppState>((set, get) => {
       run(async (s) => {
         const rec = dayOf(s, date);
         const day = { ...rec, [kind]: { ...rec[kind], done } };
-        const blockKind = kind === 'coldShower' ? 'anchor_cold_shower' : 'anchor_walk';
+        const blockKind = kind === 'coldShower' ? 'anchor_cold_shower' : kind === 'walk' ? 'anchor_walk' : null;
         const blocks = s.blocks.map((b) => (b.date === date && b.kind === blockKind ? { ...b, status: done ? ('done' as const) : ('planned' as const) } : b));
         await repo.upsertDays([day]);
         await repo.replaceBlocks([date], blocks.filter((b) => b.date === date));
@@ -418,9 +423,10 @@ export const useApp = create<AppState>((set, get) => {
         return withDay(s, day);
       }),
 
-    setInner: (inner) =>
+    setInner: (inner, kaizen) =>
       run(async (s) => {
-        const day = { ...dayOf(s, today()), inner: { ...inner, note: inner.note?.trim() || undefined } };
+        const rec = dayOf(s, today());
+        const day = { ...rec, inner: { ...inner, note: inner.note?.trim() || undefined }, kaizen: kaizen === undefined ? rec.kaizen : kaizen.trim() || null };
         await repo.upsertDays([day]);
         return withDay(s, day);
       }),
@@ -583,10 +589,12 @@ export const useApp = create<AppState>((set, get) => {
         { replan: !date || date === today() },
       ),
 
-    startLostDay: (reason) =>
+    startLostDay: (reason, focus) =>
       run(
         async (s) => {
-          const day = { ...dayOf(s, today()), lostDay: true, lostDayReason: reason.trim() };
+          const rec = dayOf(s, today());
+          const aside = rec.lostFocus?.big3 ?? rec.big3;
+          const day = { ...rec, lostDay: true, lostDayReason: reason.trim() || null, big3: [], lostFocus: { text: focus.trim(), done: false, big3: aside } };
           await repo.upsertDays([day]);
           return withDay(s, day);
         },
@@ -596,12 +604,22 @@ export const useApp = create<AppState>((set, get) => {
     endLostDay: () =>
       run(
         async (s) => {
-          const day = { ...dayOf(s, today()), lostDay: false };
+          const rec = dayOf(s, today());
+          const day = { ...rec, lostDay: false, big3: rec.lostFocus?.big3 ?? rec.big3, lostFocus: null };
           await repo.upsertDays([day]);
           return withDay(s, day);
         },
         { replan: true },
       ),
+
+    setLostFocus: (patch) =>
+      run(async (s) => {
+        const rec = dayOf(s, today());
+        const f = rec.lostFocus ?? { text: '', done: false, big3: rec.big3 };
+        const day = { ...rec, lostFocus: { ...f, ...patch } };
+        await repo.upsertDays([day]);
+        return rescore(withDay(s, day), day.date);
+      }),
 
     setCodeRed: (on, level) =>
       run(

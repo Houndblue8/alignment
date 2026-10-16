@@ -3,12 +3,13 @@ import { expect, test } from '@playwright/test';
 import { checkIn, signedWithTasks } from './helpers';
 
 test('the building: foundation, pillars and roof rise as the day goes; tap a pillar to log a step', async ({ page }) => {
-  await signedWithTasks(page, '2026-10-12T07:45', [{ id: 'memo', title: 'Tax memo', importance: 5 }]);
+  await signedWithTasks(page, '2026-10-19T07:45', [{ id: 'memo', title: 'Tax memo', importance: 5 }]);
   await checkIn(page, '7:30');
   await page.getByRole('link', { name: 'Today', exact: true }).click();
   const focus = page.getByRole('region', { name: 'Focus' });
-  await expect(focus.getByTestId('focus-line')).toHaveText('Lay the foundation first: the cold shower, then the walk.');
+  await expect(focus.getByTestId('focus-line')).toHaveText('Lay the foundation first: a glass of water, the cold shower, then the walk.');
 
+  await page.getByRole('button', { name: 'Glass of water Not yet' }).click();
   await page.getByRole('button', { name: 'Cold shower Not yet' }).click();
   await page.getByRole('button', { name: 'Walk with God Not yet' }).click();
   await expect(focus.getByTestId('focus-line')).toHaveText(/^Foundation laid\. Now feed the fire: your Big 3\. Temple this week: \d of 6 pillars at target\.$/);
@@ -16,7 +17,7 @@ test('the building: foundation, pillars and roof rise as the day goes; tap a pil
   await focus.getByRole('button', { name: 'Social and Community: 0 steps today' }).click();
   await page.getByRole('button', { name: 'Called family' }).click();
   await expect(page.getByRole('list', { name: 'Steps today' })).toContainText('Called family');
-  await page.getByRole('button', { name: 'Close' }).click();
+  await page.getByRole('button', { name: 'Close', exact: true }).click();
   await expect(focus.getByRole('button', { name: 'Social and Community: 1 step today' })).toBeVisible();
 
   await page.getByRole('checkbox', { name: 'Tax memo done', exact: true }).click();
@@ -74,29 +75,37 @@ test('talk box follow-up: "that got cancelled" knows what "that" was and reshape
   expect(calls[1]!.context.recent_messages.map((m) => m.said)).toEqual(['hangout with Josh 1 to 3']);
 });
 
-test('the fire: night check, faith steps, and a refiner\'s day when everything else breaks down', async ({ page }) => {
-  await signedWithTasks(page, '2026-10-12T21:00', [{ id: 'memo', title: 'Tax memo', importance: 5 }]);
+test('the fire: foundation 30, the Big 3 50, faith 20; all of it is a blue fire', async ({ page }) => {
+  await signedWithTasks(page, '2026-10-19T21:00', [{ id: 'memo', title: 'Tax memo', importance: 5 }]);
   await checkIn(page, '7:30');
   await page.getByRole('link', { name: 'Today', exact: true }).click();
   const focus = page.getByRole('region', { name: 'Focus' });
-  await expect(focus.getByTestId('fire-meter')).toContainText('Ember');
+  const meter = focus.getByTestId('fire-meter');
+  await expect(meter).toContainText('Ember');
 
+  await page.getByRole('button', { name: 'Glass of water Not yet' }).click();
+  await page.getByRole('button', { name: 'Cold shower Not yet' }).click();
   await page.getByRole('button', { name: 'Walk with God Not yet' }).click();
-  await focus.getByRole('button', { name: /^Faith and Epic:/ }).click();
-  await page.getByRole('button', { name: 'Prayed for someone' }).click();
-  await page.getByRole('button', { name: 'Close' }).click();
+  // Epic small group (6:30 PM) already counted: a step toward God beyond the walk is 10.
+  await expect(meter).toContainText('40%');
+  await page.getByRole('checkbox', { name: 'Tax memo done', exact: true }).click();
+  await expect(meter).toContainText('Burning bright');
+  await expect(meter).toContainText('90%');
 
   const check = page.getByRole('region', { name: "Tonight's check" });
-  await check.getByRole('radio', { name: 'Mind 2' }).click();
-  await check.getByRole('radio', { name: 'Heart 1' }).click();
+  await check.getByRole('radio', { name: 'Mind 4' }).click();
+  await check.getByRole('radio', { name: 'Heart 4' }).click();
   await check.getByRole('radio', { name: 'Spirit 5' }).click();
-  await check.getByLabel('One line').fill('Rough day. Held on to Him.');
+  await check.getByRole('button', { name: 'I drew closer to God today' }).click();
+  await check.getByLabel('Kaizen: one thing to do 1% better tomorrow').fill('Phone out of the bedroom');
   await check.getByRole('button', { name: "Save tonight's check" }).click();
-  await expect(check).toContainText('Mind 2, Heart 1, Spirit 5. Rough day. Held on to Him.');
+  await expect(check.getByTestId('kaizen-saved')).toContainText('Phone out of the bedroom');
 
-  await expect(focus.getByTestId('fire-meter')).toContainText("Refiner's fire");
-  await focus.getByTestId('fire-meter').click();
-  await expect(page.getByRole('dialog')).toContainText('brighter than ever');
+  await expect(meter).toContainText('Blue fire');
+  await meter.click();
+  const sheet = page.getByRole('dialog', { name: 'The fire' });
+  await expect(sheet).toContainText('Blue fire. Everything done, and done with God.');
+  await expect(sheet.getByRole('list', { name: 'This week' })).toBeVisible();
 });
 
 test('the schedule shows set times and open time with its best use; tapping a pillar keeps the keyboard closed', async ({ page }) => {

@@ -56,7 +56,8 @@ export function restoreSnapshot(s: Snapshot, b: UndoSnapshot, farBlockIds: strin
   };
 }
 
-const ANCHOR_LABEL ={ cold_shower: 'Cold shower', walk: 'Walk with God' } as const;
+const ANCHOR_LABEL = { cold_shower: 'Cold shower', walk: 'Walk with God', water: 'Glass of water' } as const;
+const ANCHOR_KEY = { cold_shower: 'coldShower', walk: 'walk', water: 'water' } as const;
 const RANK_FOR_KIND: Record<string, RankKey> = { social: 'social', class: 'school', exam: 'school', practice: 'club_practice', event: 'general' };
 const shortId = () => crypto.randomUUID().slice(0, 8);
 const dateLabel = (d: string) => fmtDate(d).replace(/^\w+, /, '');
@@ -83,8 +84,9 @@ export function applyOps(s: Snapshot, reply: ParseReply, now: Now): ApplyResult 
         break;
       }
       case 'set_anchor': {
-        const key = op.anchor === 'cold_shower' ? 'coldShower' : 'walk';
-        const kind = op.anchor === 'cold_shower' ? 'anchor_cold_shower' : 'anchor_walk';
+        const key = ANCHOR_KEY[op.anchor];
+        // The water has no block on the schedule.
+        const kind = op.anchor === 'cold_shower' ? 'anchor_cold_shower' : op.anchor === 'walk' ? 'anchor_walk' : null;
         const startMin = op.time ? toMin(op.time) : null;
         setDay({ ...day(), [key]: { done: op.done, startMin } });
         next.blocks = next.blocks.flatMap((b) => {
@@ -248,10 +250,13 @@ export function applyOps(s: Snapshot, reply: ParseReply, now: Now): ApplyResult 
         next.settings = { ...next.settings, codeRed: op.on, codeRedLevel: op.level ?? next.settings.codeRedLevel };
         done.push(op.on ? `Code Red is on${(op.level ?? next.settings.codeRedLevel) === 'severe' ? ', all in' : ''}.` : 'Code Red is off.');
         break;
-      case 'start_lost_day':
-        setDay({ ...day(), lostDay: true, lostDayReason: op.reason });
-        done.push('Lost Day started. The rest of today is cut to the easiest salvage wins.');
+      case 'start_lost_day': {
+        // The Big 3 waits aside; the Lost Day page asks for the one faith focus.
+        const d = day();
+        if (!d.lostDay) setDay({ ...d, lostDay: true, lostDayReason: op.reason, big3: [], lostFocus: { text: '', done: false, big3: d.big3 } });
+        done.push('Lost Day started. The Big 3 is set aside for one faith focus. Pick it on Home.');
         break;
+      }
       case 'add_quote':
         next.quotes.push({ id: crypto.randomUUID(), text: op.text, tags: op.tags });
         done.push('Quote saved.');

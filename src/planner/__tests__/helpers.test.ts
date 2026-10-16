@@ -149,6 +149,16 @@ describe('scoring', () => {
     expect(scoreDay({ ...day, walkDone: false, lostDay: true, lostDayReason: 'Sick', salvageCompleted: 1 })).toBe('loss');
   });
 
+  test('the water anchor, and a Lost Day with one faith focus', () => {
+    expect(scoreDay({ ...day, waterDone: true })).toBe('win');
+    expect(scoreDay({ ...day, waterDone: false })).toBe('loss');
+    const lost = { ...day, big3Done: [], lostDay: true, lostDayReason: 'Rough day', waterDone: true };
+    expect(scoreDay({ ...lost, lostFocus: { done: true, surrendered: true } })).toBe('half');
+    expect(scoreDay({ ...lost, lostFocus: { done: true, surrendered: false } })).toBe('loss');
+    expect(scoreDay({ ...lost, lostFocus: { done: false, surrendered: true } })).toBe('loss');
+    expect(scoreDay({ ...lost, waterDone: false, lostFocus: { done: true, surrendered: true } })).toBe('loss');
+  });
+
   test('weekly series: at most 2 half wins count, 4 wins the series', () => {
     expect(scoreWeek(['win', 'win', 'win', 'win', 'win', 'win', 'win'])).toEqual({ points: 7, won: true, label: 'Sweep' });
     expect(scoreWeek(['win', 'win', 'win', 'win', 'win', 'win', 'half'])).toEqual({ points: 6.5, won: true, label: 'Dominant' });

@@ -3,7 +3,7 @@ import { describe, expect, test } from 'vitest';
 import { emptyDay, type DayRecord, type Snapshot } from '../data/model';
 import { seedSnapshot } from '../data/seedData';
 import { addDays } from '../planner';
-import { fireFor } from './fire';
+import { fireLog } from './fire';
 import { anchorStreaks, seasonRecord } from './planning';
 import { reportToOffer } from './report';
 import { coachFacts } from './store';
@@ -26,7 +26,7 @@ describe('stats start', () => {
     expect(seasonRecord(after, '2026-10-12')).toEqual({ won: 0, lost: 0 });
     expect(anchorStreaks(before, '2026-10-12').coldShower).toBe(11);
     expect(anchorStreaks(after, '2026-10-12').coldShower).toBe(1);
-    expect(fireFor(before, { date: '2026-10-12', min: 600 }).trail.length).toBeGreaterThan(fireFor(after, { date: '2026-10-12', min: 600 }).trail.length);
+    expect(fireLog(before, { date: '2026-10-12', min: 600 }).length).toBeGreaterThan(fireLog(after, { date: '2026-10-12', min: 600 }).length);
   });
 
   test('no scouting report for a week before the start; the coach does not bring up yesterday', () => {

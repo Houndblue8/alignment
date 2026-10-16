@@ -7,14 +7,14 @@ import * as THREE from 'three';
 import type { Journey } from '../../planner';
 
 export interface TempleState {
-  foundation: { coldShower: boolean; walk: boolean };
+  foundation: { water: boolean; coldShower: boolean; walk: boolean };
   /** rise: this week's progress (0 to 1); today: counted today (the column glows). */
   pillars: { id: Journey; rise: number; today: boolean }[];
   /** One little flame per Big 3 item. */
   buddies: { pillar: Journey; done: boolean }[];
-  /** EMBER (0.12) to about 1.25. */
+  /** EMBER (0.12) to 1. */
   fire: number;
-  level: 'ember' | 'flame' | 'blaze' | 'bright' | 'refiner';
+  level: 'ember' | 'flame' | 'blaze' | 'bright' | 'blue' | 'purple';
 }
 
 export interface TempleColors {
@@ -310,9 +310,13 @@ export function createTemple(canvas: HTMLCanvasElement, opts: TempleOptions): Te
 
   const marble = () => new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.55, metalness: 0.02 });
 
-  // Foundation: the cold shower (lower step) and the walk with God (upper step).
+  // Foundation: the water (a wide base), the cold shower (lower step) and the walk with God (upper step).
+  const baseMat = marble();
   const lowerMat = marble();
   const upperMat = marble();
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(3.7, 3.8, 0.12, 72), baseMat);
+  base.position.y = -0.06;
+  world.add(base);
   const lower = new THREE.Mesh(new THREE.CylinderGeometry(3.35, 3.45, 0.25, 72), lowerMat);
   lower.position.y = 0.125;
   const upper = new THREE.Mesh(new THREE.CylinderGeometry(3.0, 3.1, 0.25, 72), upperMat);
@@ -456,6 +460,8 @@ export function createTemple(canvas: HTMLCanvasElement, opts: TempleOptions): Te
     const stone = new THREE.Color(c.stone).lerp(new THREE.Color(0xf4efe4), 0.35);
     const accent = new THREE.Color(c.accent);
     const lit = stone.clone().lerp(accent, 0.45);
+    baseMat.color.copy(s.foundation.water ? lit : stone);
+    baseMat.emissive.copy(accent).multiplyScalar(s.foundation.water ? 0.16 : 0);
     lowerMat.color.copy(s.foundation.coldShower ? lit : stone);
     lowerMat.emissive.copy(accent).multiplyScalar(s.foundation.coldShower ? 0.16 : 0);
     upperMat.color.copy(s.foundation.walk ? lit : stone);
@@ -470,11 +476,16 @@ export function createTemple(canvas: HTMLCanvasElement, opts: TempleOptions): Te
       col.today = p.today;
     }
     (veilMat.uniforms.uColor!.value as THREE.Color).copy(accent).lerp(new THREE.Color(0xfff6e0), 0.65);
-    if (s.level === 'refiner') {
-      // Refiner's fire: white-hot at the core, gold, with a blue edge. Still a fire.
+    if (s.level === 'blue') {
+      // Blue fire: everything done, and done with God.
       core.set(0xffffff);
-      mid.set(0xffd66b);
-      edge.set(0x5aa9f0);
+      mid.set(0x7cc4ff);
+      edge.set(0x2f7fe0);
+    } else if (s.level === 'purple') {
+      // Purple fire: a Lost Day given to God. Loved, with eternal eyes.
+      core.set(0xfff0ff);
+      mid.set(0xc08cff);
+      edge.set(0x7a3fd6);
     } else {
       core.set(0xfff3c4);
       mid.set(0xffa040);
@@ -575,7 +586,7 @@ export function createTemple(canvas: HTMLCanvasElement, opts: TempleOptions): Te
     // The fire: size and bounce follow its strength; a puff when a buddy hops in.
     puff = Math.max(0, puff - dt * 1.6);
     const size = 0.55 + 0.55 * Math.min(1.25, f) + puff * 0.25;
-    const bounce = state.level === 'bright' || state.level === 'refiner' ? Math.abs(Math.sin(t * 2.2)) * 0.06 : Math.sin(t * 1.6) * 0.02;
+    const bounce = state.level === 'bright' || state.level === 'blue' || state.level === 'purple' ? Math.abs(Math.sin(t * 2.2)) * 0.06 : Math.sin(t * 1.6) * 0.02;
     fire.group.scale.set(size * (1 + puff * 0.1), size * (1 - puff * 0.05), size);
     fire.group.position.y = BASE_Y + 0.02 + bounce;
     fire.mat.uniforms.uTime!.value = t;

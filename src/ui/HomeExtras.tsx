@@ -40,10 +40,10 @@ export function AwayMessage() {
     return (
       <section className="card pad stack" role="note">
         <p>
-          {away} days away. That stretch is over and it does not decide who you are. Today decides the next one. Reset with a Lost Day: two small wins and today counts.
+          {away} days away. That stretch is over and it does not decide who you are. Today decides the next one. Reset with a Lost Day: one thing with God, and today counts.
         </p>
         <div className="row wrap">
-          <button className="btn primary" onClick={() => startLostDay(`Back after ${away} days away`).then(() => setHidden(true))}>
+          <button className="btn primary" onClick={() => startLostDay(`Back after ${away} days away`, '').then(() => setHidden(true))}>
             Lost Day reset
           </button>
           <button className="btn" onClick={() => setHidden(true)}>

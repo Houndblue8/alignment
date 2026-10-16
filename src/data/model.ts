@@ -99,10 +99,14 @@ export interface DayRecord {
   checkinDone: boolean;
   coldShower: AnchorStatus;
   walk: AnchorStatus;
+  /** The third morning anchor (Oct 16): a glass of water. Required for a Win from WATER_FROM on. */
+  water: AnchorStatus;
   big3: Big3Item[];
   result: DayResult | null;
   lostDay: boolean;
   lostDayReason: string | null;
+  /** A Lost Day's one faith focus (Oct 16). The original Big 3 waits here in case the Lost Day is ended. */
+  lostFocus?: LostFocus | null;
   codeRed: boolean;
   notes: string;
   plan: PlanMeta;
@@ -116,8 +120,19 @@ export interface DayRecord {
   /** The night tap: pillars Eli showed up for that the app could not see. */
   showedUp?: Journey[];
   /** The night check: Mind, Heart, Spirit, 1 to 5, and an optional line. */
-  inner?: { mind: number; heart: number; spirit: number; note?: string } | null;
+  inner?: { mind: number; heart: number; spirit: number; note?: string; closer?: boolean } | null;
 }
+
+export interface LostFocus {
+  text: string;
+  done: boolean;
+  /** Before bed: how he surrendered the day to God. */
+  surrender?: string;
+  big3: Big3Item[];
+}
+
+/** The glass of water became the third anchor on this day; earlier days are scored without it. */
+export const WATER_FROM = '2026-10-17';
 
 export interface PillarStep {
   pillar: Journey;
@@ -160,6 +175,7 @@ export function emptyDay(date: string): DayRecord {
     checkinDone: false,
     coldShower: { done: false },
     walk: { done: false },
+    water: { done: false },
     big3: [],
     result: null,
     lostDay: false,

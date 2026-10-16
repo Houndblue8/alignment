@@ -100,8 +100,8 @@ describe('home numbers', () => {
         '2026-10-12': { ...emptyDay('2026-10-12'), coldShower: { done: true } },
       },
     });
-    expect(anchorStreaks(s, '2026-10-12')).toEqual({ coldShower: 2, walk: 1 });
-    expect(todayProgress(s, '2026-10-12')).toEqual({ done: 1, total: 2 });
+    expect(anchorStreaks(s, '2026-10-12')).toEqual({ coldShower: 2, walk: 1, water: 0 });
+    expect(todayProgress(s, '2026-10-12')).toEqual({ done: 1, total: 3 });
     expect(quoteFor(s, '2026-10-12')!.tags).toContain('regret');
     expect(quoteFor(snap(), '2026-10-12')!.tags).toContain('general');
   });

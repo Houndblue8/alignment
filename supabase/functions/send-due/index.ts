@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
   for (const user of users) {
     const [{ data: settings }, { data: days }, { data: blocks }, { data: photo }] = await Promise.all([
       db.from('settings').select('*').eq('user_id', user).maybeSingle(),
-      db.from('day_records').select('date, checkin_done, cold_shower, walk, plan, big3').eq('user_id', user).in('date', [now.date, yesterday(now.date)]),
+      db.from('day_records').select('date, checkin_done, cold_shower, walk, water, plan, big3').eq('user_id', user).in('date', [now.date, yesterday(now.date)]),
       db.from('blocks').select('id, start_min, end_min, kind, title, status, source, pinned, task_id, place_id').eq('user_id', user).eq('date', now.date),
       db.from('photos').select('date').eq('user_id', user).eq('date', now.date).maybeSingle(),
     ]);
@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
       photoTaken: !!photo,
       expectedWakeMin: prev?.plan?.bedtime?.wakeMin ?? settings.wake_target_min,
       checkinDone: !!today?.checkin_done,
-      anchorsDone: !!(today?.cold_shower?.done && today?.walk?.done),
+      anchorsDone: !!(today?.cold_shower?.done && today?.walk?.done && today?.water?.done),
       bedMin: today?.plan?.bedtime?.bedMin ?? null,
       blocks: (blocks ?? []).map((b) => ({ id: b.id, start: b.start_min, end: b.end_min, kind: b.kind, title: b.title, status: b.status, source: b.source, pinned: b.pinned, taskId: b.task_id, placeId: b.place_id })),
       big3: ((today?.big3 ?? []) as { taskId: string }[]).map((i) => i.taskId),

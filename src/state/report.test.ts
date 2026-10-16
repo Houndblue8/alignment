@@ -19,7 +19,7 @@ function task(id: string, status: TaskRow['status'], deferralCount = 0): TaskRow
 function week(over: (d: DayRecord, i: number) => Partial<DayRecord>): Snapshot {
   const s = seedSnapshot();
   const days: Record<string, DayRecord> = {};
-  dates.forEach((d, i) => (days[d] = { ...emptyDay(d), checkinDone: true, wakeMin: 450, coldShower: { done: true }, walk: { done: true }, result: 'win', ...over(emptyDay(d), i) }));
+  dates.forEach((d, i) => (days[d] = { ...emptyDay(d), checkinDone: true, wakeMin: 450, coldShower: { done: true }, walk: { done: true }, water: { done: true }, result: 'win', ...over(emptyDay(d), i) }));
   return { ...s, settings: { ...s.settings, wakeTargetMin: 450 }, days, tasks: [task('a', 'done'), task('b', 'open'), task('c', 'open', 2)], blocks: [], photos: [] };
 }
 

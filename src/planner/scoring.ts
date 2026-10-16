@@ -11,10 +11,18 @@ export interface DayScoreInput {
   lostDay: boolean;
   lostDayReason: string | null;
   salvageCompleted: number;
+  /** The glass of water (the third anchor); undefined on days before it existed. */
+  waterDone?: boolean;
+  /** A Lost Day's faith focus: done, and surrendered to God before bed. */
+  lostFocus?: { done: boolean; surrendered: boolean } | null;
 }
 
 export function scoreDay(d: DayScoreInput): DayResult {
-  if (d.coldShowerDone && d.walkDone && d.big3Done.every(Boolean)) return 'win';
+  const anchors = d.coldShowerDone && d.walkDone && d.waterDone !== false;
+  // A Lost Day (Oct 16): the Big 3 is set aside for one faith focus. The focus, the anchors and a surrender
+  // before bed make it a Half win.
+  if (d.lostDay && d.lostFocus) return anchors && d.lostFocus.done && d.lostFocus.surrendered ? 'half' : 'loss';
+  if (anchors && d.big3Done.every(Boolean)) return 'win';
   if (d.lostDay && (d.lostDayReason ?? '').trim().length > 0 && d.salvageCompleted >= 2) return 'half';
   return 'loss';
 }

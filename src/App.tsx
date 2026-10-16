@@ -7,6 +7,7 @@ import { nowLocal } from './lib/clock';
 import { CheckIn } from './screens/CheckIn';
 import { Contract } from './screens/Contract';
 import { Home } from './screens/Home';
+import { LostDayStart } from './screens/LostDay';
 import { Login, SetPassword } from './screens/Login';
 import { Memory } from './screens/Memory';
 import { Quotes } from './screens/Quotes';
@@ -24,6 +25,7 @@ import { useInAppReminders } from './ui/Notifications';
 import { PaletteButton } from './ui/ThemePicker';
 import { fmtDate } from './planner';
 import { ToastView } from './ui/Toast';
+import { BOOT_MARKUP } from './ui/bootFire';
 
 export function App() {
   return (
@@ -51,12 +53,9 @@ function AuthGate() {
   return <Loaded key={session.user.id} />;
 }
 
+/** The loading screen: the fire with Alignment over its head and three little fires hopping around it. */
 function Splash() {
-  return (
-    <main className="fullscreen" aria-busy="true">
-      <h1 className="big">Alignment</h1>
-    </main>
-  );
+  return <main aria-busy="true" dangerouslySetInnerHTML={{ __html: BOOT_MARKUP }} />;
 }
 
 function Loaded() {
@@ -106,6 +105,7 @@ function Loaded() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/today" element={<Today />} />
+          <Route path="/lost" element={<LostDayStart />} />
           <Route path="/week" element={<Week />} />
           <Route path="/week/:date" element={<DayDetail />} />
           <Route path="/quotes" element={<Quotes />} />

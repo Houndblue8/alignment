@@ -103,36 +103,41 @@ export function FilmCamera({ date, label, test = false, onShot, onClose, onFallb
 
   return createPortal(
     <div className="film-camera" role="dialog" aria-modal="true" aria-label="Camera">
-      <video ref={video} playsInline muted className={mirror ? 'mirror' : ''} />
-      <div className="film-top">
-        <button className="film-icon" aria-label="Close the camera" onClick={onClose}>
-          <X size={24} />
-        </button>
-        <span className="film-count">{test ? 'Test shot, not saved' : label}</span>
-        <span className="film-icon" aria-hidden="true" />
-      </div>
-      {phase === 'selfie' && <p className="film-hint">You first. Then the view in {COUNTDOWN}.</p>}
-      {phase === 'countdown' && (
-        <div className="film-countdown" aria-live="assertive">
-          <span className="film-number">{count}</span>
-          <span className="film-hint static">Point it at what is in front of you</span>
-        </div>
-      )}
-      {phase === 'flash' && <div className="film-flash" aria-hidden="true" />}
-      {phase === 'error' ? (
-        <div className="film-error">
-          <p>{error}</p>
-          <button className="btn primary" onClick={onFallback}>
-            Use the phone camera
+      {/* A little digital camera: the viewfinder in the middle of the body, the shutter under it. */}
+      <div className="digicam">
+        <div className="film-top">
+          <button className="film-icon" aria-label="Close the camera" onClick={onClose}>
+            <X size={22} />
           </button>
+          <span className="film-count">{test ? 'Test shot, not saved' : label}</span>
+          <span className="digicam-led" aria-hidden="true" />
         </div>
-      ) : (
+        <div className="digicam-screen">
+          <video ref={video} playsInline muted className={mirror ? 'mirror' : ''} />
+          {phase === 'countdown' && (
+            <div className="film-countdown" aria-live="assertive">
+              <span className="film-number">{count}</span>
+            </div>
+          )}
+          {phase === 'flash' && <div className="film-flash" aria-hidden="true" />}
+          {phase === 'error' && (
+            <div className="film-error">
+              <p>{error}</p>
+              <button className="btn primary" onClick={onFallback}>
+                Use the phone camera
+              </button>
+            </div>
+          )}
+        </div>
+        <p className="film-hint">
+          {phase === 'countdown' ? 'Point it at what is in front of you' : phase === 'selfie' ? `You first. Then the view in ${COUNTDOWN}.` : test ? 'Test shots are not saved' : 'Alignment'}
+        </p>
         <div className="film-bottom">
-          <span className="film-icon" aria-hidden="true" />
+          <span className="digicam-grip" aria-hidden="true" />
           <button className="film-shutter" aria-label="Take the photo" disabled={phase !== 'selfie'} onClick={() => void shoot()} />
-          <span className="film-icon" aria-hidden="true" />
+          <span className="digicam-grip" aria-hidden="true" />
         </div>
-      )}
+      </div>
     </div>,
     document.body,
   );

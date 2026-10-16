@@ -24,7 +24,7 @@ export function todaysReminders(): Reminder[] {
     photoTaken: s.photos.some((p) => p.date === now.date),
     expectedWakeMin: s.days[addDays(now.date, -1)]?.plan.bedtime?.wakeMin ?? s.settings.wakeTargetMin,
     checkinDone: rec.checkinDone,
-    anchorsDone: rec.coldShower.done && rec.walk.done,
+    anchorsDone: rec.coldShower.done && rec.walk.done && rec.water.done,
     bedMin: rec.plan.bedtime?.bedMin ?? null,
     blocks: s.blocks.filter((b) => b.date === now.date).map((b) => ({ id: b.id, start: b.start, end: b.end, kind: b.kind, title: b.title, status: b.status, source: b.source, pinned: b.pinned, taskId: b.taskId, placeId: b.placeId })),
     big3: rec.big3.map((i) => i.taskId),

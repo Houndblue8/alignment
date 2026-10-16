@@ -3,10 +3,10 @@ import { useMemo, useState } from 'react';
 import { JOURNEYS, journeyLabel } from '../data/model';
 import { haptic } from '../lib/haptics';
 import { journeyStyle } from '../lib/format';
-import { addDays, weekStart, type Journey } from '../planner';
-import { fireFor, LEVEL_NAME, type FireState } from '../state/fire';
+import { addDays, fmtDate, weekStart, type Journey } from '../planner';
+import { fireFor, fireLog, LEVEL_NAME, type DayFire, type FirePart, type FireState } from '../state/fire';
 import { pillarHistory, pillarSteps, type Step } from '../state/pillars';
-import { buildingFor, buildingLine, seenOn, UNIT, weekTemple } from '../state/temple';
+import { buildingFor, buildingLine, needOn, seenOn, UNIT, weekTemple } from '../state/temple';
 import { dayOf } from '../state/planning';
 import { useApp } from '../state/store';
 import { SHORT } from './Building';
@@ -45,10 +45,11 @@ export function FocusHero() {
       <div className="pillar-chips" role="group" aria-label="Pillars">
         {b.pillars.map((p) => {
           const Icon = JOURNEY_ICON[p.id];
+          const need = needOn(p.id, now.date);
           return (
             <button
               key={p.id}
-              className={`pillar-chip ${p.steps > 0 ? 'risen' : ''}`}
+              className={`pillar-chip ${p.steps >= need ? 'risen' : ''}`}
               style={journeyStyle(p.id)}
               aria-label={`${p.label}: ${p.steps} ${p.steps === 1 ? 'step' : 'steps'} today`}
               onClick={() => setPillar(p.id)}
@@ -56,7 +57,7 @@ export function FocusHero() {
               <Icon size={16} aria-hidden="true" />
               <span>{SHORT[p.id]}</span>
               <span className="count" aria-hidden="true">
-                {p.steps}
+                {need > 1 ? `${Math.min(p.steps, need)}/${need}` : p.steps}
               </span>
             </button>
           );
@@ -77,64 +78,105 @@ export function FocusHero() {
   );
 }
 
-/** The fire's name and strength. Over 100 percent only on a refiner's day. */
-function FireMeter({ fire, onOpen }: { fire: FireState; onOpen: () => void }) {
-  const pct = Math.round(fire.value * 100);
+/** The fire's name and today's percent. */
+export function FireMeter({ fire, onOpen }: { fire: FireState; onOpen: () => void }) {
   return (
-    <button className={`fire-meter ${fire.level}`} onClick={onOpen} aria-label={`The fire: ${LEVEL_NAME[fire.level]}, ${pct} percent. Open`} data-testid="fire-meter">
+    <button className={`fire-meter ${fire.level}`} onClick={onOpen} aria-label={`The fire: ${LEVEL_NAME[fire.level]}, ${fire.pct} percent. Open`} data-testid="fire-meter">
       <Flame size={18} aria-hidden="true" className="fire-icon" />
       <span className="fire-name">{LEVEL_NAME[fire.level]}</span>
       <span className="fire-bar" aria-hidden="true">
-        <span style={{ width: `${Math.min(100, (fire.value / 1.25) * 100)}%` }} />
+        <span style={{ width: `${fire.pct}%` }} />
       </span>
       <span className="small muted" aria-hidden="true">
-        {pct}%
+        {fire.pct}%
       </span>
     </button>
   );
 }
 
-function FireSheet({ fire, onClose }: { fire: FireState; onClose: () => void }) {
+const DAY_LETTER = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+
+/** Seven little flames, Monday to Sunday, each the color its day reached. */
+export function FireWeek({ days, label }: { days: (DayFire | null)[]; label: string }) {
+  return (
+    <div className="fire-week" role="list" aria-label={label}>
+      {days.map((d, i) => (
+        <span
+          key={i}
+          role="listitem"
+          className={`fire-day ${d ? d.level : 'none'}`}
+          aria-label={d ? `${DAYS[i]}: ${LEVEL_NAME[d.level]}, ${d.pct} percent` : `${DAYS[i]}: not yet`}
+        >
+          <Flame size={Math.round(12 + (d ? d.pct / 100 : 0) * 12)} aria-hidden="true" />
+          <span className="small muted" aria-hidden="true">
+            {DAY_LETTER[i]}
+          </span>
+        </span>
+      ))}
+    </div>
+  );
+}
+
+export function FireSheet({ fire, onClose }: { fire: FireState; onClose: () => void }) {
+  const s = useApp((a) => a.s)!;
+  const now = useApp((a) => a.now);
   const t = fire.today;
-  const max = Math.max(1.25, ...fire.trail);
+  const log = useMemo(() => fireLog(s, now), [s, now]);
   return (
     <Sheet title="The fire" onClose={onClose}>
       <p className={`fire-title ${fire.level}`}>
-        <Flame size={20} aria-hidden="true" /> {LEVEL_NAME[fire.level]}, {Math.round(fire.value * 100)}%
+        <Flame size={20} aria-hidden="true" /> {LEVEL_NAME[fire.level]}, {fire.pct}%
       </p>
       <p>{fire.line}</p>
       <div className="stack">
-        <span className="small muted">Last {fire.trail.length} days</span>
-        <div className="fire-trail" aria-label={`Fire over the last ${fire.trail.length} days`}>
-          {fire.trail.map((v, i) => (
-            <span key={i} className={v > 1 ? 'over' : ''} style={{ height: `${Math.max(6, (v / max) * 100)}%` }} />
-          ))}
-        </div>
+        <Meter label={t.foundation.label} part={t.foundation} />
+        <Meter label={t.work.label} part={t.work} />
+        <Meter label={t.faith.label} part={t.faith} />
       </div>
-      <div className="stack">
-        <span className="small muted">Today so far</span>
-        <Meter label="Faith" value={t.faith} />
-        <Meter label="The rest of life" value={t.life} />
+      <ul className="fire-pieces" aria-label="What feeds it today">
+        {t.pieces.map((p, i) => (
+          <li key={i} className={p.done ? 'done' : ''}>
+            <span className="check-dot" aria-hidden="true">
+              {p.done && <Check size={12} strokeWidth={3} />}
+            </span>
+            <span className="grow">{p.label}</span>
+            <span className="small muted">+{Math.round(p.pts)}</span>
+          </li>
+        ))}
+      </ul>
+      <div className="stack" style={{ gap: 6 }}>
+        <span className="small muted">The log</span>
+        {log.map((w, i) => (
+          <div key={w.weekStart} className="fire-log-row">
+            <span className="small" style={{ width: 74 }}>
+              {i === 0 ? 'This week' : `Week of ${fmtDate(w.weekStart).replace(/^\w+, /, '')}`}
+            </span>
+            <FireWeek days={w.days} label={i === 0 ? 'This week' : `Week of ${w.weekStart}`} />
+            <span className="small muted">{w.avg}%</span>
+          </div>
+        ))}
       </div>
       <p className="small muted">
-        Faith feeds it most: the walk with God, time in the Word, prayer, Epic, church, and the Spirit check. Then the cold shower, the three torches of
-        your Big 3, the other pillars, and how your mind and heart are. It carries from day to day and never goes out. On a day where everything else
-        breaks down but your faith holds, it burns brighter than ever.
+        Foundation 30 (water, cold shower, the walk), the Big 3 50, faith 20. Everything without faith tops out at 80. The last 20 is steps toward God:
+        prayer, serving, His Word, Epic, church, sharing His love, or the night tap. All of it is a blue fire. A Lost Day given to Him (the one focus,
+        the foundation, and a surrender before bed) is a purple fire. Ember under 25, Flame to 49, Blaze to 79, Burning bright to 99.
       </p>
     </Sheet>
   );
 }
 
-function Meter({ label, value }: { label: string; value: number }) {
+function Meter({ label, part }: { label: string; part: FirePart }) {
   return (
     <div className="row">
-      <span className="small" style={{ width: 120 }}>
+      <span className="small" style={{ width: 110 }}>
         {label}
       </span>
       <span className="fire-bar grow" aria-hidden="true">
-        <span style={{ width: `${Math.round(value * 100)}%` }} />
+        <span style={{ width: `${Math.round((part.pts / part.max) * 100)}%` }} />
       </span>
-      <span className="small muted">{Math.round(value * 100)}%</span>
+      <span className="small muted" style={{ width: 52, textAlign: 'right' }}>
+        {Math.round(part.pts)} of {part.max}
+      </span>
     </div>
   );
 }
@@ -146,15 +188,19 @@ const INNER_ROWS: { key: 'mind' | 'heart' | 'spirit'; label: string; hint: strin
   { key: 'spirit', label: 'Spirit', hint: 'Close to God today?' },
 ];
 
-/** From 5 PM: Mind, Heart, Spirit, 1 to 5. Ten seconds. It feeds the fire. */
-export function InnerCheckCard() {
+/**
+ * From 5 PM: the night check. Mind, Heart, Spirit (1 to 5), "I drew closer to God today" (it fills the faith
+ * part of the fire), one line, and the kaizen line: one thing to do 1% better tomorrow.
+ */
+export function InnerCheckCard({ always = false }: { always?: boolean }) {
   const s = useApp((a) => a.s)!;
   const now = useApp((a) => a.now);
   const setInner = useApp((a) => a.setInner);
-  const saved = dayOf(s, now.date).inner ?? null;
-  const [v, setV] = useState({ mind: saved?.mind ?? 0, heart: saved?.heart ?? 0, spirit: saved?.spirit ?? 0, note: saved?.note ?? '' });
+  const rec = dayOf(s, now.date);
+  const saved = rec.inner ?? null;
+  const [v, setV] = useState({ mind: saved?.mind ?? 0, heart: saved?.heart ?? 0, spirit: saved?.spirit ?? 0, note: saved?.note ?? '', closer: !!saved?.closer, kaizen: rec.kaizen ?? '' });
   const [editing, setEditing] = useState(!saved);
-  if (now.min < 17 * 60) return null;
+  if (!always && now.min < 17 * 60) return null;
   return (
     <section className="card stack" aria-label="Tonight's check">
       <p className="section-label">Tonight's check</p>
@@ -165,7 +211,7 @@ export function InnerCheckCard() {
           onSubmit={(e) => {
             e.preventDefault();
             haptic();
-            void setInner({ mind: v.mind, heart: v.heart, spirit: v.spirit, note: v.note });
+            void setInner({ mind: v.mind, heart: v.heart, spirit: v.spirit, note: v.note, closer: v.closer || undefined }, v.kaizen);
             setEditing(false);
           }}
         >
@@ -191,17 +237,35 @@ export function InnerCheckCard() {
               </div>
             </div>
           ))}
+          <button type="button" className={`closer-tap ${v.closer ? 'on' : ''}`} aria-pressed={v.closer} onClick={() => (!v.closer && haptic(), setV({ ...v, closer: !v.closer }))}>
+            <Flame size={18} aria-hidden="true" />
+            <span className="grow">I drew closer to God today</span>
+            {v.closer && <Check size={16} strokeWidth={3} aria-hidden="true" />}
+          </button>
           <input className="field" value={v.note} onChange={(e) => setV({ ...v, note: e.target.value })} maxLength={160} placeholder="One line, if you want" aria-label="One line" />
+          <label className="label">
+            Kaizen: one thing to do 1% better tomorrow
+            <input className="field" value={v.kaizen} onChange={(e) => setV({ ...v, kaizen: e.target.value })} maxLength={140} placeholder="Phone stays out of the bedroom" />
+          </label>
           <button type="submit" className="btn primary" disabled={!v.mind || !v.heart || !v.spirit}>
             Save tonight's check
           </button>
         </form>
       ) : (
         <div className="row">
-          <p className="grow small">
-            Mind {v.mind}, Heart {v.heart}, Spirit {v.spirit}
-            {v.note.trim() ? `. ${v.note.trim()}` : ''}
-          </p>
+          <div className="grow stack" style={{ gap: 4 }}>
+            <p className="small">
+              Mind {v.mind}, Heart {v.heart}, Spirit {v.spirit}
+              {v.closer ? '. Drew closer to God' : ''}
+              {v.note.trim() ? `. ${v.note.trim()}` : ''}
+            </p>
+            {v.kaizen.trim() && (
+              <p className="small" data-testid="kaizen-saved">
+                <span className="muted">Tomorrow's 1%: </span>
+                {v.kaizen.trim()}
+              </p>
+            )}
+          </div>
           <button className="btn ghost" onClick={() => setEditing(true)}>
             Edit
           </button>
@@ -245,6 +309,11 @@ function PillarSheet({ pillar, onClose }: { pillar: Journey; onClose: () => void
         </div>
       </div>
       <ul className="stack" style={{ margin: 0, padding: 0, listStyle: 'none' }} aria-label="Steps today">
+        {needOn(pillar, now.date) > 1 && (
+          <li className="small muted">
+            Counts today at {needOn(pillar, now.date)} steps{pillar === 'faith' ? ': the walk and one more' : ': the water, the cold shower and one more'}.
+          </li>
+        )}
         {steps.length === 0 && <li className="small muted">No step yet today. One small step adds a stone.</li>}
         {steps.map((st) => (
           <StepRow key={st.key} step={st} pillar={pillar} />
@@ -335,47 +404,6 @@ function StepRow({ step, pillar }: { step: Step; pillar: Journey }) {
         </div>
       )}
     </li>
-  );
-}
-
-/** From 5 PM: one thing to do 1% better tomorrow. It shows on tomorrow's building. */
-export function KaizenCard() {
-  const s = useApp((a) => a.s)!;
-  const now = useApp((a) => a.now);
-  const setKaizen = useApp((a) => a.setKaizen);
-  const saved = dayOf(s, now.date).kaizen ?? '';
-  const [text, setText] = useState(saved);
-  const [editing, setEditing] = useState(!saved);
-  if (now.min < 17 * 60) return null;
-  return (
-    <section className="card stack" aria-label="One percent better">
-      <p className="section-label">Kaizen</p>
-      {editing ? (
-        <form
-          className="stack"
-          onSubmit={(e) => {
-            e.preventDefault();
-            void setKaizen(text);
-            setEditing(false);
-          }}
-        >
-          <label className="label">
-            One thing to do 1% better tomorrow
-            <input className="field" value={text} onChange={(e) => setText(e.target.value)} maxLength={140} placeholder="Phone stays out of the bedroom" />
-          </label>
-          <button type="submit" className="btn" disabled={!text.trim()}>
-            Save for tomorrow
-          </button>
-        </form>
-      ) : (
-        <div className="row">
-          <p className="grow">{saved}</p>
-          <button className="btn ghost" onClick={() => setEditing(true)}>
-            Edit
-          </button>
-        </div>
-      )}
-    </section>
   );
 }
 

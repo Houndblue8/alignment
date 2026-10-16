@@ -31,6 +31,7 @@ export function CheckIn() {
   const [wake, setWake] = useState<number | null>(nowRounded);
   const [cold, setCold] = useState(false);
   const [walk, setWalk] = useState(false);
+  const [water, setWater] = useState(false);
   const [creating, setCreating] = useState(false);
 
   // Start from yesterday's carried picks plus suggestions; Eli taps to keep or swap.
@@ -77,6 +78,7 @@ export function CheckIn() {
       </div>
 
       <div className="anchors">
+        <AnchorButton kind="water" done={water} onToggle={setWater} />
         <AnchorButton kind="coldShower" done={cold} onToggle={setCold} />
         <AnchorButton kind="walk" done={walk} onToggle={setWalk} />
       </div>
@@ -118,7 +120,7 @@ export function CheckIn() {
         onClick={async () => {
           if (wake === null) return;
           const big3: Big3Item[] = picked.map((taskId) => ({ taskId, locked: true, accepted: true }));
-          await checkIn({ wakeMin: wake, coldShowerDone: cold, walkDone: walk, big3 });
+          await checkIn({ wakeMin: wake, coldShowerDone: cold, walkDone: walk, waterDone: water, big3 });
           navigate('/', { replace: true });
         }}
       >

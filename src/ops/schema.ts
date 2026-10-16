@@ -10,8 +10,8 @@ const src = { source_text: z.string().min(1).describe('The exact clause of what 
 export const OpSchema = z.discriminatedUnion('op', [
   z.object({ op: z.literal('set_wake_time'), ...src, time }).describe('Eli says when he woke up today.'),
   z
-    .object({ op: z.literal('set_anchor'), ...src, anchor: z.enum(['cold_shower', 'walk']), done: z.boolean(), time: time.nullable() })
-    .describe('Cold shower or walk with God done (or not). time only if Eli said when.'),
+    .object({ op: z.literal('set_anchor'), ...src, anchor: z.enum(['cold_shower', 'walk', 'water']), done: z.boolean(), time: time.nullable() })
+    .describe('Glass of water, cold shower or walk with God done (or not). time only if Eli said when.'),
   z
     .object({
       op: z.literal('add_task'),

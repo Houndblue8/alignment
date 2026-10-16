@@ -20,7 +20,7 @@ Resolving time words (Eli lives in America/Los_Angeles; now is in the context)
 - "in an hour" = now plus 60 minutes. "I'm running 30 minutes behind" or "an hour late" = shift_day with those minutes.
 
 Things about the past
-- "I woke up at 7:30", "I already did my cold shower", "I walked at 8", "I skipped lunch": these apply to today only. Use set_wake_time, set_anchor (time only if he said one) and delete_block for today's matching block.
+- "I woke up at 7:30", "I already did my cold shower", "drank my water", "I walked at 8", "I skipped lunch": these apply to today only. Use set_wake_time, set_anchor (cold_shower, walk, or water for his morning glass of water; time only if he said one) and delete_block for today's matching block.
 
 Brain dumps
 - Split a list of things into separate add_task operations.

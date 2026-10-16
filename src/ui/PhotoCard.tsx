@@ -7,6 +7,7 @@ import { monthName } from '../state/recap';
 import { developsLabel, rollSize, shotNumber } from '../state/roll';
 import { useApp } from '../state/store';
 import { FilmCamera } from './FilmCamera';
+import { Polaroid } from './Polaroid';
 import { Sheet } from './Sheet';
 
 /** A little film canister: the shot is on the roll, out of sight until the month develops. */
@@ -157,7 +158,7 @@ export function PhotoCard() {
             setTestUrl(null);
           }}
         >
-          <img src={testUrl} alt="Your test shot" className="photo-full" data-testid="test-shot" />
+          <Polaroid src={testUrl} date={date} caption="Test shot" testId="test-shot" />
           <p className="small muted">This is how your shots come out. Test shots are not saved and do not go on the roll.</p>
           <button
             className="btn primary"

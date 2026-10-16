@@ -1,8 +1,9 @@
-import { Check, Snowflake, Sunrise } from 'lucide-react';
+import { Check, GlassWater, Snowflake, Sunrise } from 'lucide-react';
 import { useState } from 'react';
 import { haptic } from '../lib/haptics';
 
 const META = {
+  water: { label: 'Glass of water', Icon: GlassWater },
   coldShower: { label: 'Cold shower', Icon: Snowflake },
   walk: { label: 'Walk with God', Icon: Sunrise },
 } as const;

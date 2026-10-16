@@ -518,8 +518,13 @@ label.label {
 /* Anchor circles */
 .anchors {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--s2);
+}
+.anchors .anchor {
+  font-size: 0.86rem;
+  line-height: 1.2;
+  padding: 6px;
 }
 .anchor {
   aspect-ratio: 1;
@@ -1341,11 +1346,15 @@ main .pillar-chip {
   --fire-mid: #f59e2a;
   --fire-edge: #d9481c;
 }
-.building.refiner,
-.temple.refiner {
+.fire-blue {
   --fire-core: #ffffff;
   --fire-mid: #7cc4ff;
-  --fire-edge: #f5b335;
+  --fire-edge: #2f7fe0;
+}
+.fire-purple {
+  --fire-core: #fff0ff;
+  --fire-mid: #c08cff;
+  --fire-edge: #7a3fd6;
 }
 .building .god-roof .roof-fill {
   fill: var(--accent);
@@ -1494,9 +1503,13 @@ main .pillar-chip {
   color: #e2741f;
   flex: none;
 }
-.fire-meter.refiner .fire-icon,
-.fire-title.refiner svg {
+.fire-meter.blue .fire-icon,
+.fire-title.blue svg {
   color: #4aa3f0;
+}
+.fire-meter.purple .fire-icon,
+.fire-title.purple svg {
+  color: #9b5cf0;
 }
 .fire-meter .fire-name {
   font-weight: 600;
@@ -1517,8 +1530,11 @@ main .pillar-chip {
   background: linear-gradient(90deg, #f0b23c, #e2741f);
   transition: width 800ms ease;
 }
-.fire-meter.refiner .fire-bar span {
+.fire-meter.blue .fire-bar span {
   background: linear-gradient(90deg, #f0b23c, #ffffff 60%, #7cc4ff);
+}
+.fire-meter.purple .fire-bar span {
+  background: linear-gradient(90deg, #f0b23c, #f4dcff 55%, #a66cf5);
 }
 .fire-title {
   display: flex;
@@ -1729,6 +1745,13 @@ main .pillar-chip {
 .building .flame-core {
   fill: var(--fire-core);
 }
+.building .flame-tongue {
+  fill: var(--fire-edge);
+  opacity: 0.9;
+}
+.building .buddy .flame-tongue {
+  fill: var(--jc);
+}
 .building .hero-flame,
 .building .buddy {
   transform-box: fill-box;
@@ -1828,64 +1851,6 @@ main .pillar-chip {
 }
 
 /* Urge button (Appendix E 5) */
-.urge-btn {
-  justify-self: center;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 18px;
-  min-height: 44px;
-  border-radius: 999px;
-  border: 1.5px dashed color-mix(in srgb, var(--accent) 60%, var(--border));
-  background: var(--card);
-  color: var(--text);
-  font: inherit;
-  cursor: pointer;
-}
-.urge-choices {
-  gap: 10px;
-}
-.urge-choice {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  width: 100%;
-  padding: 14px 16px;
-  border-radius: 16px;
-  border: 1px solid var(--border);
-  background: var(--card);
-  color: var(--text);
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-}
-.urge-choice svg {
-  color: var(--accent-ink);
-  flex: none;
-}
-.urge-choice > span {
-  display: grid;
-  gap: 2px;
-  min-width: 0;
-}
-.urge-photo {
-  margin: 0;
-  display: grid;
-  gap: 8px;
-}
-.urge-photo img {
-  width: 100%;
-  max-height: 46vh;
-  object-fit: cover;
-  border-radius: 14px;
-}
-.urge-quote {
-  margin: 0;
-  padding: 8px 14px;
-  border-left: 3px solid var(--accent);
-  font-size: 1.1rem;
-  line-height: 1.5;
-}
 
 /* Monthly recap */
 .photo-strip {
@@ -1898,7 +1863,7 @@ main .pillar-chip {
 .strip-item {
   margin: 0;
   flex: none;
-  width: 84px;
+  width: auto;
   scroll-snap-align: start;
   text-align: center;
 }
@@ -1922,93 +1887,130 @@ main .pillar-chip {
   z-index: 40;
 }
 
-/* The daily camera: a BeReal double shot with the disposable look (Oct 12). */
+/* The daily camera (Oct 16): a little digital camera body, centered, with the 3:4 viewfinder in the middle.
+   The viewfinder is the shot: the same 3:4 frame that is saved, so the 0.5x looks like 0.5x. */
 .film-camera {
   position: fixed;
   inset: 0;
   z-index: 100;
-  background: #000;
-  color: #fff;
   display: grid;
-  grid-template-rows: auto 1fr auto;
+  place-items: center;
+  padding: calc(12px + env(safe-area-inset-top)) 12px calc(12px + env(safe-area-inset-bottom));
+  background: radial-gradient(120% 80% at 50% 40%, #2a2622, #0b0a09);
+  color: #fff;
 }
-/* The preview is the shot: the same 3:4 frame that is saved (a full-screen preview would crop the sides
-   and make the 0.5x look like 1x). */
-.film-camera video {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: min(100vw, 75vh);
-  aspect-ratio: 3 / 4;
-  height: auto;
-  object-fit: cover;
-  transform: translate(-50%, -50%);
-  border-radius: 6px;
+.digicam {
+  --screen-w: min(calc(100vw - 64px), calc((100dvh - 250px) * 0.75), 420px);
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 12px 14px 16px;
+  border-radius: 26px;
+  background: linear-gradient(160deg, #f3efe7, #d9d2c4 60%, #c9c0b0);
+  color: #3a332b;
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    inset 0 -3px 0 rgba(0, 0, 0, 0.12);
 }
-.film-camera video.mirror {
-  transform: translate(-50%, -50%) scaleX(-1);
-}
-.film-top,
-.film-bottom {
-  position: relative;
-  z-index: 1;
+.film-top {
+  width: var(--screen-w);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: calc(12px + env(safe-area-inset-top)) 20px 12px;
-  background: linear-gradient(rgba(0, 0, 0, 0.45), transparent);
-}
-.film-bottom {
-  grid-row: 3;
-  padding: 20px 28px calc(28px + env(safe-area-inset-bottom));
-  background: linear-gradient(transparent, rgba(0, 0, 0, 0.5));
 }
 .film-count {
   font-family: 'Courier New', ui-monospace, monospace;
   font-weight: 700;
+  font-size: 0.8rem;
   color: #ff9a3c;
-  text-shadow: 0 0 8px rgba(255, 120, 30, 0.8);
-  letter-spacing: 0.05em;
+  background: #1d1a17;
+  padding: 4px 10px;
+  border-radius: 6px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-shadow: 0 0 6px rgba(255, 120, 30, 0.8);
 }
 .film-icon {
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
   display: grid;
   place-items: center;
   border-radius: 50%;
   border: 0;
-  background: rgba(255, 255, 255, 0.14);
-  color: #fff;
+  background: rgba(58, 51, 43, 0.12);
+  color: #3a332b;
   cursor: pointer;
 }
-span.film-icon {
-  background: transparent;
+.digicam-led {
+  width: 40px;
+  display: grid;
+  place-items: center;
+}
+.digicam-led::after {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #4ade80;
+  box-shadow: 0 0 8px #4ade80;
+}
+.digicam-screen {
+  position: relative;
+  width: var(--screen-w);
+  aspect-ratio: 3 / 4;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #000;
+  border: 6px solid #1d1a17;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+.digicam-screen video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.digicam-screen video.mirror {
+  transform: scaleX(-1);
+}
+.film-hint {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #5a5046;
+  text-align: center;
+}
+.film-bottom {
+  width: var(--screen-w);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.digicam-grip {
+  width: 48px;
+  height: 18px;
+  border-radius: 999px;
+  background: repeating-linear-gradient(90deg, rgba(58, 51, 43, 0.25) 0 2px, transparent 2px 6px);
 }
 .film-shutter {
-  width: 78px;
-  height: 78px;
+  width: 70px;
+  height: 70px;
   border-radius: 50%;
-  border: 5px solid #fff;
-  background: rgba(255, 255, 255, 0.25);
+  border: 4px solid #3a332b;
+  background: radial-gradient(circle at 40% 35%, #ff9a5a, #e4572e 70%);
+  box-shadow: 0 3px 0 #9c3a1d, 0 6px 14px rgba(0, 0, 0, 0.3);
   cursor: pointer;
   transition: transform 120ms ease;
 }
 .film-shutter:active {
-  transform: scale(0.92);
+  transform: translateY(2px) scale(0.96);
 }
 .film-shutter:disabled,
 .film-icon:disabled {
-  opacity: 0.4;
-}
-.film-hint {
-  grid-row: 2;
-  align-self: center;
-  justify-self: center;
-  z-index: 1;
-  padding: 10px 18px;
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.55);
-  font-weight: 600;
+  opacity: 0.45;
 }
 .film-flash {
   position: absolute;
@@ -2026,14 +2028,69 @@ span.film-icon {
   }
 }
 .film-error {
-  grid-row: 2;
+  position: absolute;
+  inset: 0;
   z-index: 1;
-  align-self: center;
   display: grid;
   gap: 14px;
+  place-content: center;
   justify-items: center;
   text-align: center;
-  padding: 24px;
+  padding: 20px;
+  color: #fff;
+}
+
+/* A developed shot: a polaroid with the line and the date written underneath. */
+.polaroid {
+  margin: 0;
+  justify-self: center;
+  width: 100%;
+  max-width: 360px;
+  padding: 12px 12px 0;
+  background: #fbfaf6;
+  border-radius: 3px;
+  box-shadow:
+    0 10px 28px rgba(0, 0, 0, 0.22),
+    0 1px 2px rgba(0, 0, 0, 0.12);
+  color: #2b2620;
+}
+.polaroid .polaroid-photo img,
+.polaroid .polaroid-photo .strip-empty {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 0;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  background: #ddd6c8;
+}
+.polaroid figcaption {
+  display: grid;
+  gap: 2px;
+  padding: 12px 4px 18px;
+  min-height: 64px;
+  align-content: center;
+  text-align: center;
+  font-family: 'Marker Felt', 'Bradley Hand', 'Segoe Print', 'Comic Sans MS', cursive;
+}
+.polaroid-caption {
+  font-size: 1.05rem;
+  line-height: 1.25;
+}
+.polaroid-date {
+  font-size: 0.85rem;
+  color: #7a6f62;
+}
+.polaroid.small {
+  width: 92px;
+  padding: 6px 6px 0;
+}
+.polaroid.small figcaption {
+  min-height: 0;
+  padding: 6px 2px 8px;
+}
+.polaroid.small .polaroid-date {
+  font-size: 0.72rem;
 }
 
 /* The roll */
@@ -2086,25 +2143,215 @@ span.film-icon {
   }
 }
 .film-countdown {
-  grid-row: 2;
+  position: absolute;
+  inset: 0;
   z-index: 1;
-  align-self: center;
-  justify-self: center;
   display: grid;
-  justify-items: center;
-  gap: 12px;
+  place-items: center;
 }
 .film-number {
-  font-size: 7rem;
+  font-size: 6rem;
   font-weight: 700;
   line-height: 1;
   color: #fff;
   text-shadow: 0 2px 18px rgba(0, 0, 0, 0.6);
 }
-.film-hint.static {
-  align-self: auto;
+
+/* The fire, Oct 16: today's percent, the week of little flames, the log. */
+.fire-day {
+  display: grid;
+  justify-items: center;
+  align-content: end;
+  gap: 2px;
+  min-width: 0;
 }
-.film-camera > .film-hint {
-  align-self: end;
-  margin-bottom: 16px;
+.fire-week {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+  align-items: end;
+  width: 100%;
+  max-width: 320px;
+}
+.fire-day svg {
+  color: #e2741f;
+}
+.fire-day.none svg {
+  color: var(--border);
+}
+.fire-day.ember svg {
+  color: #c98a5a;
+  opacity: 0.6;
+}
+.fire-day.bright svg {
+  color: #f0b23c;
+}
+.fire-day.blue svg {
+  color: #4aa3f0;
+}
+.fire-day.purple svg {
+  color: #9b5cf0;
+}
+.fire-log-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: end;
+}
+.fire-pieces {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.fire-pieces li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+}
+.fire-pieces li.done {
+  color: var(--text);
+}
+.check-dot {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  display: grid;
+  place-items: center;
+}
+.fire-pieces li.done .check-dot {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+.closer-tap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.closer-tap svg {
+  color: #4aa3f0;
+}
+.closer-tap.on {
+  border-color: #4aa3f0;
+  background: color-mix(in srgb, #4aa3f0 14%, var(--card));
+}
+
+/* The fire alone (Lost Day, evening). */
+.fire-solo {
+  max-width: 260px;
+}
+.fire-hero {
+  border: 0;
+  background: none;
+  padding: 0;
+  justify-self: center;
+  width: 100%;
+  display: grid;
+  justify-items: center;
+  cursor: pointer;
+}
+.fire-solo .hopper {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: hop 1.1s ease-in-out infinite;
+}
+.fire-solo .hopper.h1 {
+  animation-delay: 0.35s;
+}
+.fire-solo .hopper.h2 {
+  animation-delay: 0.7s;
+}
+@keyframes hop {
+  0%,
+  100% {
+    transform: translateY(0) scale(1, 1);
+  }
+  15% {
+    transform: translateY(0) scale(1.1, 0.88);
+  }
+  50% {
+    transform: translateY(-18px) scale(0.95, 1.05);
+  }
+}
+
+/* The Lost Day page. */
+.lost-day h1 {
+  line-height: 1.2;
+}
+.lost-line {
+  margin: 0;
+  text-align: center;
+  font-weight: 600;
+}
+.lost-day.is-purple .lost-line {
+  color: #9b5cf0;
+}
+.focus-idea {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.focus-idea.on {
+  border-color: #9b5cf0;
+  background: color-mix(in srgb, #9b5cf0 12%, var(--card));
+}
+.focus-check {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 6px 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 1.15rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.focus-check .check {
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+}
+.focus-check.is-done .check {
+  background: #9b5cf0;
+  border-color: #9b5cf0;
+  color: #fff;
+}
+.focus-check.is-done .grow {
+  text-decoration: line-through;
+  text-decoration-color: color-mix(in srgb, #9b5cf0 60%, transparent);
+}
+.lost-verse {
+  margin: 0;
+  padding-left: 12px;
+  border-left: 3px solid color-mix(in srgb, #9b5cf0 50%, transparent);
+  font-style: italic;
+}
+@media (prefers-reduced-motion: reduce) {
+  .fire-solo .hopper {
+    animation: none;
+  }
 }

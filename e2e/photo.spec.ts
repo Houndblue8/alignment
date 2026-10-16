@@ -43,7 +43,7 @@ test("a shot goes on the month's roll, hidden until the month is over; then Memo
   await page.getByRole('button', { name: 'Previous month' }).click();
   await page.getByRole('button', { name: 'Friday, Oct 16', exact: true }).click();
   await page.getByRole('checkbox', { name: 'Milestone day' }).check();
-  await page.getByRole('button', { name: 'Close' }).click();
+  await page.getByRole('button', { name: 'Close', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Friday, Oct 16, milestone' })).toBeVisible();
   await page.goto('/recap/2026-10');
   await expect(page.getByRole('region', { name: 'Photo timeline' }).locator('img')).toHaveCount(1);

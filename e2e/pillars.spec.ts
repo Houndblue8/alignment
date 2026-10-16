@@ -14,7 +14,7 @@ test('take Epic out of Faith always; it is remembered and can be forgotten in Se
   await expect(sheet).toContainText('Stop counting "Epic small group"');
   await sheet.getByRole('button', { name: 'Always' }).click();
   await expect(sheet.getByRole('list', { name: 'Steps today' })).not.toContainText('Epic small group');
-  await page.getByRole('button', { name: 'Close' }).click();
+  await page.getByRole('button', { name: 'Close', exact: true }).click();
 
   await page.getByRole('link', { name: 'Settings' }).click();
   await page.getByText('Weekly temple').click();
@@ -34,6 +34,6 @@ test('move a step to another pillar just for today', async ({ page }) => {
   await sheet.getByRole('button', { name: 'Edit Epic small group' }).click();
   await sheet.getByRole('button', { name: 'Social', exact: true }).click();
   await sheet.getByRole('button', { name: 'Just today' }).click();
-  await page.getByRole('button', { name: 'Close' }).click();
+  await page.getByRole('button', { name: 'Close', exact: true }).click();
   await expect(focus.getByRole('button', { name: /^Social and Community: 1 step today/ })).toBeVisible();
 });

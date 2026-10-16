@@ -1,37 +1,6 @@
-// The urge button (Appendix E 5) and the monthly recap (Appendix E 2).
+// The monthly recap (Appendix E 2).
 import { expect, test } from '@playwright/test';
 import { checkIn, signedWithTasks } from './helpers';
-
-test('urge button: avoiding shrinks the most pushed-off task to a 5 minute start; tired offers a walk that counts for Stewardship', async ({ page }) => {
-  await signedWithTasks(page, '2026-10-12T14:00', [
-    { id: 'memo', title: 'Tax memo', importance: 5, deferralCount: 3 } as never,
-    { id: 'dms', title: 'Send DMs', importance: 3, estimatedMinutes: 20 },
-  ]);
-  await checkIn(page, '7:30');
-  await page.getByRole('button', { name: 'Bored, avoiding, or tired?' }).click();
-  await page.getByRole('button', { name: /^Avoiding Shrink/ }).click();
-  const avoiding = page.getByTestId('urge-avoiding');
-  await expect(avoiding).toContainText('Tax memo');
-  await expect(avoiding).toContainText('Pushed off 3 times.');
-  await expect(avoiding).toContainText('5 minute start: Open it and write one rough sentence.');
-  await page.getByRole('button', { name: 'Start 5 minutes' }).click();
-  await expect(page.getByTestId('urge-timer')).toContainText(/4:5\d|5:00/);
-  await page.getByRole('button', { name: 'Stop here' }).click();
-
-  await page.getByRole('button', { name: 'Bored, avoiding, or tired?' }).click();
-  await page.getByRole('button', { name: /^Tired A short/ }).click();
-  await expect(page.getByTestId('urge-tired')).toContainText('Send DMs');
-  await page.getByRole('button', { name: /A 10 minute walk/ }).click();
-  await page.getByRole('button', { name: 'Stop here' }).click();
-  await page.getByRole('link', { name: 'Today', exact: true }).click();
-  await expect(page.getByRole('region', { name: 'Focus' }).getByRole('button', { name: /^Stewardship: 1 step today/ })).toBeVisible();
-
-  await page.getByRole('button', { name: 'Bored, avoiding, or tired?' }).click();
-  await page.getByRole('button', { name: /^Bored Something/ }).click();
-  await expect(page.getByTestId('urge-bored')).toBeVisible();
-  await page.getByRole('button', { name: 'Another' }).click();
-  await page.getByRole('button', { name: 'Back to it' }).click();
-});
 
 test('monthly recap: the numbers, a letter from the coach, and the vision check', async ({ page }) => {
   await page.addInitScript(() => {

@@ -9,6 +9,7 @@ export interface DumpContext {
   today: {
     wake_time: string | null;
     cold_shower_done: boolean;
+    water_done: boolean;
     walk_done: boolean;
     lost_day: boolean;
     big3_task_ids: string[];
@@ -49,6 +50,7 @@ export function buildContext(s: Snapshot, now: Now, recent: RecentMessage[] = []
     today: {
       wake_time: rec.wakeMin === null ? null : hhmm(rec.wakeMin),
       cold_shower_done: rec.coldShower.done,
+      water_done: !!rec.water?.done,
       walk_done: rec.walk.done,
       lost_day: rec.lostDay,
       big3_task_ids: rec.big3.map((i) => i.taskId),

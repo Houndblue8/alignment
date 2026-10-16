@@ -36,6 +36,7 @@ describe('the weekly temple', () => {
       tasks: [task('memo', 'school'), task('dms', 'shs')],
       days: { [MON]: day(MON, { walk: { done: true }, big3: [{ taskId: 'memo', locked: true, accepted: true, done: true }] }) },
       blocks: [
+        blk('church', MON, { eventId: 'church-sun', start: 480, end: 540 }),
         blk('w', MON, { kind: 'workout', start: 900, end: 960 }),
         blk('p', MON, { kind: 'practice', start: 585, end: 705 }),
         blk('c', MON, { kind: 'class', eventId: 'acct2-mon', start: 720, end: 800 }),
@@ -71,10 +72,22 @@ describe('the weekly temple', () => {
     expect(custom.targets).toMatchObject({ body: 4, sport: 10, school: 4, shs: 4, life: 2 });
   });
 
-  test('the week adds up day by day; Athletics counts sessions (workouts and practices)', () => {
+  test('from Oct 17, Faith takes two things a day and Stewardship three; the night tap is one', () => {
+    const SAT = '2026-10-17';
+    const s = snap({ days: { [SAT]: day(SAT, { walk: { done: true }, coldShower: { done: true }, steps: [{ pillar: 'body', text: 'Laundry' }] }) } });
+    const now = { date: SAT, min: 1300 };
+    expect([countedOn(s, SAT, now).faith, countedOn(s, SAT, now).body]).toEqual([false, false]);
+    s.days[SAT] = { ...s.days[SAT]!, water: { done: true }, showedUp: ['faith'] };
+    expect([countedOn(s, SAT, now).faith, countedOn(s, SAT, now).body]).toEqual([true, true]);
+    // Before then, one step was enough.
+    expect(countedOn({ ...s, days: { [MON]: day(MON, { walk: { done: true } }) } }, MON, { date: MON, min: 1300 }).faith).toBe(true);
+  });
+
+  test('the week adds up day by day; Athletics counts every session (practice, flag football, the lift, a game)', () => {
     const s = snap({
       days: { [MON]: day(MON, { walk: { done: true } }), [TUE]: day(TUE, { walk: { done: true }, showedUp: ['sport'] }) },
       blocks: [
+        blk('playoffs', TUE, { title: 'Flag football playoffs', start: 1110, end: 1200 }),
         blk('p1', MON, { kind: 'practice', start: 585, end: 705 }),
         blk('w1', MON, { kind: 'workout', start: 900, end: 960 }),
         blk('p2', MON, { kind: 'practice', start: 1290, end: 1350, eventId: 'flag-mon' }),
@@ -84,8 +97,8 @@ describe('the weekly temple', () => {
     const t = weekTemple(s, MON, { date: TUE, min: 1300 });
     const p = Object.fromEntries(t.pillars.map((x) => [x.id, x]));
     expect([p.faith!.done, p.faith!.days.slice(0, 3)]).toEqual([2, [true, true, false]]);
-    // Monday: a practice, a workout and flag football; Tuesday: a tap with no session.
-    expect(p.sport!.done).toBe(4);
+    // Monday: a practice, a workout and flag football; Tuesday: the playoffs (an event) and a tap.
+    expect(p.sport!.done).toBe(5);
     expect(p.faith!.today).toBe(true);
     expect(t.complete).toBe(false);
     const saved = saveableTemple(s, MON, { date: TUE, min: 1300 });
@@ -96,7 +109,10 @@ describe('the weekly temple', () => {
   test('the line under the fire speaks to today: foundation, then the Big 3 flames', () => {
     const s = snap({ tasks: [task('a', 'school'), task('b', 'shs')], days: { [MON]: day(MON) } });
     const now = { date: MON, min: 600 };
-    expect(buildingLine(buildingFor(s, MON, now))).toBe('Lay the foundation first: the cold shower, then the walk.');
+    expect(buildingLine(buildingFor(s, MON, now))).toBe('1 of 3 in the foundation. Finish it. Temple this week: 0 of 6 pillars at target.');
+    const sat = '2026-10-17';
+    s.days[sat] = day(sat);
+    expect(buildingLine(buildingFor(s, sat, { date: sat, min: 600 }))).toBe('Lay the foundation first: a glass of water, the cold shower, then the walk.');
     s.days[MON] = day(MON, { coldShower: { done: true }, walk: { done: true }, big3: [{ taskId: 'a', locked: true, accepted: true }, { taskId: 'b', locked: true, accepted: true, done: true }] });
     const b = buildingFor(s, MON, now);
     expect(b.torches.items.map((i) => [i.pillar, i.done])).toEqual([

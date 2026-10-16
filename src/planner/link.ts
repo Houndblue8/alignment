@@ -61,6 +61,17 @@ function wordsMatch(a: string, b: string): boolean {
 export function sameThing(a: string, b: string): boolean {
   const ta = tokens(a);
   const tb = tokens(b);
+  if (sameWords(ta, tb)) return true;
+  // "Intentional at large group" is Epic large group: how he shows up is not what it is.
+  const sa = ta.filter((w) => !MANNER.has(w));
+  const sb = tb.filter((w) => !MANNER.has(w));
+  return (sa.length < ta.length || sb.length < tb.length) && sameWords(sa, sb);
+}
+
+/** Words about how Eli shows up, not what the thing is. */
+const MANNER = new Set(['intentional', 'intentionally', 'be', 'present', 'fully', 'attend', 'show', 'up', 'really', 'engaged']);
+
+function sameWords(ta: string[], tb: string[]): boolean {
   if (!ta.length || !tb.length) return false;
   const ja = ta.join('');
   const jb = tb.join('');

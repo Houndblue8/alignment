@@ -53,5 +53,6 @@ export async function checkIn(page: Page, chip = '7:30') {
   await expect(page.getByRole('heading', { name: 'What time did you wake up?' })).toBeVisible();
   await page.getByRole('button', { name: chip, exact: true }).click();
   await page.getByRole('button', { name: 'Build my day' }).click();
-  await expect(page.getByRole('button', { name: /^Next:/ })).toBeVisible();
+  // After 9 PM Home is the evening recap.
+  await expect(page.getByRole('button', { name: /^Next:/ }).or(page.getByTestId('evening'))).toBeVisible();
 }

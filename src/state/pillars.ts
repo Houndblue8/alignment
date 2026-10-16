@@ -13,7 +13,7 @@ export interface Step {
   index?: number;
   /** What this step is, the same across days (an event, a task, the workout), so an edit can be remembered. */
   key: string;
-  /** A training session (a workout or a practice): Athletics counts sessions. */
+  /** A training session (a workout or a practice). Athletics counts every one of its steps as a session. */
   session?: boolean;
 }
 
@@ -49,6 +49,12 @@ export function pillarFromTitle(title: string): Journey | null {
   return null;
 }
 
+/** The pillar an event block counts toward (Epic, church: Faith), if any. */
+export function eventPillar(s: Snapshot, b: Block): Journey | null {
+  const def = b.eventId ? s.events.find((e) => e.id === b.eventId) : undefined;
+  return (def && RANK_PILLAR[def.rankKey]) ?? pillarFromTitle(b.title);
+}
+
 /** A block that stands for a task without being work time (the workout for "Lift"). */
 const isLinked = (b: Block) => !!b.taskId && b.kind !== 'work' && b.kind !== 'library_work';
 
@@ -76,6 +82,7 @@ export function pillarSteps(s: Snapshot, date: string, now: Now): Record<Journey
   };
   const task = (id: string | null) => (id ? s.tasks.find((x) => x.id === id) : undefined);
 
+  if (rec.water?.done) add('body', { key: 'anchor:water', text: 'Glass of water' });
   if (rec.coldShower.done) add('body', { key: 'anchor:cold_shower', text: 'Cold shower' });
   if (rec.walk.done) add('faith', { key: 'anchor:walk', text: 'Walk with God' });
   for (const i of rec.big3) {
@@ -102,8 +109,7 @@ export function pillarSteps(s: Snapshot, date: string, now: Now): Record<Journey
     }
     if (b.kind === 'event') {
       if (!happened(b)) continue;
-      const def = b.eventId ? s.events.find((e) => e.id === b.eventId) : undefined;
-      add((def && RANK_PILLAR[def.rankKey]) ?? pillarFromTitle(b.title), { key: b.eventId ? `event:${b.eventId}` : `title:${tokens(b.title).join(' ')}`, text: b.title });
+      add(eventPillar(s, b), { key: b.eventId ? `event:${b.eventId}` : `title:${tokens(b.title).join(' ')}`, text: b.title });
       continue;
     }
     if (b.status !== 'done' && !(b.source === 'manual' && happened(b))) continue;

@@ -6,6 +6,7 @@ import { monthFacts, monthName, prevMonth } from '../state/recap';
 import { developsLabel, isDeveloped } from '../state/roll';
 import { Canister } from '../ui/PhotoCard';
 import { useApp } from '../state/store';
+import { Polaroid } from '../ui/Polaroid';
 
 const nextMonth = (month: string): string => {
   const [y, m] = month.split('-').map(Number) as [number, number];
@@ -106,10 +107,9 @@ export function Recap() {
               </div>
               <div className="photo-strip develop">
                 {f.photos.map((p, i) => (
-                  <figure key={p.date} className="strip-item" style={{ animationDelay: `${i * 140}ms` }}>
-                    {urls[p.storagePath] ? <img src={urls[p.storagePath]} alt={p.caption || fmtDate(p.date)} /> : <span className="strip-empty" />}
-                    <figcaption className="small muted">{fmtDate(p.date).replace(/^\w+, /, '')}</figcaption>
-                  </figure>
+                  <div key={p.date} className="strip-item" style={{ animationDelay: `${i * 140}ms` }}>
+                    <Polaroid src={urls[p.storagePath] ?? ''} date={p.date} caption={p.caption} small />
+                  </div>
                 ))}
               </div>
             </section>

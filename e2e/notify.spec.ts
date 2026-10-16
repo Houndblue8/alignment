@@ -5,7 +5,7 @@ import { checkIn, signedWithTasks } from './helpers';
 test('without push, the morning reminder shows inside the app at the wake time', async ({ page }) => {
   // The wake target is 6:30 AM; at 6:31 with no check-in the reminder is due.
   await signedWithTasks(page, '2026-10-16T06:31', []);
-  await expect(page.getByTestId('toast')).toContainText('Good morning. Cold shower, then the walk with God.');
+  await expect(page.getByTestId('toast')).toContainText('Good morning. A glass of water, the cold shower, then the walk with God.');
 });
 
 test('notification settings: state is explained and preferences persist', async ({ page }) => {

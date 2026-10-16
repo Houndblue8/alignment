@@ -41,7 +41,7 @@ test('24. a theme switch applies at once and persists after reload', async ({ pa
   await page.getByRole('radio', { name: /Black Panther/ }).click();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'black-panther');
   await expect.poll(bg).toBe('rgb(9, 8, 13)');
-  await page.getByRole('button', { name: 'Close' }).click();
+  await page.getByRole('button', { name: 'Close', exact: true }).click();
 
   await page.reload();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'black-panther');

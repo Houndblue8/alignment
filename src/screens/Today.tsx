@@ -1,6 +1,6 @@
 import { CalendarX, Car, Check, Clock, MapPin, MoreVertical, Pin, RefreshCw, SkipForward } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { journeyLabel } from '../data/model';
 import { fmtTime, fromHHMM, journeyStyle, kindJourney, shortDuration, toHHMM } from '../lib/format';
 import { sunsetMin, weekStart, type Block } from '../planner';
@@ -9,8 +9,7 @@ import { weekTemple } from '../state/temple';
 import { openWindows, setBlocks, type OpenWindow } from '../../supabase/functions/_shared/reminders.ts';
 import { useApp } from '../state/store';
 import { AnchorButton } from '../ui/AnchorButton';
-import { FocusHero, InnerCheckCard, KaizenCard } from '../ui/Focus';
-import { UrgeButton } from '../ui/Urge';
+import { FocusHero, InnerCheckCard } from '../ui/Focus';
 import { Sheet } from '../ui/Sheet';
 import { JOURNEY_ICON, KIND_ICON } from '../ui/icons';
 
@@ -25,6 +24,7 @@ export function Today() {
   const [sheet, setSheet] = useState<null | 'wake' | 'lost' | 'codeRed'>(null);
   const [menu, setMenu] = useState(false);
   const { hash } = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (hash) document.getElementById(decodeURIComponent(hash.slice(1)))?.scrollIntoView({ block: 'center' });
@@ -49,7 +49,7 @@ export function Today() {
             <button role="menuitem" onClick={() => setSheet('wake')}>
               Edit wake time
             </button>
-            <button role="menuitem" onClick={() => setSheet('lost')}>
+            <button role="menuitem" onClick={() => (rec.lostDay ? setSheet('lost') : navigate('/lost'))}>
               {rec.lostDay ? 'End Lost Day' : 'Start Lost Day'}
             </button>
             <button role="menuitem" onClick={() => setSheet('codeRed')}>
@@ -62,17 +62,16 @@ export function Today() {
       {mode && <p className="banner warn">{mode} is on.</p>}
 
       <FocusHero />
-      <UrgeButton />
 
       <p className="section-label">Foundation</p>
-      <div className="anchors">
+"      <div className="anchors">
+        <AnchorButton kind="water" done={rec.water.done} onToggle={(d) => setAnchor('water', d)} />
         <AnchorButton kind="coldShower" done={rec.coldShower.done} onToggle={(d) => setAnchor('coldShower', d)} />
         <AnchorButton kind="walk" done={rec.walk.done} onToggle={(d) => setAnchor('walk', d)} />
       </div>
 
 
       <InnerCheckCard />
-      <KaizenCard />
 
       {rec.plan.warnings.map((w) => (
         <p key={w} className="banner warn small">
@@ -256,47 +255,21 @@ function WakeSheet({ onClose }: { onClose: () => void }) {
   );
 }
 
+/** Ending a Lost Day brings the Big 3 back and rebuilds the rest of today. (Starting one is its own page.) */
 function LostDaySheet({ onClose }: { onClose: () => void }) {
-  const s = useApp((a) => a.s)!;
-  const date = useApp((a) => a.now.date);
-  const start = useApp((a) => a.startLostDay);
   const end = useApp((a) => a.endLostDay);
-  const [reason, setReason] = useState('');
-  const on = dayOf(s, date).lostDay;
   return (
-    <Sheet title={on ? 'End Lost Day' : 'Start Lost Day'} onClose={onClose}>
-      {on ? (
-        <>
-          <p className="muted">Go back to the full plan from now.</p>
-          <button
-            className="btn primary block"
-            onClick={async () => {
-              await end();
-              onClose();
-            }}
-          >
-            End Lost Day
-          </button>
-        </>
-      ) : (
-        <>
-          <p className="muted">The rest of today is cut to what is possible. Two salvage wins make it a Half win.</p>
-          <label className="label">
-            One line: what happened?
-            <input className="field" value={reason} onChange={(e) => setReason(e.target.value)} maxLength={140} />
-          </label>
-          <button
-            className="btn primary block"
-            disabled={!reason.trim()}
-            onClick={async () => {
-              await start(reason);
-              onClose();
-            }}
-          >
-            Start Lost Day
-          </button>
-        </>
-      )}
+    <Sheet title="End Lost Day" onClose={onClose}>
+      <p className="muted">Your Big 3 comes back and the rest of today is built from now.</p>
+      <button
+        className="btn primary block"
+        onClick={async () => {
+          await end();
+          onClose();
+        }}
+      >
+        End Lost Day
+      </button>
     </Sheet>
   );
 }

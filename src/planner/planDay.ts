@@ -12,9 +12,12 @@ import { isSchoolUrgent, rankTasks } from './priority';
 import { RULES } from './rules';
 import { ceil5, diffDays, fmtDuration, fmtTime, sunsetMin } from './time';
 import { HOME, Timeline, type Spacing } from './timeline';
-import type { Block, BlockKind, DayInput, DayPlan, EventInstance, Task, WorkoutType } from './types';
+import type { Block, BlockKind, DayInput, DayPlan, EventInstance, RankKey, Task, WorkoutType } from './types';
 
 /** Cut levels for a day that is too full. Each level includes the ones before it. */
+/** Events a Lost Day keeps: church, Epic, discipleship, retreats. */
+const FAITH_RANKS: RankKey[] = ['church', 'epic_large', 'epic_small', 'discipleship', 'retreat'];
+
 export const CUT = { none: 0, miscAndGeneral: 1, social: 2, workout: 3, floor: 4 } as const;
 
 interface Built {
@@ -117,7 +120,8 @@ function buildDay(input: DayInput, level: number): Built {
     timed = timed.filter((e) => !paused.includes(e));
     if (paused.length) notes.push(`Paused by Code Red: ${paused.map((e) => e.title).join(', ')}.`);
   } else if (mode === 'lostDay') {
-    const dropped = timed.filter((e) => !e.immovable && !pinnedIds.has(eventId(date, e)));
+    // Faith events stay (Oct 16): a Lost Day turns the rest of the day toward God.
+    const dropped = timed.filter((e) => !e.immovable && !FAITH_RANKS.includes(e.rankKey) && !pinnedIds.has(eventId(date, e)));
     timed = timed.filter((e) => !dropped.includes(e));
     if (dropped.length) notes.push(`Lost Day: ${dropped.map((e) => e.title).join(', ')} dropped for today.`);
   }
@@ -590,7 +594,7 @@ function buildDay(input: DayInput, level: number): Built {
     for (const t of pool) belowTheLine.push({ taskId: t.id, title: t.title, minutes: remaining[t.id]!, reason: 'No work planned today.' });
   }
 
-  // 13. Lost Day: easiest salvage wins first.
+  // 13. Lost Day: the basics only (the anchors, one meal); the rest of the day is for the faith focus.
   if (mode === 'lostDay') {
     const salvage: string[] = [];
     if (!input.anchors.coldShower.done) salvage.push('Cold shower');
@@ -604,37 +608,7 @@ function buildDay(input: DayInput, level: number): Built {
         salvage.push(mealRef === 'lunch' ? 'Lunch' : 'Dinner');
       }
     }
-    const easiest = [...big3].sort((a, b) => remaining[a.id]! - remaining[b.id]! || (a.id < b.id ? -1 : 1))[0];
-    if (easiest) {
-      const rem = remaining[easiest.id]!;
-      const n = freeChunk(easiest);
-      const r = tl.findFlex(workMk('work', easiest, n, workLoc), Math.min(RULES.chunkMin, rem), Math.min(RULES.chunkMax, rem), ws, dayEnd);
-      if (r) {
-        nextChunk(easiest);
-        tl.add(workMk('work', easiest, n, workLoc)(r.start, r.len));
-        record(easiest, r.len);
-        salvage.push(easiest.title);
-      }
-    }
-    const type = input.workout ?? 'weights';
-    const wMk = mk('workout', type, '30 minute workout', 'campus');
-    const shMk = mk('shower', '1', 'Shower at home', HOME);
-    for (let s = ceil5(ws); s + RULES.workout.min <= dayEnd; s += 5) {
-      const w = wMk(s, RULES.workout.min);
-      if (!tl.canPlace(w)) continue;
-      tl.add(w);
-      const arrive = w.end + travel(places, 'campus', HOME);
-      const sh = tl.find(shMk, RULES.homeShowerMin, arrive, Math.min(dayEnd, arrive + 30));
-      if (sh === null) {
-        tl.remove(w.id);
-        continue;
-      }
-      tl.add(shMk(sh, RULES.homeShowerMin));
-      salvage.push('30 minute workout');
-      workoutPlaced = type;
-      break;
-    }
-    notes.unshift(`Lost Day. Salvage wins, easiest first: ${salvage.join(', ')}.`);
+    notes.unshift(`Lost Day. One faith focus for the rest of today${salvage.length ? `, and the basics: ${salvage.join(', ')}` : ''}.`);
   }
 
   if (eveningKept && working) notes.push(`Evening is free after sunset (${fmtTime(workEnd)}). Work that did not fit moves to another day.`);

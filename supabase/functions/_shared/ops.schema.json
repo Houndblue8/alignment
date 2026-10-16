@@ -46,7 +46,8 @@
                 "type": "string",
                 "enum": [
                   "cold_shower",
-                  "walk"
+                  "walk",
+                  "water"
                 ]
               },
               "done": {
@@ -72,7 +73,7 @@
               "time"
             ],
             "additionalProperties": false,
-            "description": "Cold shower or walk with God done (or not). time only if Eli said when."
+            "description": "Glass of water, cold shower or walk with God done (or not). time only if Eli said when."
           },
           {
             "type": "object",

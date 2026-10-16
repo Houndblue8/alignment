@@ -1,4 +1,5 @@
 import { Check } from 'lucide-react';
+import { WATER_FROM } from '../data/model';
 import { haptic } from '../lib/haptics';
 import { addDays, fmtDate } from '../planner';
 import { dayOf, isItemDone } from '../state/planning';
@@ -14,7 +15,7 @@ export function canCloseOut(s: NonNullable<ReturnType<typeof useApp.getState>['s
 /** True when the day still has an anchor or a Big 3 item unchecked. */
 export function hasOpenItems(s: NonNullable<ReturnType<typeof useApp.getState>['s']>, date: string): boolean {
   const rec = dayOf(s, date);
-  return !rec.coldShower.done || !rec.walk.done || rec.big3.some((i) => !isItemDone(s, i));
+  return (date >= WATER_FROM && !rec.water.done) || !rec.coldShower.done || !rec.walk.done || rec.big3.some((i) => !isItemDone(s, i));
 }
 
 /**
@@ -51,6 +52,7 @@ export function CloseOut({ date, title }: { date: string; title?: string }) {
         {rec.result && <span className="chip" data-testid="closeout-result">{WORD[rec.result]}</span>}
       </div>
       <p className="small muted">Forgot to check things off? Mark what you did. The day is scored again.</p>
+      {date >= WATER_FROM && row('Glass of water', rec.water.done, () => void setPastAnchor(date, 'water', !rec.water.done))}
       {row('Cold shower', rec.coldShower.done, () => void setPastAnchor(date, 'coldShower', !rec.coldShower.done))}
       {row('Walk with God', rec.walk.done, () => void setPastAnchor(date, 'walk', !rec.walk.done))}
       {rec.big3.map((i) => {

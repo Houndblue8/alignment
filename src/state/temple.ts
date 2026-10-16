@@ -1,6 +1,6 @@
 // The weekly temple (Eli, Oct 10). Each pillar has a weekly target; each day Eli shows up for a pillar adds a
 // stone. The temple rises Monday to Sunday and is saved when the week closes. Pure.
-import { DEFAULT_TARGETS, JOURNEYS, type Snapshot, type WeeklyTargets } from '../data/model';
+import { DEFAULT_TARGETS, JOURNEYS, WATER_FROM, type Snapshot, type WeeklyTargets } from '../data/model';
 import type { Now } from '../lib/clock';
 import { addDays, expandEvents, scoreWeek, weekStart as weekStartOf, type Journey, type SeriesLabel } from '../planner';
 import { pillarSteps } from './pillars';
@@ -17,24 +17,38 @@ export const UNIT: Record<Journey, string> = {
 
 
 /**
- * What the app saw on a day, per pillar. Set-time things count when they happen (practice, the workout, Epic,
- * church, social plans); the rest needs a check (Big 3 items, tasks, the floor) or a logged step.
+ * Steps a pillar needs in one day to count for that day (Oct 16, from the day the water anchor starts): Faith
+ * takes two things (the walk and one more), Stewardship three (the water, the cold shower, and one more). The
+ * rest take one. Earlier days keep the old rule of one.
+ */
+export const DAY_NEED: Record<Journey, number> = { faith: 2, body: 3, sport: 1, school: 1, shs: 1, life: 1 };
+export const needOn = (j: Journey, date: string): number => (date >= WATER_FROM ? DAY_NEED[j] : 1);
+
+/** Steps per pillar on a day: what the app saw, plus one for a night tap. */
+export function stepCounts(s: Snapshot, date: string, now: Now): Record<Journey, number> {
+  const steps = pillarSteps(s, date, now);
+  const tapped = new Set(dayOf(s, date).showedUp ?? []);
+  return Object.fromEntries(JOURNEYS.map((j) => [j.id, steps[j.id].length + (tapped.has(j.id) ? 1 : 0)])) as Record<Journey, number>;
+}
+
+/**
+ * What the app saw on a day, per pillar, at the day's need. Set-time things count when they happen (practice,
+ * the workout, Epic, church, social plans); the rest needs a check (Big 3 items, tasks, the floor) or a logged step.
  */
 export function seenOn(s: Snapshot, date: string, now: Now): Record<Journey, boolean> {
   const steps = pillarSteps(s, date, now);
-  return Object.fromEntries(JOURNEYS.map((j) => [j.id, steps[j.id].length > 0])) as Record<Journey, boolean>;
+  return Object.fromEntries(JOURNEYS.map((j) => [j.id, steps[j.id].length >= needOn(j.id, date)])) as Record<Journey, boolean>;
 }
 
-/** Athletics sessions on a day: workouts and practices that happened (at least 1 if the pillar counted). */
+/** Athletics sessions on a day: every Athletics step (practice, flag football, the lift, a game) is one. */
 export function sessionsOn(s: Snapshot, date: string, now: Now): number {
-  return pillarSteps(s, date, now).sport.filter((x) => x.session).length;
+  return stepCounts(s, date, now).sport;
 }
 
-/** A pillar counts on a day when the app saw it or Eli tapped it at night. */
+/** A pillar counts on a day when its steps (the app's, plus a night tap) reach the day's need. */
 export function countedOn(s: Snapshot, date: string, now: Now): Record<Journey, boolean> {
-  const seen = seenOn(s, date, now);
-  const tapped = new Set(dayOf(s, date).showedUp ?? []);
-  return Object.fromEntries(JOURNEYS.map((j) => [j.id, seen[j.id] || tapped.has(j.id)])) as Record<Journey, boolean>;
+  const n = stepCounts(s, date, now);
+  return Object.fromEntries(JOURNEYS.map((j) => [j.id, n[j.id] >= needOn(j.id, date)])) as Record<Journey, boolean>;
 }
 
 export interface PillarWeek {
@@ -97,7 +111,7 @@ export function weekTemple(s: Snapshot, start: string, now: Now): WeekTemple {
       j.id === 'sport'
         ? dates.reduce((n, d, i) => {
             if (!counted[i]) return n;
-            return n + (sessionsOn(s, d, now) || (days[i] ? 1 : 0));
+            return n + sessionsOn(s, d, now);
           }, 0)
         : days.filter(Boolean).length;
     const target = targets[j.id];
@@ -138,7 +152,7 @@ export function saveableTemple(s: Snapshot, start: string, now: Now): SavedTempl
 }
 
 export interface BuildingState {
-  foundation: { coldShower: boolean; walk: boolean };
+  foundation: { water: boolean; coldShower: boolean; walk: boolean };
   /** Each pillar: today's steps, and the week so far (the column height). */
   pillars: { id: Journey; label: string; steps: number; ratio: number; done: number; target: number; today: boolean }[];
   /** The Big 3: little flames that hop into the fire when done. */
@@ -153,12 +167,13 @@ export function buildingFor(s: Snapshot, date: string, now: Now): BuildingState 
   const week = weekTemple(s, weekStartOf(date), now);
   const items = rec.big3.map((i) => ({ taskId: i.taskId, done: isItemDone(s, i), pillar: s.tasks.find((t) => t.id === i.taskId)?.journey ?? ('shs' as Journey) }));
   const done = items.filter((i) => i.done).length;
-  const foundation = { coldShower: rec.coldShower.done, walk: rec.walk.done };
+  // Days before the water anchor existed count it as laid.
+  const foundation = { water: rec.water.done || date < WATER_FROM, coldShower: rec.coldShower.done, walk: rec.walk.done };
   return {
     foundation,
     pillars: week.pillars.map((p) => ({ id: p.id, label: p.label, steps: steps[p.id].length, ratio: p.ratio, done: p.done, target: p.target, today: p.today })),
     torches: { done, total: items.length, items },
-    complete: foundation.coldShower && foundation.walk && items.length > 0 && done === items.length,
+    complete: foundation.water && foundation.coldShower && foundation.walk && items.length > 0 && done === items.length,
     week,
   };
 }
@@ -168,8 +183,9 @@ export function buildingLine(b: BuildingState): string {
   const atTarget = b.week.pillars.filter((p) => p.done >= p.target).length;
   const temple = `Temple this week: ${atTarget} of 6 pillars at target.`;
   if (b.complete) return `All three little flames are in the fire. That day is a Win. ${temple}`;
-  if (!b.foundation.coldShower && !b.foundation.walk) return 'Lay the foundation first: the cold shower, then the walk.';
-  if (!b.foundation.coldShower || !b.foundation.walk) return `Half the foundation is set. Finish it. ${temple}`;
+  const laid = Number(b.foundation.water) + Number(b.foundation.coldShower) + Number(b.foundation.walk);
+  if (laid === 0) return 'Lay the foundation first: a glass of water, the cold shower, then the walk.';
+  if (laid < 3) return `${laid} of 3 in the foundation. Finish it. ${temple}`;
   if (b.torches.total === 0) return `Foundation laid. Pick your Big 3: three little flames for the fire. ${temple}`;
   if (b.torches.done === 0) return `Foundation laid. Now feed the fire: your Big 3. ${temple}`;
   return `${b.torches.done} of ${b.torches.total} in the fire. ${temple}`;

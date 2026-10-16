@@ -55,7 +55,7 @@ test('17. a brain dump of 5 items creates 5 tasks and Today and Week update with
   await expect(card.getByRole('list', { name: 'Done' }).getByRole('listitem')).toHaveCount(5);
   await expect(card.getByRole('list', { name: "Couldn't do" })).toContainText('The app cannot send messages for you.');
   await expect(page.getByTestId('talk-input')).toHaveValue('');
-  await page.getByRole('button', { name: 'Close' }).click();
+  await page.getByRole('button', { name: 'Close', exact: true }).click();
 
   await page.getByRole('link', { name: 'Today' }).click();
   await expect(page.getByTestId('timeline').getByText('Tax memo').first()).toBeVisible();

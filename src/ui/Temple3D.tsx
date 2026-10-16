@@ -99,7 +99,7 @@ export function Temple3D({
 
   if (failed) return <Building b={b} fire={fire} compact={still} />;
   return (
-    <div className={`temple ${fire.level === 'refiner' ? 'refiner' : ''} ${still ? 'still' : ''}`} role="img" aria-label={buildingLabel(b, fire)} data-testid="temple">
+    <div className={`temple fire-${fire.level} ${still ? 'still' : ''}`} role="img" aria-label={buildingLabel(b, fire)} data-testid="temple">
       <canvas ref={canvas} />
     </div>
   );

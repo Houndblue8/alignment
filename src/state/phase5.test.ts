@@ -1,12 +1,9 @@
-// Monthly recap (Appendix E 2) and the urge button (Appendix E 5).
+// Monthly recap (Appendix E 2).
 import { describe, expect, test } from 'vitest';
-import { emptyDay, type DayRecord, type Snapshot, type TaskRow } from '../data/model';
+import { emptyDay, type DayRecord, type Snapshot } from '../data/model';
 import { seedSnapshot } from '../data/seedData';
 import { monthDates, monthFacts, plainLetter, prevMonth } from './recap';
-import { avoidingPick, boredKinds, firstStep, lightestPick } from './urge';
 
-const task = (id: string, over: Partial<TaskRow> = {}): TaskRow =>
-  ({ id, title: id, journey: 'school', importance: 3, estimatedMinutes: 60, deadline: null, workType: 'deep', deferralCount: 0, status: 'open', notes: '', steps: [], completedAt: null, createdAt: '2026-10-01', ...over }) as TaskRow;
 const day = (date: string, over: Partial<DayRecord> = {}): DayRecord => ({ ...emptyDay(date), checkinDone: true, coldShower: { done: true }, walk: { done: true }, result: 'win', ...over });
 
 function snap(over: Partial<Snapshot> = {}): Snapshot {
@@ -47,26 +44,3 @@ describe('monthly recap', () => {
   });
 });
 
-describe('the urge button', () => {
-  const s = snap({
-    tasks: [task('memo', { deferralCount: 3, steps: [{ text: 'Open the memo template', guess: false }] }), task('dms', { deferralCount: 1, estimatedMinutes: 20, workType: 'easy' }), task('done', { status: 'done', estimatedMinutes: 5 })],
-  });
-
-  test('avoiding: the task pushed off most, with its first step written out', () => {
-    const t = avoidingPick(s, '2026-10-12')!;
-    expect(t.id).toBe('memo');
-    expect(firstStep(t)).toBe('Open the memo template');
-  });
-
-  test('tired: the lightest open task, with a starter step for its kind of work', () => {
-    const t = lightestPick(s, '2026-10-12')!;
-    expect(t.id).toBe('dms');
-    expect(firstStep(t)).toBe('Open it and do the smallest piece you can see.');
-  });
-
-  test('bored: a photo, the season, or a quote, whichever exist', () => {
-    expect(boredKinds(s)).toEqual(['season', 'quote']);
-    expect(boredKinds({ ...s, photos: [{ date: '2026-10-12', storagePath: 'x', caption: '', milestone: false }] })[0]).toBe('season');
-    expect(boredKinds({ ...s, photos: [{ date: '2026-09-20', storagePath: 'x', caption: '', milestone: false }] })[0]).toBe('photo');
-  });
-});

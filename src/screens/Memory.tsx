@@ -7,6 +7,7 @@ import { monthName } from '../state/recap';
 import { developed, developsLabel, isDeveloped } from '../state/roll';
 import { Canister } from '../ui/PhotoCard';
 import { Sheet } from '../ui/Sheet';
+import { Polaroid } from '../ui/Polaroid';
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
@@ -161,7 +162,7 @@ function PhotoSheet({ photo, url, onClose }: { photo: PhotoRow; url: string; onC
   const [caption, setCaption] = useState(current.caption);
   return (
     <Sheet title={fmtDate(photo.date)} onClose={onClose}>
-      {url && <img src={url} alt={current.caption || fmtDate(photo.date)} className="photo-full" />}
+      {url && <Polaroid src={url} date={photo.date} caption={current.caption} />}
       <label className="label">
         Caption
         <input className="field" value={caption} maxLength={140} onChange={(e) => setCaption(e.target.value)} onBlur={() => caption !== current.caption && update(photo.date, { caption })} />

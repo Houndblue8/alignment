@@ -16,12 +16,13 @@ import {
   type WorkoutType,
 } from '../planner';
 import type { Now } from '../lib/clock';
-import { emptyDay, type Big3Item, type DayRecord, type DayResult, type Quote, type QuoteTag, type Snapshot } from '../data/model';
+import { emptyDay, WATER_FROM, type Big3Item, type DayRecord, type DayResult, type Quote, type QuoteTag, type Snapshot } from '../data/model';
 
 export const WEEK_DAYS = 7;
 
 export function dayOf(s: Snapshot, date: string): DayRecord {
-  return s.days[date] ?? emptyDay(date);
+  const d = s.days[date];
+  return d ? (d.water ? d : { ...d, water: { done: false } }) : emptyDay(date);
 }
 
 export function modeFor(s: Snapshot, date: string): Mode {
@@ -164,6 +165,8 @@ export function resultFor(s: Snapshot, date: string): DayResult {
     lostDay: rec.lostDay,
     lostDayReason: rec.lostDayReason,
     salvageCompleted: salvageCount(s, date),
+    waterDone: date >= WATER_FROM ? rec.water.done : undefined,
+    lostFocus: rec.lostFocus ? { done: rec.lostFocus.done, surrendered: !!rec.lostFocus.surrender?.trim() } : null,
   });
 }
 
@@ -218,8 +221,9 @@ export function seasonRecord(s: Snapshot, today: string): { won: number; lost: n
   return { won, lost };
 }
 
-export function anchorStreaks(s: Snapshot, today: string): { coldShower: number; walk: number } {
+export function anchorStreaks(s: Snapshot, today: string): { coldShower: number; walk: number; water: number } {
   return {
+    water: streak(today, (d) => counts(s, d) && !!s.days[d]?.water?.done),
     coldShower: streak(today, (d) => counts(s, d) && !!s.days[d]?.coldShower.done),
     walk: streak(today, (d) => counts(s, d) && !!s.days[d]?.walk.done),
   };
@@ -240,7 +244,7 @@ export function quoteFor(s: Snapshot, today: string): Quote | null {
 export function todayProgress(s: Snapshot, date: string): { done: number; total: number } {
   const rec = dayOf(s, date);
   const big3Done = rec.big3.filter((i) => isItemDone(s, i)).length;
-  return { done: Number(rec.coldShower.done) + Number(rec.walk.done) + big3Done, total: 2 + rec.big3.length };
+  return { done: Number(rec.water.done) + Number(rec.coldShower.done) + Number(rec.walk.done) + big3Done, total: 3 + rec.big3.length };
 }
 
 /** The next thing to do: the first planned block that has not ended yet. */

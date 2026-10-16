@@ -35,6 +35,6 @@ test('a test shot is shown and never saved', async ({ page }) => {
   await expect(camera.getByRole('button', { name: 'Take the photo' })).toBeEnabled({ timeout: 10_000 });
   await camera.getByRole('button', { name: 'Take the photo' }).click();
   await expect(page.getByTestId('test-shot')).toBeVisible({ timeout: 15_000 });
-  await page.getByRole('button', { name: 'Close' }).click();
+  await page.getByRole('button', { name: 'Close', exact: true }).click();
   await expect(card).toContainText("Today's photo is still open");
 });

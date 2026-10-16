@@ -68,7 +68,7 @@ export function remindersFor(r: ReminderInput): Reminder[] {
       kind: 'morning',
       dueMin: r.expectedWakeMin,
       title: 'Good morning',
-      body: 'Cold shower, then the walk with God. Check in and the day builds itself around your Big 3.',
+      body: 'A glass of water, the cold shower, then the walk with God. Check in and the day builds itself around your Big 3.',
       url: '/',
     });
   }

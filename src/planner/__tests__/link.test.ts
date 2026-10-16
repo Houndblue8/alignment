@@ -14,6 +14,8 @@ describe('same thing, different words', () => {
     ['Intentional Dinner', 'Dinner and intentional hangout with Epic people'],
     ['Outreach DMs', 'outreach dm'],
     ['Finish the tax memo', 'tax memo finish'],
+    ['Intentional at large group', 'Epic large group'],
+    ['Be present at small group', 'Epic small group'],
   ])('%s = %s', (a, b) => expect(sameThing(a, b)).toBe(true));
 
   test.each([
@@ -22,6 +24,8 @@ describe('same thing, different words', () => {
     ['Lift', 'Life plan'],
     ['Study for midterm', 'Tax Midterm II'],
     ['Call mom', 'Call Isaac'],
+    ['Intentional', 'Intentional dinner'],
+    ['Be intentional at practice', 'Epic large group'],
   ])('%s is not %s', (a, b) => expect(sameThing(a, b)).toBe(false));
 
   test('meal words', () => {

@@ -15,7 +15,8 @@ import { Temple3D } from '../ui/Temple3D';
 import { buildingFor, buildingLine } from '../state/temple';
 import { fireFor } from '../state/fire';
 import { monthFacts, monthName, prevMonth } from '../state/recap';
-import { UrgeButton } from '../ui/Urge';
+import { LostDayPage } from './LostDay';
+import { Evening, EVENING_MIN } from './Evening';
 import { SeriesBar, WeekCircles } from '../ui/Series';
 
 export function Home() {
@@ -30,11 +31,7 @@ export function Home() {
   const season = seasonRecord(s, now.date);
   const streaks = anchorStreaks(s, now.date);
   const quote = quoteFor(s, now.date);
-  const scouting = reportToOffer(s, now);
   const building = buildingFor(s, now.date, now);
-  // The first three days of a month offer last month's recap, if any of it counted.
-  const lastMonth = prevMonth(now.date.slice(0, 7));
-  const recapMonth = Number(now.date.slice(8, 10)) <= 3 && monthFacts(s, lastMonth, now).days > 0 ? lastMonth : null;
   const fire = fireFor(s, now);
   const bed = rec.plan.bedtime;
   const firstLine = s.vision.identity.split(/(?<=\.)\s/)[0] ?? s.vision.identity;
@@ -45,30 +42,17 @@ export function Home() {
     if (isWin && !wasWin.current) showToast('That day is a Win.');
     wasWin.current = isWin;
   }, [isWin, showToast]);
+  const [full, setFull] = useState(false);
+
+  // A Lost Day takes over Home; after 9 PM Home is the evening recap.
+  if (rec.lostDay) return <LostDayPage />;
+  if (now.min >= EVENING_MIN && rec.checkinDone && !full) return <Evening onFull={() => setFull(true)} />;
 
   return (
     <>
       <InstallHint />
       <CoachLine />
-      {/* Everything that needs Eli, in one card (it disappears when nothing does). */}
-      <div className="notices card" aria-label="Needs you" role="region">
-        <AwayMessage />
-        {scouting && <ScoutingCard start={scouting} />}
-        {recapMonth && (
-          <Link to={`/recap/${recapMonth}`} className="row" style={{ textDecoration: 'none', color: 'inherit' }}>
-            <span className="grow">
-              <strong>{monthName(recapMonth).split(' ')[0]} recap is in</strong>
-              <span className="small muted" style={{ display: 'block' }}>
-                Photos, the record, and a letter from your coach
-              </span>
-            </span>
-            <ChevronRight size={18} aria-hidden="true" />
-          </Link>
-        )}
-        <IsaacPrompt />
-        <CodeRedHint />
-        <Decisions />
-      </div>
+      <Notices />
 
       <section className={`card pad stack lg ${isWin ? 'win-glow' : ''}`} style={{ justifyItems: 'center' }}>
         <Link to="/today" className="building-link" aria-label={`Focus view: ${progress.done} of ${progress.total} done`}>
@@ -92,8 +76,6 @@ export function Home() {
           </p>
         )}
       </section>
-
-      <UrgeButton />
 
       <Big3Section />
 
@@ -202,5 +184,38 @@ function CodeRedHint() {
         </button>
       </div>
     </section>
+  );
+}
+
+/** Everything that needs Eli, in one card (it disappears when nothing does). The evening recap shows it too. */
+export function Notices() {
+  const s = useApp((a) => a.s)!;
+  const now = useApp((a) => a.now);
+  const scouting = reportToOffer(s, now);
+  // The first three days of a month offer last month's recap, if any of it counted.
+  const lastMonth = prevMonth(now.date.slice(0, 7));
+  const recapMonth = Number(now.date.slice(8, 10)) <= 3 && monthFacts(s, lastMonth, now).days > 0 ? lastMonth : null;
+  return (
+    <>
+      <div className="notices card" aria-label="Needs you" role="region">
+        <AwayMessage />
+        {scouting && <ScoutingCard start={scouting} />}
+        {recapMonth && (
+          <Link to={`/recap/${recapMonth}`} className="row" style={{ textDecoration: 'none', color: 'inherit' }}>
+            <span className="grow">
+              <strong>{monthName(recapMonth).split(' ')[0]} recap is in</strong>
+              <span className="small muted" style={{ display: 'block' }}>
+                Photos, the record, and a letter from your coach
+              </span>
+            </span>
+            <ChevronRight size={18} aria-hidden="true" />
+          </Link>
+        )}
+        <IsaacPrompt />
+        <CodeRedHint />
+        <Decisions />
+      </div>
+
+    </>
   );
 }
